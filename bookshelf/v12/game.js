@@ -582,14 +582,14 @@ const MECH_TIPS=[
 MECH_TIPS.forEach(m=>{const r=window.BS_CFG&&BS_CFG.tips[m.key==='dlock'?'doubleLock':m.k];if(r){m.t=r.name||m.t;m.x=r.tutorialText||m.x}});
 function mechQueue(){const out=[];MECH_TIPS.forEach(m=>{const id='m_'+(m.key||m.k);if(S.tut[id])return;const ids=m.has();if(ids&&ids.length)out.push({...m,id,ids})});return out}
 function mechIntro(list,done){if(!list.length||!G||G.solved){done();return}const m=list[0];S.tut[m.id]=1;if(m.flag)S.tut[m.flag]=1;save();
-  const rs=m.ids.map(i=>relRect(G.books[i].el)),x0=Math.min(...rs.map(r=>r.x)),y0=Math.min(...rs.map(r=>r.y)),x1=Math.max(...rs.map(r=>r.x+r.w)),y1=Math.max(...rs.map(r=>r.y+r.h)),pad=6;
+  const rs=m.ids.map(i=>{const el=G.books[i].el;return relRect(m.k==='hidden'?(el.querySelector('.cover')||el):el)}),x0=Math.min(...rs.map(r=>r.x)),y0=Math.min(...rs.map(r=>r.y)),x1=Math.max(...rs.map(r=>r.x+r.w)),y1=Math.max(...rs.map(r=>r.y+r.h)),pad=m.k==='hidden'?0:6;
   const up=(y0+y1)/2>app.clientHeight*.5,ax=Math.max(30,Math.min(app.clientWidth-30,(x0+x1)/2));
   const w=document.createElement('div');w.id='mechW';G.locked=true;
-  w.innerHTML=`<div class="spotH" style="left:${x0-pad}px;top:${y0-pad}px;width:${x1-x0+pad*2}px;height:${y1-y0+pad*2}px"></div>
+  w.innerHTML=`<div class="spotH${m.k==='hidden'?' hiddenFocus':''}" style="left:${x0-pad}px;top:${y0-pad}px;width:${x1-x0+pad*2}px;height:${y1-y0+pad*2}px"></div>
    <div class="mcCard ${up?'up':'dn'}" style="${up?`bottom:${app.clientHeight-y0+pad+16}px`:`top:${y1+pad+16}px`};--ax:${ax}px">
     <div class="mcHd">${m.k==='hidden'?'':'<span class="mcIc">'+MECH_UI[m.k].ic+'</span>'}<b>${m.t}</b><small>New</small></div><span class="mcX">${m.x}</span>
     <button class="btn wide" id="mcOk"><span class="t">Got it</span></button></div>`;
-  app.appendChild(w);Sound.play('magic');m.ids.forEach(i=>{const el=G.books[i].el;el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake')});
+  app.appendChild(w);Sound.play('magic');if(m.k!=='hidden')m.ids.forEach(i=>{const el=G.books[i].el;el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake')});
   const t0=performance.now();w.onclick=()=>{if(performance.now()-t0<500)return;Sound.play('click');w.classList.add('out');setTimeout(()=>{w.remove();G.locked=false;mechIntro(list.slice(1),done)},180)}}
 function levelIntro(){if(G.replay)return;const q=mechQueue();if(q.length){mechIntro(q,levelIntroBase);return}levelIntroBase()}
 function levelIntroBase(){if(!G||G.solved)return;const L=G.L;
