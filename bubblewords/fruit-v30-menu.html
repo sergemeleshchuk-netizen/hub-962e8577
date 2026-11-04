@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Fruit Bubble Jam · ORIGINAL · v30</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    height:100dvh;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;user-select:none;
+    background:radial-gradient(120% 120% at 50% 0%,#222838,#10131c 80%);}
+
+  /* ===== РАМКА-ТЕЛЕФОН 9:16 ===== */
+  #phone{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;
+         background:#bfe4f6;}
+  @media (max-aspect-ratio:1/1){ #phone{width:100vw;height:100dvh;border-radius:0;} }
+  @media (min-aspect-ratio:1/1){ #phone{height:96dvh;aspect-ratio:9/16;width:auto;
+         border-radius:32px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 8px #0c0e15;} }
+
+  #bg{position:absolute;inset:0;z-index:0;
+      background:url(fruit-v28/bg.jpg) center bottom/cover no-repeat;}
+
+  /* ===== МЕНЮ: сетка уровней ===== */
+  #menu{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;
+        transition:filter .18s ease;}
+  #menu.blur{filter:blur(7px) brightness(.85);}
+  #logo{width:44%;max-width:210px;margin-top:4%;filter:drop-shadow(0 10px 18px rgba(60,20,90,.35));}
+  #selTtl{color:#fff;font-size:15px;font-weight:800;margin:10px 0 4px;letter-spacing:1px;
+        text-shadow:0 2px 4px rgba(30,80,140,.6);}
+  #grid{flex:1;width:100%;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;
+        display:grid;grid-template-columns:repeat(5,1fr);gap:10px;
+        padding:8px 16px 24px;align-content:start;}
+  .lv{position:relative;aspect-ratio:1;border:none;border-radius:16px;cursor:pointer;
+        font-family:inherit;font-size:17px;font-weight:800;color:#7a4a10;
+        background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.95),rgba(255,244,214,.85) 70%,rgba(255,228,170,.9));
+        box-shadow:0 4px 8px rgba(60,40,10,.25),inset 0 -3px 6px rgba(220,160,60,.35);}
+  .lv:active{transform:scale(.92);}
+
+  /* ===== ОВЕРЛЕЙ ВЫБОРА МОДИФИКАТОРА ===== */
+  #ov{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;
+      padding:0 22px;background:rgba(10,22,38,.45);}
+  #ov.show{display:flex;}
+  #card{width:100%;max-width:320px;border-radius:22px;padding:18px 18px 16px;
+        background:linear-gradient(180deg,#ffffff,#eef7fd);
+        box-shadow:0 18px 40px rgba(0,0,0,.45);text-align:center;
+        animation:pop .18s ease-out;}
+  @keyframes pop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+  #cardTtl{font-size:20px;font-weight:900;color:#15344a;margin-bottom:2px;}
+  #cardSub{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+        color:#7b9cb3;margin-bottom:14px;}
+  #modifier{width:100%;min-height:48px;padding:0 14px;border:2px solid #cfe4f0;border-radius:13px;
+        font:inherit;font-weight:800;background:#fff;color:#15344a;outline:none;
+        appearance:none;-webkit-appearance:none;
+        background-image:linear-gradient(45deg,transparent 50%,#15344a 50%),linear-gradient(135deg,#15344a 50%,transparent 50%);
+        background-position:calc(100% - 20px) 21px,calc(100% - 14px) 21px;
+        background-size:6px 6px,6px 6px;background-repeat:no-repeat;}
+  #play{width:100%;min-height:52px;margin-top:12px;border:0;border-radius:14px;font:inherit;font-weight:900;
+        font-size:17px;background:linear-gradient(180deg,#39b97b,#16875b);color:#fff;
+        box-shadow:0 3px 0 #0a553b;cursor:pointer;}
+  #play:active{transform:translateY(2px);box-shadow:0 1px 0 #0a553b;}
+  #cancel{margin-top:10px;background:none;border:0;font:inherit;font-weight:800;font-size:13px;
+        color:#7b9cb3;cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="phone">
+  <div id="bg"></div>
+  <div id="menu">
+    <img id="logo" src="fruit-v28/logo.png" alt="Fruit Bubble Jam">
+    <div id="selTtl">ВЫБЕРИ УРОВЕНЬ · 1–199</div>
+    <div id="grid"></div>
+  </div>
+
+  <div id="ov">
+    <div id="card">
+      <div id="cardTtl">Уровень 1</div>
+      <div id="cardSub">Модификатор механики</div>
+      <select id="modifier">
+        <option value="none">Без модификатора</option>
+        <option value="halves">Половинки пузырей</option>
+        <option value="ice">Лёд на пузырях</option>
+        <option value="hidden">Скрытые пузыри</option>
+        <option value="chain">Цепочка</option>
+      </select>
+      <button id="play">Играть ▶</button>
+      <button id="cancel">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const PACK='fruit-jam-v27-original', GAME='v30-fruit.html';
+  const grid=document.getElementById('grid'), ov=document.getElementById('ov'),
+        menu=document.getElementById('menu'), ttl=document.getElementById('cardTtl');
+  let picked=1;
+
+  for(let n=1;n<=199;n++){
+    const b=document.createElement('button');
+    b.className='lv'; b.textContent=n;
+    b.onclick=()=>openMod(n);
+    grid.appendChild(b);
+  }
+
+  function openMod(n){
+    picked=n; ttl.textContent='Уровень '+n;
+    ov.classList.add('show'); menu.classList.add('blur');
+  }
+  function closeMod(){ ov.classList.remove('show'); menu.classList.remove('blur'); }
+
+  document.getElementById('cancel').onclick=closeMod;
+  ov.onclick=e=>{ if(e.target===ov) closeMod(); };
+  document.getElementById('play').onclick=()=>{
+    const mod=document.getElementById('modifier').value;
+    location.href=`${GAME}?pack=${PACK}&n=${picked-1}&mod=${mod}`;
+  };
+</script>
+</body></html>

@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Arrow Merge — v1</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    height:100dvh;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;user-select:none;touch-action:none;
+    background:radial-gradient(120% 120% at 50% 0%,#222838,#10131c 80%);}
+
+  #phone{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;
+         background:#f4ede6;}
+  @media (max-aspect-ratio:1/1){ #phone{width:100vw;height:100dvh;border-radius:0;} }
+  @media (min-aspect-ratio:1/1){
+    #phone{height:96dvh;aspect-ratio:9/16;width:auto;
+           border-radius:32px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 8px #0c0e15;}
+  }
+
+  #hud{width:100%;padding:18px 16px 0;z-index:3;position:relative;height:128px;flex:none;}
+  #gearBtn{position:absolute;left:16px;top:22px;width:52px;height:52px;border:none;cursor:pointer;
+    border-radius:16px;background:linear-gradient(#e08b3a,#c9722a);
+    box-shadow:0 5px 0 #9c5518,0 8px 14px rgba(150,90,40,.35);
+    color:#fff;font-size:26px;display:flex;align-items:center;justify-content:center;}
+  #gearBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #9c5518;}
+  #lvlWrap{position:absolute;left:50%;top:14px;transform:translateX(-50%);text-align:center;}
+  #lvlBadge{display:inline-block;background:#b0692a;color:#fff;font-weight:800;font-size:15px;
+    letter-spacing:1px;padding:5px 20px;border-radius:10px;box-shadow:0 3px 0 #854e1e;}
+  #movesBanner{margin-top:-4px;background:#fff;color:#8a5a2c;font-weight:800;font-size:26px;
+    padding:6px 34px;border:3px solid #e0bd94;position:relative;
+    clip-path:polygon(0 50%,7% 0,93% 0,100% 50%,93% 100%,7% 100%);
+    filter:drop-shadow(0 3px 3px rgba(150,100,50,.3));}
+  #goalPill{display:inline-block;margin-top:5px;background:#fff3e2;color:#b0692a;font-weight:800;
+    font-size:15px;padding:4px 16px;border-radius:20px;border:2px solid #e0bd94;}
+
+  #stage{flex:1;width:100%;position:relative;z-index:2;min-height:0;}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  #fx{z-index:15;pointer-events:none;}
+
+  .ov{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
+      flex-direction:column;background:rgba(40,26,16,.66);}
+  .hidden{display:none !important;}
+
+  .card{position:relative;width:78%;max-width:360px;background:#faf2e9;border:6px solid #e08b3a;
+    border-radius:28px;padding:64px 22px 26px;display:flex;flex-direction:column;align-items:center;
+    box-shadow:0 24px 60px rgba(0,0,0,.45);}
+  .ribbon{position:absolute;top:-26px;left:50%;transform:translateX(-50%);white-space:nowrap;
+    background:linear-gradient(#ff9b2e,#f07713);color:#fff;font-weight:900;font-size:26px;
+    letter-spacing:1px;padding:12px 34px;border-radius:14px;
+    text-shadow:0 3px 0 rgba(160,70,0,.55);box-shadow:0 6px 0 #c85c08,0 10px 18px rgba(0,0,0,.3);}
+  .ribbon.red{background:linear-gradient(#ff5964,#e0333f);box-shadow:0 6px 0 #b0222c,0 10px 18px rgba(0,0,0,.3);
+    text-shadow:0 3px 0 rgba(150,20,30,.55);}
+  .emoji{font-size:84px;margin:6px 0 14px;}
+  .rewardPill{background:#e8b98f;color:#fff;font-weight:900;font-size:26px;border-radius:40px;
+    padding:12px 30px;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+  .bigBtn{border:none;cursor:pointer;color:#fff;font-weight:900;font-size:26px;letter-spacing:1px;
+    padding:15px 60px;border-radius:18px;background:linear-gradient(#5fd435,#3fae1e);
+    box-shadow:0 6px 0 #2e8514,0 10px 18px rgba(0,0,0,.25);text-shadow:0 2px 0 rgba(30,90,10,.5);}
+  .bigBtn:active{transform:translateY(4px);box-shadow:0 2px 0 #2e8514;}
+  .bigBtn.blue{background:linear-gradient(#5b8cf0,#3a68d8);box-shadow:0 6px 0 #2749a8,0 10px 18px rgba(0,0,0,.25);}
+  .bigBtn.blue:active{box-shadow:0 2px 0 #2749a8;}
+
+  #home{background:linear-gradient(#f4ede6,#ecdcc8);z-index:25;}
+  #home h1{margin:0 0 6px;font-size:44px;font-weight:900;color:#b0692a;letter-spacing:2px;
+    text-shadow:0 3px 0 #fff,0 6px 10px rgba(150,100,50,.25);text-align:center;line-height:1.1;}
+  #home .sub{color:#b09a80;font-weight:700;margin-bottom:8px;}
+  #home .hint{color:#bda98e;font-weight:600;font-size:14px;margin:0 30px 30px;text-align:center;line-height:1.35;}
+  #homeHexes{font-size:44px;letter-spacing:6px;margin-bottom:26px;filter:drop-shadow(0 4px 4px rgba(150,100,50,.3));}
+
+  #menuCard{background:#faf2e9;border:5px solid #e08b3a;border-radius:24px;padding:26px 30px;
+    display:flex;flex-direction:column;gap:14px;align-items:stretch;box-shadow:0 20px 50px rgba(0,0,0,.4);}
+  #menuCard .bigBtn{font-size:20px;padding:12px 40px;}
+</style>
+</head>
+<body>
+<div id="phone">
+  <div id="hud">
+    <button id="gearBtn">⚙</button>
+    <div id="lvlWrap">
+      <div id="lvlBadge">LEVEL 1</div>
+      <div id="movesBanner">Moves: 0</div>
+      <div id="goalPill">Собери ✦ 3</div>
+    </div>
+  </div>
+  <div id="stage">
+    <canvas id="game"></canvas>
+  </div>
+  <canvas id="fx"></canvas>
+
+  <div id="winOv" class="ov hidden">
+    <div class="card">
+      <div class="ribbon">CONGRATS!!</div>
+      <div class="emoji">😍</div>
+      <div class="rewardPill">🪙 +20</div>
+      <button class="bigBtn" id="nextBtn">NEXT</button>
+    </div>
+  </div>
+
+  <div id="loseOv" class="ov hidden">
+    <div class="card">
+      <div class="ribbon red">OUT OF MOVES</div>
+      <div class="emoji">😵</div>
+      <button class="bigBtn blue" id="retryBtn">RETRY</button>
+    </div>
+  </div>
+
+  <div id="menuOv" class="ov hidden">
+    <div id="menuCard">
+      <button class="bigBtn blue" id="mRestart">RESTART</button>
+      <button class="bigBtn" id="mHome" style="background:linear-gradient(#f79e2d,#e0801a);box-shadow:0 6px 0 #b56412;">HOME</button>
+      <button class="bigBtn blue" id="mClose" style="background:#8a8ab0;box-shadow:0 6px 0 #6b6b8f;">CLOSE</button>
+    </div>
+  </div>
+
+  <div id="home" class="ov">
+    <div id="homeHexes">⬡⬢⬡</div>
+    <h1>ARROW<br>MERGE</h1>
+    <div class="sub" id="homeLvl">Уровень 1</div>
+    <div class="hint">Тап — фишка скользит по своей стрелке до упора.
+      Две равные сливаются в ступень выше. Собери фишку-цель, пока есть ходы!</div>
+    <button class="bigBtn" id="playBtn">PLAY</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ================= Arrow Merge v1 =================
+   Микс: мердж 2048 + стрелки. Фишка = стопка слоёв (высота = ступень),
+   у каждой своя стрелка. Тап: фишка скользит по стрелке до препятствия;
+   если упёрлась в фишку ТОЙ ЖЕ ступени — сливаются в ступень выше
+   (сохраняется стрелка неподвижной фишки). Каждый результативный тап = -1 ход.
+   Цель: собрать фишку ступени goal. Проигрыш — кончились ходы.
+   Генерация: реверс-сплиты от финальной фишки → точный скрипт решения. */
+
+const $=id=>document.getElementById(id);
+const stage=$('stage'), cvs=$('game'), ctx=cvs.getContext('2d');
+const fxCvs=$('fx'), fxCtx=fxCvs.getContext('2d');
+
+const ROT=-0.10, SQUASH=0.92, CELL_GAP=0.94, CELL_DEPTH=7, LAYER_H=9;
+/* лесенка ступеней: 1..6 */
+const TIERS=[
+  {top:'#9fd8a8',side:'#79b585'},
+  {top:'#45c454',side:'#2f9139'},
+  {top:'#3a7cf6',side:'#2456bd'},
+  {top:'#b04ef5',side:'#8231c2'},
+  {top:'#f2404f',side:'#bd2733'},
+  {top:'#f8c92e',side:'#cc9c14'},
+];
+const DIRS=[[0,-1],[1,-1],[1,0],[0,1],[-1,1],[-1,0]];
+
+/* goal — целевая ступень; splits — мерджей в решении; distract — фишки-обманки */
+const LEVELS=[
+  {R:2, goal:3, splits:3,  distract:0, fac:2.0},
+  {R:2, goal:4, splits:5,  distract:0, fac:1.8},
+  {R:2, goal:4, splits:6,  distract:1, fac:1.6},
+  {R:3, goal:5, splits:8,  distract:2, fac:1.4},
+  {R:3, goal:5, splits:10, distract:2, fac:1.25},  // спайк
+];
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+
+let level=parseInt(localStorage.getItem('arrowMerge.level')||'1');
+if(!(level>=1&&level<=LEVELS.length)) level=1;
+let cells=[], cellSet=new Set(), chips=[], moves=0, S=34, goal=3;
+let solution=[];        // [{q,r}] — фишка, которую тапнуть на каждом шаге
+let playing=false, busy=false, shake=0, winTimer=0;
+let W=0,H=0,DPR=1,cx=0,cy=0;
+const key=(q,r)=>q+','+r;
+
+/* ---------- Генерация: реверс-сплиты ---------- */
+function buildLevel(n){
+  const cfg=LEVELS[n-1];
+  goal=cfg.goal;
+  cells=[]; cellSet.clear();
+  for(let q=-cfg.R;q<=cfg.R;q++)for(let r=-cfg.R;r<=cfg.R;r++)
+    if(Math.max(Math.abs(q),Math.abs(r),Math.abs(q+r))<=cfg.R){cells.push([q,r]);cellSet.add(key(q,r));}
+  let done=null;
+  for(let attempt=0;attempt<600&&!done;attempt++){
+    const rng=mulberry32(n*52361+attempt);
+    const c0=cells[(rng()*cells.length)|0];
+    const board=[{q:c0[0],r:c0[1],tier:cfg.goal,dir:(rng()*6)|0}];
+    const at=(q,r)=>board.find(c=>c.q===q&&c.r===r);
+    const splitsRev=[];          // в порядке применения реверса
+    const segCells=new Set();    // клетки всех дорожек скрипта (для обманок)
+    let ok=true;
+    for(let s2=0;s2<cfg.splits;s2++){
+      const cand=board.filter(c=>c.tier>=2);
+      for(let i=cand.length-1;i>0;i--){const j=(rng()*(i+1))|0;[cand[i],cand[j]]=[cand[j],cand[i]];}
+      cand.sort((a,b)=>b.tier-a.tier);            // сперва высокие ступени
+      let didSplit=false;
+      for(const X of cand){
+        const dirsSh=[0,1,2,3,4,5].sort(()=>rng()-0.5);
+        for(const d of dirsSh){
+          /* мувер шёл по d и врезался в X ⇒ его старт на луче -d, промежутки пусты */
+          const dq=-DIRS[d][0], dr=-DIRS[d][1];
+          const spots=[];
+          let q=X.q+dq, r=X.r+dr;
+          while(cellSet.has(key(q,r))&&!at(q,r)){spots.push([q,r]);q+=dq;r+=dr;}
+          if(!spots.length)continue;
+          const si=(rng()*spots.length)|0;
+          const [mq,mr]=spots[si];
+          X.tier--;
+          board.push({q:mq,r:mr,tier:X.tier,dir:d});
+          for(let k=0;k<=si;k++)segCells.add(key(spots[k][0],spots[k][1]));
+          segCells.add(key(X.q,X.r));
+          splitsRev.push({mq,mr});
+          didSplit=true;break;
+        }
+        if(didSplit)break;
+      }
+      if(!didSplit){ok=false;break;}
+    }
+    if(!ok)continue;
+    /* обманки — вне дорожек скрипта */
+    const freeCells=cells.filter(c=>!at(c[0],c[1])&&!segCells.has(key(c[0],c[1])));
+    for(let i=freeCells.length-1;i>0;i--){const j=(rng()*(i+1))|0;[freeCells[i],freeCells[j]]=[freeCells[j],freeCells[i]];}
+    if(freeCells.length<cfg.distract)continue;
+    for(let i2=0;i2<cfg.distract;i2++){
+      const [q,r]=freeCells[i2];
+      board.push({q,r,tier:1+((rng()*2)|0),dir:(rng()*6)|0,decoy:true});
+    }
+    const sol=splitsRev.slice().reverse().map(s3=>({q:s3.mq,r:s3.mr}));
+    /* контрольная переигровка чистой логикой */
+    if(!simCheck(board,sol,cfg.goal))continue;
+    done={board,sol};
+  }
+  chips=done?done.board.map(c=>({...c,pop:0,ox:0,oy:0})):[];
+  solution=done?done.sol:[];
+  moves=Math.ceil(solution.length*cfg.fac);
+  busy=false; playing=true; shake=0; stopConfetti(); clearTimeout(winTimer);
+  chips.forEach((c,i)=>c.pop=-i*0.03);
+  $('lvlBadge').textContent='LEVEL '+n;
+  $('goalPill').textContent='Собери ✦ '+goal;
+  updateMoves(); layout();
+}
+function updateMoves(){$('movesBanner').textContent='Moves: '+moves;}
+
+/* чистая симуляция скрипта */
+function simCheck(board0,sol,goalT){
+  const b=board0.map(c=>({...c}));
+  const at=(q,r)=>b.find(c=>c.q===q&&c.r===r);
+  for(const step of sol){
+    const ch=at(step.q,step.r);
+    if(!ch)return false;
+    const [dq,dr]=DIRS[ch.dir];
+    let q=ch.q,r=ch.r;
+    while(cellSet.has(key(q+dq,r+dr))&&!at(q+dq,r+dr)){q+=dq;r+=dr;}
+    const bl=cellSet.has(key(q+dq,r+dr))?at(q+dq,r+dr):null;
+    if(!bl||bl.tier!==ch.tier)return false;
+    b.splice(b.indexOf(ch),1);
+    bl.tier++;
+    if(bl.tier===goalT)return true;
+  }
+  return false;
+}
+
+/* ---------- Геометрия / рендер ---------- */
+function hexCenter(q,r){
+  let x=1.5*S*q, y=Math.sqrt(3)*S*(r+q/2);
+  const rx=x*Math.cos(ROT)-y*Math.sin(ROT), ry=x*Math.sin(ROT)+y*Math.cos(ROT);
+  return [cx+rx, cy+ry*SQUASH];
+}
+function hexVerts(x,y,s){
+  const v=[];
+  for(let i=0;i<6;i++){
+    const a=Math.PI/3*i;
+    let px=Math.cos(a)*s, py=Math.sin(a)*s;
+    const rx=px*Math.cos(ROT)-py*Math.sin(ROT), ry=px*Math.sin(ROT)+py*Math.cos(ROT);
+    v.push([x+rx,y+ry*SQUASH]);
+  }
+  return v;
+}
+function dirVec(d){
+  const [ax,ay]=hexCenter(0,0), [bx,by]=hexCenter(DIRS[d][0],DIRS[d][1]);
+  const dx=bx-ax, dy=by-ay, l=Math.hypot(dx,dy);
+  return [dx/l,dy/l];
+}
+function pointInPoly(px,py,v){
+  let inside=false;
+  for(let i=0,j=v.length-1;i<v.length;j=i++){
+    if((v[i][1]>py)!==(v[j][1]>py) &&
+       px<(v[j][0]-v[i][0])*(py-v[i][1])/(v[j][1]-v[i][1])+v[i][0]) inside=!inside;
+  }
+  return inside;
+}
+function drawHexPrism(c2,x,y,s,depth,topCol,sideCol){
+  const v=hexVerts(x,y,s);
+  c2.fillStyle=sideCol;
+  for(let i=0;i<6;i++){
+    const a=v[i], b=v[(i+1)%6];
+    if((a[1]+b[1])/2>=y-0.5){
+      c2.beginPath();
+      c2.moveTo(a[0],a[1]);c2.lineTo(b[0],b[1]);
+      c2.lineTo(b[0],b[1]+depth);c2.lineTo(a[0],a[1]+depth);
+      c2.closePath();c2.fill();
+    }
+  }
+  c2.beginPath();
+  v.forEach((p,i)=>i?c2.lineTo(p[0],p[1]):c2.moveTo(p[0],p[1]));
+  c2.closePath();
+  c2.fillStyle=topCol;c2.fill();
+  return v;
+}
+function drawArrow(c2,x,y,ang,s,col,shadow){
+  c2.save();
+  c2.translate(x,y);c2.scale(1,SQUASH);c2.rotate(ang);
+  c2.strokeStyle=col;c2.fillStyle=col;
+  c2.lineWidth=s*0.24;c2.lineCap='round';c2.lineJoin='round';
+  if(shadow){c2.shadowColor='rgba(0,0,0,.28)';c2.shadowOffsetY=s*0.09/SQUASH;c2.shadowBlur=1;}
+  c2.beginPath();c2.moveTo(-s*0.34,0);c2.lineTo(s*0.30,0);c2.stroke();
+  c2.beginPath();
+  c2.moveTo(s*0.14,-s*0.30);c2.lineTo(s*0.48,0);c2.lineTo(s*0.14,s*0.30);
+  c2.lineTo(s*0.26,0);c2.closePath();c2.fill();
+  c2.restore();
+}
+
+function layout(){
+  const rect=stage.getBoundingClientRect();
+  DPR=window.devicePixelRatio||1;
+  W=rect.width;H=rect.height;
+  cvs.width=W*DPR;cvs.height=H*DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  const phone=$('phone').getBoundingClientRect();
+  fxCvs.width=phone.width*DPR;fxCvs.height=phone.height*DPR;
+  fxCtx.setTransform(DPR,0,0,DPR,0,0);
+  const R=LEVELS[level-1].R;
+  S=Math.min((W-46)/(3*R+2), (H-70)/(Math.sqrt(3)*(2*R+1.6)));
+  cx=W/2; cy=H/2;
+}
+window.addEventListener('resize',layout);
+
+function chipDraw(c2,x,y,ch,sc){
+  const s=S*CELL_GAP*0.97*sc;
+  const t=TIERS[Math.min(ch.tier,TIERS.length)-1];
+  let topY=y-CELL_DEPTH;
+  for(let l=0;l<ch.tier;l++){
+    topY=y-CELL_DEPTH-l*LAYER_H*sc;
+    drawHexPrism(c2,x,topY,s,LAYER_H*sc,t.top,t.side);
+    if(l<ch.tier-1){
+      const v=hexVerts(x,topY,s);
+      c2.strokeStyle='rgba(0,0,0,.14)';c2.lineWidth=1;
+      c2.beginPath();
+      v.forEach((p,i)=>i?c2.lineTo(p[0],p[1]):c2.moveTo(p[0],p[1]));
+      c2.closePath();c2.stroke();
+    }
+  }
+  const [vx,vy]=dirVec(ch.dir);
+  drawArrow(c2,x,topY,Math.atan2(vy/SQUASH,vx),s,'#fff',true);
+  return topY;
+}
+
+function draw(dt){
+  ctx.clearRect(0,0,W,H);
+  ctx.save();
+  if(shake>0){shake-=dt;ctx.translate((Math.random()-0.5)*4,(Math.random()-0.5)*4);}
+  for(const [q,r] of cells)
+    drawHexPrism(ctx,...hexCenter(q,r),S*CELL_GAP,CELL_DEPTH,'#c8c2ba','#a49d92');
+  const sorted=chips.slice().sort((a,b)=>hexCenter(a.q,a.r)[1]+(a.oy||0)-hexCenter(b.q,b.r)[1]-(b.oy||0));
+  for(const ch of sorted){
+    ch.pop=Math.min(1,ch.pop+dt*3.2);
+    if(ch.pop<=0)continue;
+    const sc=ch.pop<1?(0.5+0.5*(1-Math.pow(1-ch.pop,3))):1;
+    const [x0,y0]=hexCenter(ch.q,ch.r);
+    const x=x0+(ch.ox||0), y=y0+(ch.oy||0);
+    const topY=chipDraw(ctx,x,y,ch,sc*(ch.mergePop?1+0.18*Math.sin(ch.mergePop*Math.PI):1));
+    if(ch.mergePop){ch.mergePop=Math.max(0,ch.mergePop-dt*2.4);}
+    ch.topV=hexVerts(x,topY,S*CELL_GAP);
+    ch.topY=topY; ch.baseY=y;
+  }
+  ctx.restore();
+}
+
+/* ---------- Логика ---------- */
+function chipAt(q,r){return chips.find(c=>c.q===q&&c.r===r);}
+function calcSlide(ch){
+  const [dq,dr]=DIRS[ch.dir];
+  let q=ch.q,r=ch.r;
+  while(cellSet.has(key(q+dq,r+dr))&&!chipAt(q+dq,r+dr)){q+=dq;r+=dr;}
+  const bl=cellSet.has(key(q+dq,r+dr))?chipAt(q+dq,r+dr):null;
+  return {q,r,merge:(bl&&bl.tier===ch.tier)?bl:null,moved:q!==ch.q||r!==ch.r};
+}
+function tapChip(ch){
+  if(!playing||busy)return;
+  const m=calcSlide(ch);
+  if(!m.moved&&!m.merge){
+    const [vx,vy]=dirVec(ch.dir);
+    bump(ch,vx,vy); shake=0.12;
+    return;
+  }
+  busy=true;
+  moves--; updateMoves();
+  const [x0,y0]=hexCenter(ch.q,ch.r);
+  const [x1,y1]=hexCenter(m.merge?m.merge.q:m.q, m.merge?m.merge.r:m.r);
+  const dist=Math.hypot(x1-x0,y1-y0);
+  const dur=Math.max(0.10,dist/(S*22));
+  let t=0;
+  ch.q=m.q; ch.r=m.r;                     // логическая позиция — конец скольжения
+  const [sx,sy]=hexCenter(m.q,m.r);
+  ch.ox=x0-sx; ch.oy=y0-sy;               // визуально пока в старой точке
+  const iv=setInterval(()=>{
+    t+=1/60;
+    const k=Math.min(1,t/dur), e=1-Math.pow(1-k,3);
+    if(m.merge){
+      ch.ox=(x0-sx)+((x1-x0))*e; ch.oy=(y0-sy)+((y1-y0))*e;
+    }else{
+      ch.ox=(x0-sx)*(1-e); ch.oy=(y0-sy)*(1-e);
+    }
+    if(k>=1){
+      clearInterval(iv);
+      if(m.merge){
+        chips.splice(chips.indexOf(ch),1);
+        m.merge.tier++;
+        m.merge.mergePop=1;
+        if(m.merge.tier>=goal){
+          playing=false; busy=false;
+          winTimer=setTimeout(win,1000);
+          return;
+        }
+      }else{
+        ch.ox=0;ch.oy=0;
+      }
+      busy=false;
+      if(moves<=0){playing=false;lose('OUT OF MOVES');return;}
+      if(!anyMove()){playing=false;lose('NO MOVES LEFT');}
+    }
+  },1000/60);
+}
+function anyMove(){
+  return chips.some(c=>{const m=calcSlide(c);return m.moved||m.merge;});
+}
+function bump(t,vx,vy){
+  const amp=S*0.42;let tt=0;
+  const iv=setInterval(()=>{
+    tt+=1/60;
+    const k=tt/0.28;
+    if(k>=1){t.ox=0;t.oy=0;clearInterval(iv);return;}
+    const e=Math.sin(k*Math.PI)*(1-k*0.3);
+    t.ox=vx*amp*e;t.oy=vy*amp*e;
+  },1000/60);
+}
+
+cvs.addEventListener('pointerdown',e=>{
+  if(!playing||busy)return;
+  const r=cvs.getBoundingClientRect();
+  const px=e.clientX-r.left, py=e.clientY-r.top;
+  const sorted=chips.slice().sort((a,b)=>hexCenter(b.q,b.r)[1]-hexCenter(a.q,a.r)[1]);
+  for(const ch of sorted){
+    if(ch.topV&&pointInPoly(px,py,ch.topV)){tapChip(ch);return;}
+    const [x,y]=hexCenter(ch.q,ch.r);
+    if(Math.abs(px-x)<S*0.8&&py>(ch.topY||y)-S*0.5&&py<y+CELL_DEPTH){tapChip(ch);return;}
+  }
+});
+
+/* ---------- Конфетти ---------- */
+let confetti=[],confettiOn=false;
+function startConfetti(){
+  confetti=[];confettiOn=true;
+  const w=fxCvs.width/DPR,h=fxCvs.height/DPR;
+  const cols=['#ff5964','#f8c92e','#3a7cf6','#45c454','#ff8ac2','#59e0e8','#b04ef5','#ff9b2e'];
+  for(let i=0;i<130;i++)confetti.push({
+    x:Math.random()*w,y:-Math.random()*h*0.8,
+    vy:110+Math.random()*160,ph:Math.random()*7,om:2+Math.random()*3,
+    s:4+Math.random()*6,c:cols[(Math.random()*cols.length)|0],r:Math.random()*7});
+}
+function stopConfetti(){confettiOn=false;fxCtx.clearRect(0,0,fxCvs.width,fxCvs.height);}
+function drawConfetti(dt){
+  if(!confettiOn)return;
+  const w=fxCvs.width/DPR,h=fxCvs.height/DPR;
+  fxCtx.clearRect(0,0,w,h);
+  for(const p of confetti){
+    p.y+=p.vy*dt;p.ph+=p.om*dt;p.r+=3*dt;
+    if(p.y>h+20){p.y=-20;p.x=Math.random()*w;}
+    fxCtx.save();
+    fxCtx.translate(p.x+Math.sin(p.ph)*14,p.y);
+    fxCtx.rotate(p.r);fxCtx.scale(1,Math.abs(Math.cos(p.ph)));
+    fxCtx.fillStyle=p.c;
+    fxCtx.fillRect(-p.s/2,-p.s/2,p.s,p.s*0.62);
+    fxCtx.restore();
+  }
+}
+
+/* ---------- Экраны ---------- */
+function win(){startConfetti();$('winOv').classList.remove('hidden');}
+function lose(txt){
+  $('loseOv').querySelector('.ribbon').textContent=txt||'OUT OF MOVES';
+  $('loseOv').classList.remove('hidden');
+}
+$('nextBtn').onclick=()=>{
+  stopConfetti();$('winOv').classList.add('hidden');
+  level=level%LEVELS.length+1;
+  localStorage.setItem('arrowMerge.level',level);
+  buildLevel(level);
+};
+$('retryBtn').onclick=()=>{$('loseOv').classList.add('hidden');buildLevel(level);};
+$('playBtn').onclick=()=>{$('home').classList.add('hidden');buildLevel(level);};
+$('gearBtn').onclick=()=>{if(playing)$('menuOv').classList.remove('hidden');};
+$('mClose').onclick=()=>$('menuOv').classList.add('hidden');
+$('mRestart').onclick=()=>{$('menuOv').classList.add('hidden');buildLevel(level);};
+$('mHome').onclick=()=>{$('menuOv').classList.add('hidden');playing=false;$('home').classList.remove('hidden');
+  $('homeLvl').textContent='Уровень '+level;};
+$('homeLvl').textContent='Уровень '+level;
+
+/* ---------- Тест-хук ---------- */
+window.__game={
+  get state(){return {chips:chips.map(c=>({q:c.q,r:c.r,tier:c.tier,dir:c.dir,decoy:!!c.decoy})),
+    moves,goal,level,busy,playing};},
+  tap(q,r){const c=chips.find(c=>c.q===q&&c.r===r);if(c)tapChip(c);return !!c;},
+  solution(){return solution.map(s=>({...s}));},
+  load(n){level=n;buildLevel(n);},
+};
+
+/* ---------- Цикл ---------- */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(0.05,(now-last)/1000);last=now;
+  draw(dt);drawConfetti(dt);
+  requestAnimationFrame(loop);
+}
+buildLevel(level);
+playing=false;
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

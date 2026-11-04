@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Muscle Map — v3 Body Layers</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    height:100dvh;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;user-select:none;touch-action:none;
+    background:radial-gradient(120% 120% at 50% 0%,#2a2430,#120f16 80%);}
+  #phone{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;
+         background:radial-gradient(110% 70% at 50% 40%,#2b2f3d,#161822 90%);}
+  @media (max-aspect-ratio:1/1){ #phone{width:100vw;height:100dvh;border-radius:0;} }
+  @media (min-aspect-ratio:1/1){
+    #phone{height:96dvh;aspect-ratio:9/16;width:auto;
+           border-radius:32px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 8px #0c0e15;}
+  }
+  /* HUD */
+  #hud{width:100%;padding:16px 16px 0;z-index:3;position:relative;height:92px;flex:none;}
+  #gearBtn{position:absolute;left:16px;top:20px;width:50px;height:50px;border:none;cursor:pointer;
+    border-radius:16px;background:linear-gradient(#e0534a,#c23b33);
+    box-shadow:0 5px 0 #8e2a24,0 8px 14px rgba(0,0,0,.3);color:#fff;font-size:24px;display:flex;align-items:center;justify-content:center;}
+  #gearBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #8e2a24;}
+  #lvlWrap{position:absolute;left:50%;top:18px;transform:translateX(-50%);text-align:center;}
+  #lvlBadge{display:inline-block;background:#e0534a;color:#fff;font-weight:800;font-size:14px;letter-spacing:1px;padding:5px 18px;border-radius:10px;box-shadow:0 3px 0 #8e2a24;}
+  #lvlName{margin-top:6px;color:#c9bfc6;font-weight:700;font-size:13px;letter-spacing:.5px;}
+  #progress{position:absolute;right:16px;top:20px;height:50px;min-width:64px;padding:0 12px;border-radius:16px;
+    background:#fff;border:3px solid #4a4356;display:flex;align-items:center;justify-content:center;
+    color:#3b2f3a;font-weight:900;font-size:20px;box-shadow:0 4px 0 #4a4356;}
+  #progress small{font-size:12px;font-weight:700;color:#9a8a95;margin-left:4px;margin-top:5px;}
+  /* stage */
+  #stage{flex:1;width:100%;position:relative;z-index:2;min-height:0;}
+  #board{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;}
+  #layers{position:absolute;left:10px;top:10px;display:flex;flex-direction:column;gap:6px;z-index:3;pointer-events:none;}
+  .lay{font-size:11px;font-weight:800;letter-spacing:1px;color:#fff;background:rgba(255,255,255,.12);padding:5px 9px;border-radius:8px;
+    border:1.5px solid rgba(255,255,255,.25);transition:all .3s;min-width:78px;}
+  .lay.ghost{opacity:.75;}
+  .lay.target{background:#e0534a;border-color:#ff8a80;}
+  .lay.off{opacity:.3;text-decoration:line-through;}
+  #boostBtn{position:absolute;right:10px;bottom:12px;z-index:4;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;
+    padding:8px 12px;border-radius:14px;background:linear-gradient(#5b9cf6,#3a78d6);color:#fff;font-weight:900;font-size:12px;letter-spacing:.5px;
+    box-shadow:0 4px 0 #27579e,0 8px 14px rgba(0,0,0,.35);}
+  #boostBtn:active{transform:translateY(3px);box-shadow:0 1px 0 #27579e;}
+  #boostBtn.empty{background:#6b6b7c;box-shadow:0 4px 0 #44444f;opacity:.7;}
+  #boostIco{font-size:18px;} #boostCnt{background:rgba(0,0,0,.28);padding:2px 7px;border-radius:8px;}
+  #rotHint{position:absolute;right:10px;top:12px;color:rgba(255,255,255,.55);font-size:11px;font-weight:700;letter-spacing:1px;z-index:3;pointer-events:none;}
+  #distLbl{position:absolute;z-index:4;pointer-events:none;background:#3b2f3a;color:#fff;font-weight:900;font-size:16px;padding:5px 12px;border-radius:9px;transform:translate(-50%,-50%);white-space:nowrap;border:2px solid #fff;}
+  #loadBody{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#fff;font-weight:800;background:rgba(22,24,34,.85);}
+  #loadBar{width:60%;height:10px;border-radius:6px;background:rgba(255,255,255,.15);overflow:hidden;}
+  #loadFill{height:100%;width:0;background:linear-gradient(90deg,#e0534a,#ff9b2e);transition:width .2s;}
+  /* tray */
+  #tray{width:100%;height:170px;flex:none;position:relative;z-index:4;padding:0 14px 14px;}
+  #card{width:100%;height:100%;background:#fff;border:3px solid #e9d9c9;border-radius:22px;box-shadow:0 6px 0 #dccbb8;
+    display:flex;align-items:center;gap:14px;padding:12px 16px;position:relative;}
+  #card.dim{opacity:.45;}
+  #previewBox{width:120px;height:120px;flex:none;background:#fbf5ee;border-radius:16px;border:2px dashed #e0cdbb;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+  #preview{width:120px;height:120px;display:block;}
+  #cardTxt{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;}
+  #mName{font-weight:900;font-size:19px;color:#3b2f3a;line-height:1.1;}
+  #mKind{font-weight:700;font-size:12px;color:#9a8a95;letter-spacing:1px;}
+  #tries{display:flex;gap:5px;align-items:center;margin-top:2px;}
+  .try{width:14px;height:14px;border-radius:50%;background:#e0534a;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18);}
+  .try.off{background:#e7dcd2;box-shadow:none;}
+  #triesLbl{font-size:12px;font-weight:700;color:#9a8a95;margin-left:4px;}
+  #hint{font-size:12px;color:#8a7a85;font-weight:600;}
+  #nextBtn{position:absolute;right:14px;bottom:12px;border:none;cursor:pointer;color:#fff;font-weight:900;font-size:18px;
+    letter-spacing:1px;padding:10px 24px;border-radius:14px;background:linear-gradient(#5fd435,#3fae1e);box-shadow:0 5px 0 #2e8514;}
+  #nextBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #2e8514;}
+  #toast{position:absolute;left:50%;transform:translateX(-50%);bottom:186px;z-index:6;pointer-events:none;
+    background:#3b2f3a;color:#fff;font-weight:900;font-size:18px;padding:10px 22px;border-radius:30px;opacity:0;transition:opacity .2s;white-space:nowrap;box-shadow:0 8px 18px rgba(0,0,0,.35);}
+  #toast.show{opacity:1;} #toast.good{background:#2f9c52;} #toast.bad{background:#c8322b;}
+  /* overlays */
+  .ov{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(20,14,24,.7);}
+  .hidden{display:none !important;}
+  .card{position:relative;width:80%;max-width:360px;background:#fbf5ee;border:6px solid #e0534a;border-radius:28px;padding:60px 22px 26px;
+    display:flex;flex-direction:column;align-items:center;box-shadow:0 24px 60px rgba(0,0,0,.45);}
+  .ribbon{position:absolute;top:-26px;left:50%;transform:translateX(-50%);white-space:nowrap;background:linear-gradient(#ff9b2e,#f07713);color:#fff;font-weight:900;font-size:24px;
+    letter-spacing:1px;padding:12px 30px;border-radius:14px;text-shadow:0 3px 0 rgba(160,70,0,.55);box-shadow:0 6px 0 #c85c08,0 10px 18px rgba(0,0,0,.3);}
+  .ribbon.red{background:linear-gradient(#ff5964,#e0333f);box-shadow:0 6px 0 #b0222c,0 10px 18px rgba(0,0,0,.3);text-shadow:0 3px 0 rgba(150,20,30,.55);}
+  .emoji{font-size:72px;margin:4px 0 8px;}
+  .stars{font-size:34px;letter-spacing:4px;margin-bottom:8px;} .stars span{opacity:.22;} .stars span.on{opacity:1;}
+  .resPill{background:#3b2f3a;color:#fff;font-weight:900;font-size:22px;border-radius:40px;padding:10px 26px;margin-bottom:18px;}
+  .resSub{color:#7a6a75;font-weight:700;font-size:14px;margin:-10px 0 16px;}
+  .bigBtn{border:none;cursor:pointer;color:#fff;font-weight:900;font-size:24px;letter-spacing:1px;padding:14px 56px;border-radius:18px;
+    background:linear-gradient(#5fd435,#3fae1e);box-shadow:0 6px 0 #2e8514,0 10px 18px rgba(0,0,0,.25);text-shadow:0 2px 0 rgba(30,90,10,.5);}
+  .bigBtn:active{transform:translateY(4px);box-shadow:0 2px 0 #2e8514;}
+  .bigBtn.blue{background:linear-gradient(#5b9cf6,#3a78d6);box-shadow:0 6px 0 #27579e,0 10px 18px rgba(0,0,0,.25);text-shadow:0 2px 0 rgba(20,60,120,.5);}
+  #menuCard{display:flex;flex-direction:column;gap:16px;align-items:center;}
+  /* home */
+  #home{background:radial-gradient(110% 70% at 50% 30%,#fbf7ef,#eadfcf 90%);justify-content:flex-start;padding-top:40px;overflow:auto;}
+  #homeIcon{margin-bottom:12px;}
+  #home h1{margin:0;font-size:38px;line-height:1;color:#3b2f3a;text-align:center;letter-spacing:1px;text-shadow:0 3px 0 #e9d9c9;}
+  #home h1 em{color:#d9463f;font-style:normal;}
+  #home .hint{width:80%;text-align:center;color:#6c5a68;font-weight:600;font-size:13px;margin:12px 0 16px;line-height:1.35;}
+  #home .sub{color:#9a8a95;font-weight:800;font-size:13px;letter-spacing:2px;margin-bottom:10px;}
+  #lvlRow{display:grid;grid-template-columns:repeat(5,52px);gap:10px;margin-bottom:12px;}
+  .lvlBtn{width:52px;height:52px;border-radius:14px;border:none;cursor:pointer;font-weight:900;font-size:20px;background:#fff;color:#3b2f3a;box-shadow:0 4px 0 #dccbb8;}
+  .lvlBtn.sel{background:linear-gradient(#e0534a,#c23b33);color:#fff;box-shadow:0 4px 0 #8e2a24;}
+  #lvlNames{display:flex;flex-direction:column;gap:2px;color:#8a7a85;font-size:11px;font-weight:600;margin-bottom:16px;text-align:center;}
+</style>
+<script type="importmap">{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+  "three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.7.8/build/index.module.js"}}</script>
+</head>
+<body>
+<div id="phone">
+  <div id="hud">
+    <button id="gearBtn" title="Menu">⚙️</button>
+    <div id="lvlWrap"><div id="lvlBadge">LEVEL 1</div><div id="lvlName">Bones I</div></div>
+    <div id="progress"><span id="progNum">0/6</span><small>found</small></div>
+  </div>
+  <div id="stage">
+    <canvas id="board"></canvas>
+    <div id="layers"></div>
+    <div id="rotHint">↔ DRAG TO ROTATE</div>
+    <button id="boostBtn"><span id="boostIco">🩻</span><span id="boostTxt">REMOVE LAYER</span><span id="boostCnt">×3</span></button>
+    <div id="distLbl" class="hidden">12 cm</div>
+    <div id="loadBody" class="hidden"><div>Loading body…</div><div id="loadBar"><div id="loadFill"></div></div><div id="loadPct" style="font-size:12px;opacity:.7">0%</div></div>
+  </div>
+  <div id="tray">
+    <div id="card">
+      <div id="previewBox"><canvas id="preview"></canvas></div>
+      <div id="cardTxt">
+        <div id="mName">Femur</div>
+        <div id="mKind">BONE</div>
+        <div id="tries"><span id="triesLbl">6 tries</span></div>
+        <div id="hint">Tap the body where it is</div>
+      </div>
+      <button id="nextBtn" class="hidden">NEXT ▶</button>
+    </div>
+  </div>
+  <div id="toast"></div>
+
+  <div id="winOv" class="ov hidden"><div class="card"><div class="ribbon">LEVEL DONE!</div><div class="emoji">💪</div>
+    <div class="stars" id="stars"><span>★</span><span>★</span><span>★</span></div><div class="resPill" id="winRes">Found 4 / 4</div>
+    <button class="bigBtn" id="winNext">NEXT</button></div></div>
+  <div id="loseOv" class="ov hidden"><div class="card"><div class="ribbon red">TOO MANY MISSES</div><div class="emoji">🩻</div>
+    <div class="resPill" id="loseRes">Found 1 / 4</div><div class="resSub" id="loseSub">You need 3 to pass</div>
+    <button class="bigBtn blue" id="retryBtn">RETRY</button></div></div>
+  <div id="menuOv" class="ov hidden"><div id="menuCard">
+    <button class="bigBtn blue" id="mRestart">RESTART</button>
+    <button class="bigBtn" id="mHome" style="background:linear-gradient(#f79e2d,#e0801a);box-shadow:0 6px 0 #b56412;">HOME</button>
+    <button class="bigBtn blue" id="mClose" style="background:#8a8ab0;box-shadow:0 6px 0 #6b6b8f;">CLOSE</button></div></div>
+  <div id="home" class="ov">
+    <div id="homeIcon"></div>
+    <h1>BODY<br><em>LAYERS</em></h1>
+    <div class="hint">A 3D body of vessels, muscles, organs and bones stands in front of you. You get a part: tap where it lives.
+      Six tries; on the sixth you see how far off you were. Boosters peel layers off: 1 booster = 1 layer, 3 per level.</div>
+    <div class="sub">CHOOSE A LEVEL</div>
+    <div id="lvlRow"></div>
+    <div id="lvlNames"></div>
+    <button class="bigBtn" id="playBtn">PLAY</button>
+  </div>
+</div>
+
+<script src="../proto-kit/proto-kit.js"></script>
+<script type="module">
+/* ================= Muscle Map v3 «Body Layers» =================
+   v3 (по правкам юзера): кожи нет (с ней ушли и гениталии — они только в меше кожи), стартовый вид = сосуды + мышцы
+   (+ органы и кости под ними); промахи слои НЕ снимают; снять слой = бустер (3 на уровень, 1 бустер = 1 слой),
+   снятые слои остаются до конца уровня.
+   3D-тело (BodyParts3D CC BY 4.0 + BodyExplorer GLB) слоями: кожа → сосуды → мышцы → органы → кости.
+   Цель = часть тела (кость/мышца/орган/сосуд). Слои НАД слоем цели полупрозрачные, слой цели плотный.
+   Тап по телу = попытка: «рентген» — расстояние от луча тапа до ближайшей точки цели (луч сквозь цель = 0 см),
+   так глубокие части (аорта под сердцем) достижимы тапом точно над ними. Попадание, если ≤ допуска слоя
+   (кости 3.5 см, мышцы 3, органы 3.5, сосуды 2.5) × множитель уровня. Пин ставится на видимую поверхность.
+   6 попыток; каждый промах снимает верхний слой целиком (никогда не ниже слоя цели); после шестого —
+   цель подсвечивается зелёным, линия и подпись с расстоянием в см. Уровень пройден при found ≥ need. */
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {DRACOLoader} from 'three/addons/loaders/DRACOLoader.js';
+import {computeBoundsTree,disposeBoundsTree,acceleratedRaycast} from 'three-mesh-bvh';
+THREE.BufferGeometry.prototype.computeBoundsTree=computeBoundsTree;
+THREE.BufferGeometry.prototype.disposeBoundsTree=disposeBoundsTree;
+THREE.Mesh.prototype.raycast=acceleratedRaycast;
+
+const $=id=>document.getElementById(id);
+const MODELS='models/dist/';
+const LAYER_ORDER=['vessels','muscles','organs','bones'];           // снаружи внутрь
+const LAYER_LABEL={skin:'SKIN',vessels:'VESSELS',muscles:'MUSCLES',organs:'ORGANS',bones:'BONES'};
+const KIND={bones:'BONE',muscles:'MUSCLE',organs:'ORGAN',vessels:'VESSEL'};
+const TOL_CM={bones:3.5,muscles:3,organs:3.5,vessels:2.5};
+const TRIES=6;const BOOSTERS=3;
+
+/* ---------- уровни: цели = ключевые слова по именам мешей (сторона не важна) ---------- */
+const LEVELS=[
+ {name:'Bones I',    layer:'bones',   need:4, ids:['sternum','femur','humerus','clavicle','patella','mandible']},
+ {name:'Bones II',   layer:'bones',   need:5, ids:['scapula','tibia','radius','ulna','hip bone','calcaneus','fibula']},
+ {name:'Bones III',  layer:'bones',   need:5, ids:['atlas','hyoid bone','talus','first rib','fifth lumbar vertebra','occipital bone','zygomatic bone','scaphoid']},
+ {name:'Muscles I',  layer:'muscles', need:5, ids:['pectoralis major','biceps brachii','rectus abdominis','rectus femoris','gluteus maximus','deltoid','trapezius','latissimus dorsi']},
+ {name:'Muscles II', layer:'muscles', need:5, ids:['gastrocnemius','triceps brachii','sartorius','tibialis anterior','external oblique','sternocleidomastoid','serratus anterior','biceps femoris']},
+ {name:'Muscles III',layer:'muscles', need:5, tolMul:.85, ids:['supraspinatus','teres major','brachioradialis','adductor longus','soleus','gluteus medius','masseter','extensor digitorum']},
+ {name:'Organs I',   layer:'organs',  need:4, ids:['heart','liver','left lung','stomach','brain','urinary bladder']},
+ {name:'Organs II',  layer:'organs',  need:5, tolMul:.85, ids:['right kidney','pancreas','trachea','gallbladder','esophagus','large intestine','small intestine','right lung']},
+ {name:'Vessels',    layer:'vessels', need:6, ids:['aorta','superior vena cava','inferior vena cava','left common carotid artery','pulmonary trunk','left femoral artery','left brachial artery','hepatic portal vein','left renal artery']},
+ {name:'Anatomy exam',layer:null,     need:6, tolMul:.6, ids:[['organs','heart'],['bones','fibula'],['muscles','sartorius'],['organs','pancreas'],['vessels','aorta'],['bones','hyoid bone'],['muscles','teres major'],['organs','gallbladder']]},
+];
+const norm=n=>n.toLowerCase().replace(/\b(left|right)\b ?/g,'').trim();
+const matches=(name,kw)=>{const n=norm(name);return n===kw||n.endsWith(' '+kw)||new RegExp('^'+kw+' \\d+$').test(n);};
+const title=s=>s.charAt(0).toUpperCase()+s.slice(1);
+
+/* ---------- цвета ---------- */
+const ORGAN_COL={brain:0xe8a9b8,heart:0xc0392b,lung:0xe89a8a,liver:0x8b3a2a,stomach:0xe5b7a0,pancreas:0xe6c46a,gallbladder:0x5f9e4a,
+  kidney:0x8e2b2b,intestine:0xe2a58c,bladder:0xe9d16a,trachea:0xf0e6d6,esophagus:0xd9a89a};
+function organColor(name){for(const k in ORGAN_COL)if(name.includes(k))return ORGAN_COL[k];return 0xd8a090;}
+function baseColor(layer,name){
+  if(layer==='bones')return 0xf1ead8; if(layer==='muscles')return 0xb8352c; if(layer==='skin')return 0xe9b998;
+  if(layer==='vessels')return /vein|vena/.test(name)?0x3b63c9:0xd63a2f; return organColor(name);
+}
+
+/* ---------- three.js сцена ---------- */
+const canvas=$('board');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const scene=new THREE.Scene();
+scene.add(new THREE.HemisphereLight(0xffffff,0x40404a,1.1));
+const dl=new THREE.DirectionalLight(0xffffff,1.5);dl.position.set(1.5,2.5,3);scene.add(dl);
+const dl2=new THREE.DirectionalLight(0xffe0d0,.5);dl2.position.set(-2,1,-2);scene.add(dl2);
+const cam=new THREE.PerspectiveCamera(30,1,0.05,50);
+const rig=new THREE.Group();scene.add(rig);                    // вращение телом
+const bp=new THREE.Group();bp.rotation.x=-Math.PI/2;bp.scale.setScalar(0.001);rig.add(bp); // BodyParts3D: мм, Z вверх
+const layers={};          // name → {group, meshes:[{mesh,name,mat}], ghost, on}
+let bodyCenter=new THREE.Vector3(0,.85,0), bodyH=1.7;
+const fxGroup=new THREE.Group();rig.add(fxGroup);
+
+function resize(){
+  const r=$('stage').getBoundingClientRect();renderer.setSize(r.width,r.height,false);
+  cam.aspect=r.width/r.height;cam.updateProjectionMatrix();fitCamera();
+}
+function fitCamera(){
+  const d=(bodyH*0.53)/Math.tan(cam.fov*Math.PI/360);
+  cam.position.set(bodyCenter.x,bodyCenter.y,bodyCenter.z+d);cam.lookAt(bodyCenter);
+}
+window.addEventListener('resize',resize);
+
+/* ---------- загрузка моделей (один раз) ---------- */
+let loaded=null;
+function loadModels(){
+  if(loaded)return loaded;
+  loaded=(async()=>{
+    $('loadBody').classList.remove('hidden');
+    const gl=new GLTFLoader();const dr=new DRACOLoader();
+    dr.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/');gl.setDRACOLoader(dr);
+    const files={bones:'skeleton.glb',muscles:'muscles.glb',organs:'organs.glb',vessels:'vessels.glb'};
+    const prog={};const upd=()=>{const v=Object.values(prog);const p=v.length?v.reduce((a,b)=>a+b,0)/LAYER_ORDER.length:0;
+      $('loadFill').style.width=(p*100).toFixed(0)+'%';$('loadPct').textContent=(p*100).toFixed(0)+'%';};
+    for(const L of LAYER_ORDER){
+      const g=await new Promise((res,rej)=>gl.load(MODELS+files[L],res,e=>{if(e.total){prog[L]=e.loaded/e.total;upd();}},rej));
+      const group=new THREE.Group();group.name=L;const meshes=[];
+      g.scene.traverse(o=>{if(o.isMesh){
+        const name=(o.name||o.parent?.name||'').toLowerCase().replace(/_/g,' ');   // GLTFLoader меняет пробелы на _
+        const mat=new THREE.MeshStandardMaterial({color:baseColor(L,name),roughness:L==='skin'?.55:.6,metalness:0});
+        o.material=mat;o.geometry.computeBoundsTree();meshes.push({mesh:o,name,mat,color:mat.color.getHex()});}});
+      group.add(g.scene);bp.add(group);layers[L]={group,meshes,ghost:false,on:true};
+      prog[L]=1;upd();
+    }
+    const box=new THREE.Box3().setFromObject(layers.bones.group);
+    bodyCenter=box.getCenter(new THREE.Vector3());bodyH=box.getSize(new THREE.Vector3()).y;
+    resize();
+    $('loadBody').classList.add('hidden');
+    return true;
+  })();
+  return loaded;
+}
+
+/* ---------- состояние уровня ---------- */
+let level=1,playing=false,queue=[],idx=0,misses=0,found=0,lost=0,phase='idle',over=false,boosters=BOOSTERS;
+let target=null;                 // {layer,kw,name,meshes,pts:Float32Array(rig-local)}
+let renderOrderDirty=true;
+
+function setLayerStyle(){
+  // слои выше слоя цели — призрачные; слой цели плотный; снятые — невидимы
+  const tIdx=target?LAYER_ORDER.indexOf(target.layer):LAYER_ORDER.length-1;
+  LAYER_ORDER.forEach((L,i)=>{
+    const lay=layers[L];if(!lay)return;
+    const ghost=i<tIdx;lay.ghost=ghost;lay.group.visible=lay.on;
+    for(const m of lay.meshes){
+      const isT=target&&target.meshes.includes(m.mesh);
+      const foundHit=m.found;
+      m.mat.transparent=ghost;m.mat.opacity=ghost?(L==='vessels'?.55:.3):1;m.mat.depthWrite=!ghost;
+      m.mat.color.setHex(foundHit?0x3ec06a:m.color);m.mat.emissive.setHex(foundHit?0x0f3d1e:0x000000);
+      m.mesh.renderOrder=ghost?10+(LAYER_ORDER.length-i):0;
+    }
+  });
+  renderLayerChips();
+}
+function renderLayerChips(){
+  const box=$('layers');box.textContent='';
+  const tIdx=target?LAYER_ORDER.indexOf(target.layer):-1;
+  LAYER_ORDER.forEach((L,i)=>{const d=document.createElement('div');d.className='lay'+(i===tIdx?' target':i<tIdx?' ghost':'')+(layers[L]&&!layers[L].on?' off':'');
+    d.textContent=LAYER_LABEL[L];box.appendChild(d);});
+}
+function restoreLayers(){for(const L of LAYER_ORDER){const lay=layers[L];if(lay)lay.on=true;}}
+function stripTopLayer(){   // снять верхний ещё не снятый слой над слоем цели; false — снимать нечего
+  const tIdx=LAYER_ORDER.indexOf(target.layer);
+  for(let i=0;i<tIdx;i++){const lay=layers[LAYER_ORDER[i]];if(lay.on){lay.on=false;setLayerStyle();toast(`${LAYER_LABEL[LAYER_ORDER[i]]} removed`,'good');return true;}}
+  return false;
+}
+function useBooster(){
+  if(phase!=='play'||over||!target)return false;
+  if(boosters<=0){toast('No boosters left','bad');return false;}
+  const tIdx=LAYER_ORDER.indexOf(target.layer);
+  if(!LAYER_ORDER.slice(0,tIdx).some(L=>layers[L].on)){toast('Nothing left to remove','bad');return false;}
+  boosters--;stripTopLayer();renderBooster();return true;
+}
+function renderBooster(){$('boostCnt').textContent='×'+boosters;$('boostBtn').classList.toggle('empty',boosters<=0);}
+$('boostBtn').onclick=useBooster;
+
+function pickTarget(spec){
+  const L=LEVELS[level-1];const layer=Array.isArray(spec)?spec[0]:L.layer;const kw=Array.isArray(spec)?spec[1]:spec;
+  const ms=layers[layer].meshes.filter(m=>matches(m.name,kw));
+  // точки цели в координатах rig (bp-трансформ применён)
+  bp.updateMatrixWorld(true);
+  const arrs=[];let n=0;
+  for(const m of ms){const p=m.mesh.geometry.attributes.position;arrs.push([m.mesh,p]);n+=p.count;}
+  const pts=new Float32Array(n*3);let k=0;const v=new THREE.Vector3();
+  for(const [mesh,p] of arrs){const mw=mesh.matrixWorld;const inv=rig.matrixWorld.clone().invert();const M=inv.multiply(mw);
+    for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i).applyMatrix4(M);pts[k++]=v.x;pts[k++]=v.y;pts[k++]=v.z;}}
+  return {layer,kw,name:title(kw),meshes:ms.map(m=>m.mesh),recs:ms,pts};
+}
+function nearestToRay(o,d){  // ближайшая точка цели к лучу (rig-local): расстояние по перпендикуляру, метры
+  const a=target.pts;let best=Infinity,bi=0,bt=0;
+  for(let i=0;i<a.length;i+=3){const wx=a[i]-o.x,wy=a[i+1]-o.y,wz=a[i+2]-o.z;const t=wx*d.x+wy*d.y+wz*d.z;if(t<0)continue;
+    const dd=wx*wx+wy*wy+wz*wz-t*t;if(dd<best){best=dd;bi=i;bt=t;}}
+  return {d:Math.sqrt(Math.max(0,best)),p:new THREE.Vector3(a[bi],a[bi+1],a[bi+2]),q:o.clone().addScaledVector(d,bt)};
+}
+
+async function buildLevel(n){
+  level=n;const L=LEVELS[n-1];
+  $('lvlBadge').textContent='LEVEL '+n;$('lvlName').textContent=L.name;
+  $('winOv').classList.add('hidden');$('loseOv').classList.add('hidden');$('menuOv').classList.add('hidden');
+  queue=L.ids.slice();idx=0;found=0;lost=0;over=false;phase='loading';playing=true;boosters=BOOSTERS;renderBooster();
+  await loadModels();restoreLayers();
+  for(const Lk of LAYER_ORDER)for(const m of layers[Lk].meshes)m.found=false;
+  clearFx();rig.rotation.y=0;
+  showTarget();
+}
+function updProgress(){$('progNum').textContent=`${found}/${queue.length}`;}
+function showTarget(){
+  misses=0;clearFx();                 // снятые слои остаются до конца уровня
+  target=pickTarget(queue[idx]);setLayerStyle();
+  $('mName').textContent=target.name;$('mKind').textContent=KIND[target.layer];
+  $('hint').textContent='Tap the body where it is';$('hint').classList.remove('hidden');$('tries').classList.remove('hidden');
+  $('nextBtn').classList.add('hidden');$('card').classList.remove('dim');
+  renderTries();updProgress();buildPreview();phase='play';
+}
+function renderTries(){
+  const t=$('tries');t.querySelectorAll('.try').forEach(e=>e.remove());
+  for(let i=0;i<TRIES;i++){const d=document.createElement('div');d.className='try'+(i<misses?' off':'');t.insertBefore(d,$('triesLbl'));}
+  $('triesLbl').textContent=(TRIES-misses)+(TRIES-misses===1?' try':' tries');
+}
+function toast(txt,cls){const t=$('toast');t.textContent=txt;t.className='show '+(cls||'');clearTimeout(t._h);t._h=setTimeout(()=>t.className='',1500);}
+
+/* ---------- попытка ---------- */
+const ray=new THREE.Raycaster();ray.firstHitOnly=true;
+function visibleMeshes(){const r=[];for(const L of LAYER_ORDER){const lay=layers[L];if(lay&&lay.on)for(const m of lay.meshes)r.push(m.mesh);}return r;}
+function attemptNDC(nx,ny){
+  if(phase!=='play'||over)return null;
+  ray.setFromCamera(new THREE.Vector2(nx,ny),cam);
+  const hits=ray.intersectObjects(visibleMeshes(),false);
+  if(!hits.length)return {hit:false,empty:true};
+  const pw=hits[0].point.clone();const pl=rig.worldToLocal(pw.clone());
+  const o=rig.worldToLocal(ray.ray.origin.clone());const dirL=ray.ray.direction.clone().transformDirection(rig.matrixWorld.clone().invert()).normalize();
+  const near=nearestToRay(o,dirL);const cm=near.d*100;
+  const L=LEVELS[level-1];const tol=TOL_CM[target.layer]*(L.tolMul||1);
+  const hit=cm<=tol;
+  if(hit){
+    phase='wait';found++;updProgress();
+    for(const r of target.recs)r.found=true;setLayerStyle();
+    addPin(pl,0x3ec06a);toast('Correct!  ✓','good');$('card').classList.add('dim');
+    setTimeout(advance,900);
+  }else{
+    misses++;renderTries();addPin(pl,0xff4040);
+    if(misses<TRIES){toast(`Not there — ${TRIES-misses} left`,'bad');}
+    else{
+      phase='reveal';lost++;
+      for(const r of target.recs){r.mat.color.setHex(0x3ec06a);r.mat.emissive.setHex(0x1a5a2c);r.mat.transparent=false;r.mat.opacity=1;r.mat.depthTest=false;r.mesh.renderOrder=50;}
+      addLine(near.q,near.p);showDist(near.q,near.p,cm);
+      toast(`${Math.max(1,Math.round(cm))} cm off`,'bad');
+      $('hint').classList.add('hidden');$('tries').classList.add('hidden');$('nextBtn').classList.remove('hidden');
+    }
+    const L2=LEVELS[level-1];
+    if(misses>=TRIES&&found+(queue.length-idx-1)<L2.need){over=true;phase='over';setTimeout(()=>lose(L2),700);}
+  }
+  return {hit,cm,tol};
+}
+function advance(){
+  if(over)return;
+  for(const r of target.recs){r.mat.depthTest=true;r.mesh.renderOrder=0;}
+  idx++;
+  if(idx>=queue.length){over=true;phase='over';setTimeout(win,1000);return;}
+  showTarget();
+}
+$('nextBtn').onclick=()=>{if(phase==='reveal')advance();};
+
+/* ---------- эффекты: пины, линия, подпись ---------- */
+let distPts=null;
+function clearFx(){while(fxGroup.children.length)fxGroup.remove(fxGroup.children[0]);distPts=null;$('distLbl').classList.add('hidden');}
+function addPin(p,col){const s=new THREE.Mesh(new THREE.SphereGeometry(0.012,12,10),new THREE.MeshBasicMaterial({color:col,depthTest:false}));s.position.copy(p);s.renderOrder=60;fxGroup.add(s);}
+function addLine(a,b){const g=new THREE.BufferGeometry().setFromPoints([a,b]);const l=new THREE.Line(g,new THREE.LineDashedMaterial({color:0xffffff,dashSize:.02,gapSize:.012,depthTest:false}));l.computeLineDistances();l.renderOrder=61;fxGroup.add(l);
+  const s=new THREE.Mesh(new THREE.SphereGeometry(0.014,12,10),new THREE.MeshBasicMaterial({color:0x3ec06a,depthTest:false}));s.position.copy(b);s.renderOrder=62;fxGroup.add(s);}
+function showDist(a,b,cm){distPts={mid:a.clone().add(b).multiplyScalar(.5)};$('distLbl').textContent=`${Math.max(1,Math.round(cm))} cm`;$('distLbl').classList.remove('hidden');}
+function updDistLbl(){
+  if(!distPts)return;const p=rig.localToWorld(distPts.mid.clone()).project(cam);
+  const r=$('stage').getBoundingClientRect();
+  $('distLbl').style.left=((p.x+1)/2*r.width)+'px';$('distLbl').style.top=((1-p.y)/2*r.height)+'px';
+}
+
+/* ---------- превью цели в карточке ---------- */
+const pv=$('preview');const pvR=new THREE.WebGLRenderer({canvas:pv,antialias:true,alpha:true});pvR.setPixelRatio(Math.min(devicePixelRatio,2));pvR.setSize(120,120,false);
+const pvS=new THREE.Scene();pvS.add(new THREE.HemisphereLight(0xffffff,0x555555,1.2));const pvL=new THREE.DirectionalLight(0xffffff,1.2);pvL.position.set(1,2,2);pvS.add(pvL);
+const pvC=new THREE.PerspectiveCamera(30,1,0.001,100);let pvG=null,pvSpin=0;
+function buildPreview(){
+  if(pvG)pvS.remove(pvG);pvG=new THREE.Group();
+  const col=baseColor(target.layer,target.recs[0]?.name||'');
+  // берём одну сторону (первый меш и его части), чтобы парная часть не растягивала превью
+  const first=target.recs[0];const side=first?(/\bleft\b/.test(first.name)?'left':/\bright\b/.test(first.name)?'right':null):null;
+  const recs=target.recs.filter(r=>!side||new RegExp('\\b'+side+'\\b').test(r.name)||!/\b(left|right)\b/.test(r.name));
+  const inner=new THREE.Group();inner.rotation.x=-Math.PI/2;inner.scale.setScalar(0.001);
+  for(const r of recs){const m=new THREE.Mesh(r.mesh.geometry,new THREE.MeshStandardMaterial({color:col,roughness:.55}));inner.add(m);}
+  pvG.add(inner);pvS.add(pvG);pvS.updateMatrixWorld(true);
+  const box=new THREE.Box3().setFromObject(pvG);const c=box.getCenter(new THREE.Vector3());const s=box.getSize(new THREE.Vector3()).length();
+  inner.position.sub(c);pvC.position.set(0,0,s*1.9);pvC.lookAt(0,0,0);pvSpin=0;
+}
+
+/* ---------- ввод: тап = попытка, drag = вращение ---------- */
+let ptr=null;
+canvas.addEventListener('pointerdown',e=>{if(!playing)return;canvas.setPointerCapture(e.pointerId);ptr={id:e.pointerId,x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY,t:performance.now(),moved:0};});
+canvas.addEventListener('pointermove',e=>{if(!ptr||e.pointerId!==ptr.id)return;const dx=e.clientX-ptr.x;ptr.moved+=Math.abs(dx)+Math.abs(e.clientY-ptr.y);ptr.x=e.clientX;ptr.y=e.clientY;rig.rotation.y+=dx*0.012;});
+canvas.addEventListener('pointerup',e=>{
+  if(!ptr||e.pointerId!==ptr.id)return;const p=ptr;ptr=null;
+  if(p.moved<8&&performance.now()-p.t<700)tapClient(e.clientX,e.clientY);
+});
+canvas.addEventListener('pointercancel',()=>ptr=null);
+function tapClient(cx,cy){const r=canvas.getBoundingClientRect();return attemptNDC(((cx-r.left)/r.width)*2-1,-(((cy-r.top)/r.height)*2-1));}
+
+/* ---------- экраны ---------- */
+function win(){const n=queue.length;const stars=found===n?3:found>=n-1?2:1;
+  $('stars').querySelectorAll('span').forEach((s,i)=>s.classList.toggle('on',i<stars));$('winRes').textContent=`Found ${found} / ${n}`;$('winOv').classList.remove('hidden');}
+function lose(L){$('loseRes').textContent=`Found ${found} / ${queue.length}`;$('loseSub').textContent=`You need ${L.need} to pass`;$('loseOv').classList.remove('hidden');}
+$('winNext').onclick=()=>{$('winOv').classList.add('hidden');ProtoKit.play(level%LEVELS.length+1);};
+$('retryBtn').onclick=()=>{$('loseOv').classList.add('hidden');buildLevel(level);};
+$('playBtn').onclick=()=>ProtoKit.play(level);
+function renderLevelRow(){
+  const row=$('lvlRow');row.textContent='';
+  for(let i=1;i<=LEVELS.length;i++){const b=document.createElement('button');b.className='lvlBtn'+(i===level?' sel':'');b.textContent=i;b.onclick=()=>ProtoKit.play(i);row.appendChild(b);}
+  $('lvlNames').innerHTML=LEVELS.map((L,i)=>`${i+1}. ${L.name} · ${L.ids.length} parts, find ${L.need}`).join('<br>');
+}
+$('gearBtn').onclick=()=>{if(playing)$('menuOv').classList.remove('hidden');};
+$('mClose').onclick=()=>$('menuOv').classList.add('hidden');
+$('mRestart').onclick=()=>{$('menuOv').classList.add('hidden');buildLevel(level);};
+$('mHome').onclick=()=>{$('menuOv').classList.add('hidden');ProtoKit.home();};
+
+/* ---------- цикл ---------- */
+function loop(){
+  renderer.render(scene,cam);updDistLbl();
+  if(pvG){pvSpin+=0.012;pvG.rotation.y=pvSpin;pvR.render(pvS,pvC);}
+  requestAnimationFrame(loop);
+}
+resize();requestAnimationFrame(loop);
+
+/* ---------- габариты и тест-хук ---------- */
+function boardBounds(){const ph=$('phone').getBoundingClientRect(),r=canvas.getBoundingClientRect();return {left:r.left-ph.left,top:r.top-ph.top,right:r.right-ph.left,bottom:r.bottom-ph.top};}
+window.__game={
+  get state(){return {level,idx,misses,found,lost,phase,over,playing,boosters,target:target?.kw||null,layer:target?.layer||null,total:queue.length,
+    layersOn:LAYER_ORDER.filter(L=>layers[L]&&layers[L].on)};},
+  levels:LEVELS,layers,
+  load(n){level=n;return buildLevel(n);},
+  ready(){return loaded;},
+  tap(cx,cy){return tapClient(cx,cy);},          // client coords
+  tapNDC(x,y){return attemptNDC(x,y);},
+  next(){if(phase==='reveal')advance();},
+  boost(){return useBooster();},
+  rotate(a){rig.rotation.y+=a;},
+  targetScreen(){ // центр цели на экране (client coords) + признак «смотрит на камеру»
+    if(!target)return null;const m0=target.meshes[0];const pa=m0.geometry.attributes.position;const c=new THREE.Vector3();const v=new THREE.Vector3();
+    bp.updateMatrixWorld(true);const M=rig.matrixWorld.clone().invert().multiply(m0.matrixWorld);
+    for(let i=0;i<pa.count;i++){v.fromBufferAttribute(pa,i).applyMatrix4(M);c.add(v);}c.divideScalar(pa.count);   // центр ПЕРВОГО меша (одна сторона)
+    const w=rig.localToWorld(c.clone());const p=w.clone().project(cam);const r=canvas.getBoundingClientRect();
+    const toCam=cam.position.clone().sub(w);const bodyDir=w.clone().sub(rig.localToWorld(bodyCenter.clone().setY(w.y)));
+    return {x:r.left+(p.x+1)/2*r.width,y:r.top+(1-p.y)/2*r.height,front:bodyDir.dot(toCam)>=0};},
+  bounds(){return boardBounds();},
+};
+
+$('homeIcon').appendChild(ProtoKit.iconTile(104));
+ProtoKit.init({slug:'musclemap',name:'Body Layers',icon:'icon.png',iconEmoji:'🫀',accent:'#e0534a',levels:LEVELS.length,
+  startLevel(n){level=n;localStorage.setItem('muscleMap.level',n);$('home').classList.add('hidden');buildLevel(n);},
+  showHome(){playing=false;$('winOv').classList.add('hidden');$('loseOv').classList.add('hidden');renderLevelRow();$('home').classList.remove('hidden');},
+});
+</script>
+</body>
+</html>

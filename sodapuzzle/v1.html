@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Soda Puzzle v1</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    height:100dvh;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;user-select:none;touch-action:none;
+    background:radial-gradient(120% 120% at 50% 0%,#222838,#10131c 80%);}
+
+  #phone{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;
+         background:linear-gradient(180deg,#bcd9f7 0%,#a8c8f0 55%,#9cbcec 100%);}
+  @media (max-aspect-ratio:1/1){ #phone{width:100vw;height:100dvh;border-radius:0;} }
+  @media (min-aspect-ratio:1/1){ #phone{height:96dvh;aspect-ratio:9/16;width:auto;
+         border-radius:32px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 8px #0c0e15;} }
+
+  #bg{position:absolute;inset:0;z-index:0;overflow:hidden;}
+  .bgbub{position:absolute;border-radius:50%;background:rgba(255,255,255,.28);
+    animation:bgrise linear infinite;}
+  @keyframes bgrise{from{transform:translateY(110dvh) scale(.6);}to{transform:translateY(-15dvh) scale(1.1);}}
+
+  #hud{width:100%;padding:12px 14px;z-index:5;display:flex;align-items:flex-start;justify-content:space-between;}
+  .hbtn{width:46px;height:46px;border-radius:14px;border:none;cursor:pointer;font-size:22px;
+    background:#3f8ef7;color:#fff;box-shadow:0 4px 0 #2a67c2;display:flex;align-items:center;justify-content:center;}
+  .hbtn:active{transform:translateY(2px);box-shadow:0 2px 0 #2a67c2;}
+  #lvlpill{display:flex;flex-direction:column;align-items:center;gap:4px;}
+  #lvlname{background:#2f9de2;color:#fff;font-weight:800;font-size:15px;letter-spacing:.5px;
+    padding:5px 18px;border-radius:12px;box-shadow:0 3px 0 #1f77b0;}
+  #timerbox{background:#4aa9ef;border-radius:12px;padding:5px 14px;display:flex;align-items:center;gap:7px;
+    box-shadow:0 3px 0 #2a7cc0;}
+  #timer{color:#fff;font-weight:800;font-size:19px;font-variant-numeric:tabular-nums;}
+  #timerbox.low #timer{color:#ffd2d2;}
+  #progress{width:120px;height:9px;background:#2a6fae;border-radius:5px;overflow:hidden;}
+  #progfill{height:100%;width:0%;background:#59e04c;border-radius:5px;transition:width .3s;}
+
+  #stage{flex:1;width:100%;position:relative;z-index:2;min-height:0;}
+  #board{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);transform-origin:center;}
+
+  #panel{position:absolute;background:#333f66;border-radius:22px;
+    box-shadow:0 10px 24px rgba(20,30,60,.35), inset 0 -5px 0 rgba(0,0,0,.22), inset 0 3px 0 rgba(255,255,255,.10);}
+  .cell{position:absolute;background:rgba(255,255,255,.055);border-radius:9px;
+    box-shadow:inset 0 2px 4px rgba(0,0,0,.18);}
+
+  .pipe{position:absolute;overflow:hidden;transition:background .4s, filter .4s;}
+  .pipe .flow{position:absolute;inset:0;opacity:.85;transition:opacity .4s;}
+  .pipe.v .flow{background:repeating-linear-gradient(180deg,rgba(255,255,255,.22) 0 8px,transparent 8px 46px);
+    animation:flowv 1.6s linear infinite;}
+  .pipe.h .flow{background:repeating-linear-gradient(90deg,rgba(255,255,255,.22) 0 8px,transparent 8px 46px);
+    animation:flowh 1.6s linear infinite;}
+  @keyframes flowv{from{transform:translateY(-46px);}to{transform:translateY(0);}}
+  @keyframes flowh{from{transform:translateX(-46px);}to{transform:translateX(0);}}
+  .pipe.empty{background:#eef4fb !important;filter:none !important;}
+  .pipe.empty .flow{opacity:0;}
+  .pipe.pulse{filter:brightness(1.35) saturate(1.3);}
+  .mouth{position:absolute;width:0;height:0;z-index:4;transition:opacity .4s;}
+
+  #pieces{position:absolute;z-index:3;}
+  .piece{position:absolute;cursor:grab;transition:transform .07s linear;}
+  .piece.sucking{transition:transform .38s cubic-bezier(.5,-0.2,.8,.5), opacity .38s;pointer-events:none;}
+  .pcell{position:absolute;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14), inset 0 -4px 6px rgba(0,0,0,.10);}
+
+  .ov{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;background:rgba(30,45,80,.55);backdrop-filter:blur(3px);}
+  .card{background:#fdfefe;border-radius:26px;padding:30px 34px;display:flex;flex-direction:column;
+    align-items:center;gap:14px;box-shadow:0 20px 50px rgba(0,0,30,.4);min-width:240px;}
+  .card h2{margin:0;font-size:26px;color:#27437a;}
+  .card .big{font-size:52px;line-height:1;}
+  .cbtn{border:none;border-radius:16px;padding:13px 34px;font-size:19px;font-weight:800;color:#fff;
+    cursor:pointer;background:#43bd37;box-shadow:0 5px 0 #2d8a24;}
+  .cbtn.blue{background:#3f8ef7;box-shadow:0 5px 0 #2a67c2;}
+  .cbtn:active{transform:translateY(2px);}
+
+  /* HOME */
+  #home{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;
+    background:linear-gradient(180deg,#bcd9f7,#8fb6ea);}
+  #home h1{margin:9dvh 0 6px;font-size:44px;color:#215089;text-shadow:0 3px 0 rgba(255,255,255,.5);}
+  #home .sub{color:#3c6ea8;font-weight:600;margin-bottom:4dvh;}
+  #path{position:relative;flex:1;width:100%;max-width:340px;}
+  .lvbtn{position:absolute;width:74px;height:74px;border-radius:50%;border:none;cursor:pointer;
+    font-size:26px;font-weight:800;color:#fff;background:linear-gradient(180deg,#ff9d3f,#f47b1a);
+    box-shadow:0 6px 0 #c25c10,0 10px 18px rgba(0,0,50,.25);}
+  .lvbtn:active{transform:translateY(3px);box-shadow:0 3px 0 #c25c10;}
+  .lvbtn small{display:block;font-size:10px;font-weight:700;opacity:.85;}
+  .dot{position:absolute;width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.75);}
+
+  .confetti{position:absolute;width:10px;height:10px;border-radius:50%;z-index:25;pointer-events:none;
+    animation:pop 1.1s ease-out forwards;}
+  @keyframes pop{
+    0%{transform:translate(0,0) scale(1);opacity:1;}
+    100%{transform:translate(var(--dx),var(--dy)) scale(.3);opacity:0;}}
+</style>
+</head>
+<body>
+<div id="phone">
+  <div id="bg"></div>
+
+  <div id="home">
+    <h1>🥤 Soda Puzzle</h1>
+    <div class="sub">Drain every jelly into its soda pipe!</div>
+    <div id="path"></div>
+  </div>
+
+  <div id="hud" style="visibility:hidden">
+    <button class="hbtn" id="btnHome">🏠</button>
+    <div id="lvlpill">
+      <div id="lvlname">LEVEL 1</div>
+      <div id="timerbox">⏰ <span id="timer">0:00</span></div>
+      <div id="progress"><div id="progfill"></div></div>
+    </div>
+    <button class="hbtn" id="btnRetry">↻</button>
+  </div>
+
+  <div id="stage"><div id="board"></div></div>
+</div>
+
+<script>
+/* ================= DATA ================= */
+const CS=70, PAD=14;
+const COLORS={
+  pink:  {b:'#ef4f9a', f:'#e5a3c4'},
+  red:   {b:'#e8403c', f:'#d68d8a'},
+  orange:{b:'#f78a1e', f:'#e7b57c'},
+  yellow:{b:'#f2bd2b', f:'#d8c48d'},
+  green: {b:'#3fbb33', f:'#8cc39b'},
+  blue:  {b:'#3d8df6', f:'#8fb2e6'},
+  purple:{b:'#8a5cf0', f:'#a89bd8'},
+  brown: {b:'#9c6a4e', f:'#a98f85'},
+};
+
+const LEVELS=[
+ { // L1 — знакомство: 5×5, 4 трубы
+  w:5,h:5,time:60,
+  pipes:[{s:'T',i:2,c:'red'},{s:'L',i:2,c:'green'},{s:'R',i:2,c:'yellow'},{s:'B',i:2,c:'blue'}],
+  pieces:[
+   {c:'red',   x:0,y:0,cells:[[0,0],[1,0],[0,1],[1,1]]},
+   {c:'green', x:3,y:0,cells:[[0,0],[1,0],[1,1]]},
+   {c:'yellow',x:3,y:3,cells:[[0,0],[1,0],[0,1],[1,1]]},
+   {c:'blue',  x:0,y:3,cells:[[0,0],[0,1]]},
+   {c:'green', x:2,y:2,cells:[[0,0]]},
+  ]},
+ { // L2 — 6×6, 6 труб
+  w:6,h:6,time:90,
+  pipes:[{s:'T',i:1,c:'pink'},{s:'T',i:4,c:'red'},{s:'L',i:2,c:'purple'},
+         {s:'R',i:3,c:'yellow'},{s:'B',i:1,c:'orange'},{s:'B',i:4,c:'blue'}],
+  pieces:[
+   {c:'purple',x:0,y:0,cells:[[0,0],[1,0],[0,1],[1,1]]},
+   {c:'pink',  x:2,y:1,cells:[[0,0],[1,0],[0,1],[1,1]]},
+   {c:'red',   x:4,y:1,cells:[[0,0],[0,1],[1,1]]},
+   {c:'red',   x:5,y:0,cells:[[0,0]]},
+   {c:'yellow',x:0,y:3,cells:[[0,0],[1,0],[0,1]]},
+   {c:'orange',x:4,y:3,cells:[[0,0],[1,0],[0,1],[1,1]]},
+   {c:'blue',  x:2,y:3,cells:[[0,0],[1,0]]},
+   {c:'pink',  x:0,y:5,cells:[[0,0]]},
+  ]},
+ { // L3 — 6×6, 8 труб, плотная упаковка (по мотивам референса)
+  w:6,h:6,time:120,
+  pipes:[{s:'T',i:1,c:'pink'},{s:'T',i:4,c:'red'},{s:'L',i:1,c:'purple'},{s:'R',i:1,c:'yellow'},
+         {s:'L',i:4,c:'green'},{s:'R',i:4,c:'brown'},{s:'B',i:1,c:'orange'},{s:'B',i:4,c:'blue'}],
+  pieces:[
+   {c:'green', x:0,y:0,cells:[[0,0],[1,0],[0,1],[1,1],[0,2]]},
+   {c:'red',   x:2,y:0,cells:[[0,0],[1,0],[1,1]]},
+   {c:'orange',x:5,y:0,cells:[[0,0],[0,1]]},
+   {c:'pink',  x:2,y:2,cells:[[0,0],[1,0],[0,1],[1,1]]},
+   {c:'blue',  x:4,y:2,cells:[[0,0],[1,0],[0,1]]},
+   {c:'purple',x:0,y:3,cells:[[0,0],[1,0],[0,1],[1,1]]},
+   {c:'yellow',x:2,y:4,cells:[[0,0],[0,1],[1,1]]},
+   {c:'brown', x:4,y:4,cells:[[0,0],[0,1]]},
+  ]},
+ { // L4 — 6×6, 8 труб, другая расстановка
+  w:6,h:6,time:120,
+  pipes:[{s:'T',i:2,c:'orange'},{s:'T',i:4,c:'purple'},{s:'L',i:1,c:'red'},{s:'L',i:3,c:'blue'},
+         {s:'R',i:2,c:'pink'},{s:'R',i:4,c:'yellow'},{s:'B',i:1,c:'green'},{s:'B',i:3,c:'brown'}],
+  pieces:[
+   {c:'orange',x:0,y:0,cells:[[0,0],[1,0],[0,1]]},
+   {c:'red',   x:3,y:0,cells:[[0,0]]},
+   {c:'purple',x:5,y:0,cells:[[0,0],[0,1]]},
+   {c:'red',   x:1,y:1,cells:[[0,0],[1,0],[0,1],[1,1]]},
+   {c:'pink',  x:3,y:1,cells:[[0,0],[1,0],[0,1],[1,1]]},
+   {c:'purple',x:0,y:2,cells:[[0,0]]},
+   {c:'blue',  x:1,y:3,cells:[[0,0],[1,0],[1,1],[2,1]]},
+   {c:'yellow',x:4,y:3,cells:[[0,0],[1,0],[0,1]]},
+   {c:'green', x:0,y:4,cells:[[0,0],[1,0],[0,1]]},
+   {c:'brown', x:4,y:5,cells:[[0,0],[1,0]]},
+  ]},
+ { // L5 — СПАЙК: 6×6, 8 труб, 5 свободных клеток, блокеры на устьях
+  w:6,h:6,time:120,
+  pipes:[{s:'T',i:1,c:'pink'},{s:'T',i:4,c:'red'},{s:'L',i:1,c:'purple'},{s:'R',i:1,c:'yellow'},
+         {s:'L',i:4,c:'green'},{s:'R',i:4,c:'brown'},{s:'B',i:1,c:'orange'},{s:'B',i:4,c:'blue'}],
+  pieces:[
+   {c:'pink',  x:0,y:0,cells:[[0,0],[0,1],[1,1]]},
+   {c:'yellow',x:1,y:0,cells:[[0,0]]},
+   {c:'purple',x:2,y:0,cells:[[0,0],[1,0],[0,1],[1,1]]},
+   {c:'red',   x:4,y:1,cells:[[0,0],[1,0],[0,1]]},
+   {c:'brown', x:0,y:2,cells:[[0,0],[1,0],[0,1],[1,1]]},
+   {c:'green', x:2,y:2,cells:[[0,0],[1,0],[1,1],[2,1]]},
+   {c:'orange',x:0,y:4,cells:[[0,0],[1,0],[0,1]]},
+   {c:'green', x:1,y:5,cells:[[0,0]]},
+   {c:'blue',  x:2,y:4,cells:[[0,0],[1,0],[0,1],[1,1]]},
+   {c:'pink',  x:5,y:4,cells:[[0,0],[0,1]]},
+   {c:'brown', x:4,y:5,cells:[[0,0]]},
+  ]},
+];
+
+/* ================= STATE ================= */
+let S=null; // {lvl,w,h,pipes,pieces,totalCells,doneCells,time,timerId,over}
+const $=id=>document.getElementById(id);
+const board=$('board'), stage=$('stage');
+
+function mouth(p,L){ // pipe -> board cell coords
+  if(p.s==='T')return[p.i,0];
+  if(p.s==='B')return[p.i,L.h-1];
+  if(p.s==='L')return[0,p.i];
+  return[L.w-1,p.i];
+}
+
+/* ================= SIM (чистая логика для бота) ================= */
+function simOccupied(pieces,skip){
+  const occ=new Set();
+  for(const p of pieces){ if(p===skip)continue;
+    for(const[cx,cy]of p.cells)occ.add((p.x+cx)+','+(p.y+cy)); }
+  return occ;
+}
+function simCanPlace(p,x,y,occ,w,h){
+  for(const[cx,cy]of p.cells){const nx=x+cx,ny=y+cy;
+    if(nx<0||ny<0||nx>=w||ny>=h||occ.has(nx+','+ny))return false;}
+  return true;
+}
+// BFS: пути перемещений фигуры p при статичных остальных; goalTest(x,y) -> bool
+function simBFS(p,pieces,w,h,goalTest){
+  const occ=simOccupied(pieces,p);
+  const seen=new Set([p.x+','+p.y]), q=[[p.x,p.y,[]]];
+  while(q.length){
+    const[x,y,path]=q.shift();
+    if(goalTest(x,y))return path;
+    for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){
+      const nx=x+dx,ny=y+dy,k=nx+','+ny;
+      if(seen.has(k)||!simCanPlace(p,nx,ny,occ,w,h))continue;
+      seen.add(k);q.push([nx,ny,[...path,[dx,dy]]]);
+    }
+  }
+  return null;
+}
+function hitsMouth(p,x,y,mx,my){
+  return p.cells.some(([cx,cy])=>x+cx===mx&&y+cy===my);
+}
+// Бот-солвер на копии уровня: жадный + случайные перестановки при затыке
+function botSolveLevel(li,seed){
+  const L=LEVELS[li];
+  let rng=seed||1; const rnd=()=>((rng=rng*48271%2147483647)/2147483647);
+  const pieces=L.pieces.map(p=>({c:p.c,x:p.x,y:p.y,cells:p.cells.map(c=>[...c])}));
+  const pmap={};for(const pp of L.pipes)pmap[pp.c]=mouth(pp,L);
+  let steps=0,drains=0,guard=400;
+  while(pieces.length&&guard--){
+    // все фигуры, у которых есть путь к своему устью
+    const opts=[];
+    for(const p of pieces){const m=pmap[p.c];if(!m)continue;
+      const path=simBFS(p,pieces,L.w,L.h,(x,y)=>hitsMouth(p,x,y,m[0],m[1]));
+      if(path)opts.push([p,path]);}
+    if(opts.length){
+      opts.sort((a,b)=>a[1].length-b[1].length);
+      const pick=opts[Math.floor(rnd()*Math.min(2,opts.length))];
+      steps+=pick[1].length;drains++;
+      pieces.splice(pieces.indexOf(pick[0]),1);
+    }else{
+      // затык: подвинуть случайную фигуру в случайную достижимую позицию
+      const p=pieces[Math.floor(rnd()*pieces.length)];
+      const occ=simOccupied(pieces,p),spots=[];
+      const seen=new Set([p.x+','+p.y]),q=[[p.x,p.y]];
+      while(q.length){const[x,y]=q.shift();spots.push([x,y]);
+        for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){
+          const nx=x+dx,ny=y+dy,k=nx+','+ny;
+          if(seen.has(k)||!simCanPlace(p,nx,ny,occ,L.w,L.h))continue;
+          seen.add(k);q.push([nx,ny]);}}
+      if(spots.length<2)return{solved:false,steps,drains};
+      const sp=spots[1+Math.floor(rnd()*(spots.length-1))];
+      steps+=Math.abs(sp[0]-p.x)+Math.abs(sp[1]-p.y);
+      p.x=sp[0];p.y=sp[1];
+    }
+  }
+  return{solved:pieces.length===0,steps,drains};
+}
+function botCheck(li,tries=30){
+  let best=null;
+  for(let t=1;t<=tries;t++){const r=botSolveLevel(li,t*7919);
+    if(r.solved&&(!best||r.steps<best.steps))best=r;}
+  return best?{solved:true,...best}:{solved:false};
+}
+
+/* ================= RENDER ================= */
+function buildBoard(){
+  const L=LEVELS[S.lvl];
+  board.innerHTML='';
+  const W=L.w*CS+PAD*2, H=L.h*CS+PAD*2;
+  board.style.width=W+'px';board.style.height=H+'px';
+
+  // трубы (за панелью)
+  const PW=36, EXT=1200;
+  for(const pp of L.pipes){
+    const el=document.createElement('div');el.className='pipe '+((pp.s==='T'||pp.s==='B')?'v':'h');
+    const col=COLORS[pp.c].b;
+    el.style.background=`linear-gradient(${pp.s==='T'||pp.s==='B'?90:0}deg,${col},${col} 40%,${shade(col,1.25)} 55%,${col})`;
+    if(pp.s==='T'||pp.s==='B'){
+      el.style.width=PW+'px';el.style.height=EXT+'px';
+      el.style.left=(PAD+pp.i*CS+CS/2-PW/2)+'px';
+      el.style.top=pp.s==='T'?(-EXT+PAD+6)+'px':(H-PAD-6)+'px';
+    }else{
+      el.style.height=PW+'px';el.style.width=EXT+'px';
+      el.style.top=(PAD+pp.i*CS+CS/2-PW/2)+'px';
+      el.style.left=pp.s==='L'?(-EXT+PAD+6)+'px':(W-PAD-6)+'px';
+    }
+    el.innerHTML='<div class="flow"></div>';
+    board.appendChild(el);pp.el=el;
+    // стрелка-устье
+    const ar=document.createElement('div');ar.className='mouth';
+    const t=13;
+    if(pp.s==='T'){ar.style.borderLeft=t+'px solid transparent';ar.style.borderRight=t+'px solid transparent';
+      ar.style.borderTop=(t+3)+'px solid #fff';ar.style.left=(PAD+pp.i*CS+CS/2-t)+'px';ar.style.top='2px';}
+    if(pp.s==='B'){ar.style.borderLeft=t+'px solid transparent';ar.style.borderRight=t+'px solid transparent';
+      ar.style.borderBottom=(t+3)+'px solid #fff';ar.style.left=(PAD+pp.i*CS+CS/2-t)+'px';ar.style.bottom='2px';}
+    if(pp.s==='L'){ar.style.borderTop=t+'px solid transparent';ar.style.borderBottom=t+'px solid transparent';
+      ar.style.borderLeft=(t+3)+'px solid #fff';ar.style.top=(PAD+pp.i*CS+CS/2-t)+'px';ar.style.left='2px';}
+    if(pp.s==='R'){ar.style.borderTop=t+'px solid transparent';ar.style.borderBottom=t+'px solid transparent';
+      ar.style.borderRight=(t+3)+'px solid #fff';ar.style.top=(PAD+pp.i*CS+CS/2-t)+'px';ar.style.right='2px';}
+    board.appendChild(ar);pp.ar=ar;
+  }
+
+  // панель + клетки
+  const panel=document.createElement('div');panel.id='panel';
+  panel.style.left='0';panel.style.top='0';panel.style.width=W+'px';panel.style.height=H+'px';
+  board.appendChild(panel);
+  for(let y=0;y<L.h;y++)for(let x=0;x<L.w;x++){
+    const c=document.createElement('div');c.className='cell';
+    c.style.left=(PAD+x*CS+3)+'px';c.style.top=(PAD+y*CS+3)+'px';
+    c.style.width=(CS-6)+'px';c.style.height=(CS-6)+'px';
+    panel.appendChild(c);
+  }
+
+  // слой фишек
+  const lay=document.createElement('div');lay.id='pieces';
+  lay.style.left=PAD+'px';lay.style.top=PAD+'px';
+  lay.style.width=(L.w*CS)+'px';lay.style.height=(L.h*CS)+'px';
+  board.appendChild(lay);
+  for(const p of S.pieces)lay.appendChild(makePieceEl(p));
+  requestAnimationFrame(fit);
+}
+function shade(hex,k){
+  const n=parseInt(hex.slice(1),16);
+  const r=Math.min(255,((n>>16)&255)*k)|0,g=Math.min(255,((n>>8)&255)*k)|0,b=Math.min(255,(n&255)*k)|0;
+  return`rgb(${r},${g},${b})`;
+}
+function makePieceEl(p){
+  const el=document.createElement('div');el.className='piece';
+  const col=COLORS[p.c],BW=5,R=14;
+  const has=(cx,cy)=>p.cells.some(([a,b])=>a===cx&&b===cy);
+  for(const[cx,cy]of p.cells){
+    const d=document.createElement('div');d.className='pcell';
+    d.style.left=(cx*CS)+'px';d.style.top=(cy*CS)+'px';
+    d.style.width=CS+'px';d.style.height=CS+'px';
+    d.style.background=col.f;
+    const bT=!has(cx,cy-1),bB=!has(cx,cy+1),bL=!has(cx-1,cy),bR=!has(cx+1,cy);
+    d.style.borderTop=bT?BW+'px solid '+col.b:'none';
+    d.style.borderBottom=bB?BW+'px solid '+col.b:'none';
+    d.style.borderLeft=bL?BW+'px solid '+col.b:'none';
+    d.style.borderRight=bR?BW+'px solid '+col.b:'none';
+    d.style.borderRadius=[(bT&&bL?R:0)+'px',(bT&&bR?R:0)+'px',(bB&&bR?R:0)+'px',(bB&&bL?R:0)+'px'].join(' ');
+    el.appendChild(d);
+  }
+  el.style.transform=`translate(${p.x*CS}px,${p.y*CS}px)`;
+  p.el=el;
+  el.addEventListener('pointerdown',e=>startDrag(e,p));
+  return el;
+}
+function renderPiece(p){p.el.style.transform=`translate(${p.x*CS}px,${p.y*CS}px)`;}
+
+/* ================= GAME FLOW ================= */
+function loadLevel(i){
+  clearInterval(S&&S.timerId);
+  const L=LEVELS[i];
+  S={lvl:i,over:false,time:L.time,
+     pieces:L.pieces.map(p=>({c:p.c,x:p.x,y:p.y,cells:p.cells.map(c=>[...c])})),
+     pipes:L.pipes};
+  for(const pp of L.pipes)pp.drained=false;
+  S.totalCells=S.pieces.reduce((a,p)=>a+p.cells.length,0);S.doneCells=0;
+  $('home').style.display='none';$('hud').style.visibility='visible';
+  $('lvlname').textContent='LEVEL '+(i+1);
+  $('progfill').style.width='0%';
+  document.querySelectorAll('.ov').forEach(o=>o.remove());
+  updTimer();
+  S.timerId=setInterval(()=>{if(S.over)return;S.time--;updTimer();
+    if(S.time<=0){S.time=0;updTimer();lose();}},1000);
+  buildBoard();
+}
+function updTimer(){
+  const m=Math.floor(S.time/60),s=S.time%60;
+  $('timer').textContent=m+':'+String(s).padStart(2,'0');
+  $('timerbox').classList.toggle('low',S.time<=15);
+}
+function tryStep(p,dx,dy){
+  const L=LEVELS[S.lvl];
+  const occ=simOccupied(S.pieces,p);
+  if(!simCanPlace(p,p.x+dx,p.y+dy,occ,L.w,L.h))return false;
+  p.x+=dx;p.y+=dy;renderPiece(p);
+  checkSuck(p);
+  return true;
+}
+function checkSuck(p){
+  if(S.over||p.sucking)return;
+  const L=LEVELS[S.lvl];
+  const pp=S.pipes.find(q=>q.c===p.c&&!q.drained);
+  if(!pp)return;
+  const[mx,my]=mouth(pp,L);
+  if(!hitsMouth(p,p.x,p.y,mx,my))return;
+  // всасывание
+  p.sucking=true;
+  if(drag&&drag.p===p)drag=null;
+  S.pieces.splice(S.pieces.indexOf(p),1);
+  S.doneCells+=p.cells.length;
+  $('progfill').style.width=(S.doneCells/S.totalCells*100)+'%';
+  const dist=3.2*CS;
+  const v={T:[0,-dist],B:[0,dist],L:[-dist,0],R:[dist,0]}[pp.s];
+  p.el.classList.add('sucking');
+  p.el.style.transform=`translate(${p.x*CS+v[0]}px,${p.y*CS+v[1]}px) scale(.15)`;
+  p.el.style.opacity='0';
+  pp.el.classList.add('pulse');
+  fizzAt(pp);
+  setTimeout(()=>{p.el.remove();pp.el.classList.remove('pulse');},400);
+  if(!S.pieces.some(q=>q.c===p.c)){
+    pp.drained=true;
+    setTimeout(()=>{pp.el.classList.add('empty');pp.ar.style.opacity='0';},350);
+  }
+  if(S.pieces.length===0){
+    S.over=true;clearInterval(S.timerId);
+    setTimeout(win,1000); // пауза ~1с перед победой
+  }
+}
+function fizzAt(pp){
+  const L=LEVELS[S.lvl];const[mx,my]=mouth(pp,L);
+  const px=PAD+mx*CS+CS/2,py=PAD+my*CS+CS/2;
+  for(let i=0;i<9;i++){
+    const b=document.createElement('div');b.className='confetti';
+    b.style.left=px+'px';b.style.top=py+'px';
+    b.style.background=COLORS[pp.c].b;
+    b.style.setProperty('--dx',(Math.random()*120-60)+'px');
+    b.style.setProperty('--dy',(Math.random()*120-60)+'px');
+    board.appendChild(b);setTimeout(()=>b.remove(),1100);
+  }
+}
+function win(){
+  const ov=document.createElement('div');ov.className='ov';
+  const next=S.lvl+1<LEVELS.length;
+  ov.innerHTML=`<div class="card"><div class="big">🥤✨</div><h2>Level Complete!</h2>
+    <button class="cbtn" id="wNext">${next?'Next Level':'To Map'}</button>
+    <button class="cbtn blue" id="wHome">🏠 Map</button></div>`;
+  $('phone').appendChild(ov);
+  // умеренное конфетти
+  for(let i=0;i<36;i++){
+    const c=document.createElement('div');c.className='confetti';
+    c.style.left='50%';c.style.top='40%';
+    c.style.background=Object.values(COLORS)[i%8].b;
+    c.style.setProperty('--dx',(Math.random()*360-180)+'px');
+    c.style.setProperty('--dy',(Math.random()*360-180)+'px');
+    ov.appendChild(c);
+  }
+  $('wNext').onclick=()=>next?loadLevel(S.lvl+1):goHome();
+  $('wHome').onclick=goHome;
+}
+function lose(){
+  if(S.over)return;S.over=true;clearInterval(S.timerId);drag=null;
+  const ov=document.createElement('div');ov.className='ov';
+  ov.innerHTML=`<div class="card"><div class="big">⏰</div><h2>Time's up!</h2>
+    <button class="cbtn" id="lRetry">↻ Retry</button>
+    <button class="cbtn blue" id="lHome">🏠 Map</button></div>`;
+  $('phone').appendChild(ov);
+  $('lRetry').onclick=()=>loadLevel(S.lvl);
+  $('lHome').onclick=goHome;
+}
+function goHome(){
+  clearInterval(S&&S.timerId);S=null;
+  $('home').style.display='flex';$('hud').style.visibility='hidden';
+  board.innerHTML='';document.querySelectorAll('.ov').forEach(o=>o.remove());
+}
+$('btnRetry').onclick=()=>S&&loadLevel(S.lvl);
+$('btnHome').onclick=goHome;
+
+/* ================= DRAG ================= */
+let drag=null;
+function boardScale(){
+  const r=board.getBoundingClientRect();
+  return r.width/board.offsetWidth||1;
+}
+function startDrag(e,p){
+  if(S.over||p.sucking)return;
+  e.preventDefault();
+  const sc=boardScale(),r=board.getBoundingClientRect();
+  const bx=(e.clientX-r.left)/sc,by=(e.clientY-r.top)/sc;
+  drag={p,gx:bx/CS-p.x,gy:by/CS-p.y};
+}
+window.addEventListener('pointermove',e=>{
+  if(!drag||!S||S.over)return;
+  const p=drag.p,sc=boardScale(),r=board.getBoundingClientRect();
+  const bx=(e.clientX-r.left)/sc,by=(e.clientY-r.top)/sc;
+  const tx=Math.round(bx/CS-drag.gx),ty=Math.round(by/CS-drag.gy);
+  let guard=24;
+  while(drag&&guard--&&(p.x!==tx||p.y!==ty)){
+    const dx=Math.sign(tx-p.x),dy=Math.sign(ty-p.y);
+    const firstX=Math.abs(tx-p.x)>=Math.abs(ty-p.y);
+    let moved=false;
+    if(firstX&&dx)moved=tryStep(p,dx,0);
+    if(!moved&&dy)moved=tryStep(p,0,dy);
+    if(!moved&&!firstX&&dx)moved=tryStep(p,dx,0);
+    if(!moved)break;
+  }
+});
+window.addEventListener('pointerup',()=>{drag=null;});
+
+/* ================= HOME ================= */
+function buildHome(){
+  const path=$('path');path.innerHTML='';
+  const pos=[[50,78],[24,62],[58,47],[30,31],[55,14]]; // % x,y
+  // точки-дорожка
+  for(let i=0;i<pos.length-1;i++){
+    for(let t=1;t<4;t++){
+      const x=pos[i][0]+(pos[i+1][0]-pos[i][0])*t/4;
+      const y=pos[i][1]+(pos[i+1][1]-pos[i][1])*t/4;
+      const d=document.createElement('div');d.className='dot';
+      d.style.left=`calc(${x}% + 27px)`;d.style.top=y+'%';
+      path.appendChild(d);
+    }
+  }
+  LEVELS.forEach((L,i)=>{
+    const b=document.createElement('button');b.className='lvbtn';
+    b.innerHTML=(i+1)+(i===4?'<small>SPIKE</small>':'');
+    b.style.left=pos[i][0]+'%';b.style.top=pos[i][1]+'%';
+    b.onclick=()=>loadLevel(i);
+    path.appendChild(b);
+  });
+}
+// пузырьки фона
+for(let i=0;i<14;i++){
+  const b=document.createElement('div');b.className='bgbub';
+  const s=6+Math.random()*18;
+  b.style.width=s+'px';b.style.height=s+'px';
+  b.style.left=(Math.random()*100)+'%';
+  b.style.animationDuration=(9+Math.random()*14)+'s';
+  b.style.animationDelay=(-Math.random()*20)+'s';
+  $('bg').appendChild(b);
+}
+
+/* ================= FIT ================= */
+function fit(){
+  if(!board.offsetWidth)return;
+  const sw=stage.clientWidth-96,sh=stage.clientHeight-140;
+  const s=Math.max(.3,Math.min(sw/board.offsetWidth,sh/board.offsetHeight,1.1));
+  board.style.transform=`translate(-50%,-50%) scale(${s})`;
+}
+window.addEventListener('resize',fit);
+
+/* ================= TEST API ================= */
+window.__game={
+  load:loadLevel, state:()=>S, levels:LEVELS,
+  botCheck, // botCheck(levelIndex, tries) -> {solved,steps,drains} на чистой симуляции
+  // авто-игра в реальном DOM: находит решение симом и исполняет tryStep'ами
+  async autoPlay(delay=40){
+    const L=LEVELS[S.lvl];
+    const pmap={};for(const pp of L.pipes)pmap[pp.c]=mouth(pp,L);
+    const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+    let guard=300;
+    while(S.pieces.length&&!S.over&&guard--){
+      let acted=false;
+      const opts=[];
+      for(const p of S.pieces){const m=pmap[p.c];if(!m)continue;
+        const path=simBFS(p,S.pieces,L.w,L.h,(x,y)=>hitsMouth(p,x,y,m[0],m[1]));
+        if(path)opts.push([p,path]);}
+      if(opts.length){
+        opts.sort((a,b)=>a[1].length-b[1].length);
+        const[p,path]=opts[0];
+        for(const[dx,dy]of path){tryStep(p,dx,dy);await sleep(delay);if(p.sucking)break;}
+        acted=true;
+      }else{
+        // перестановка: подвинуть первую фигуру с местом
+        for(const p of S.pieces){
+          const occ=simOccupied(S.pieces,p);
+          const dirs=[[1,0],[-1,0],[0,1],[0,-1]].filter(([dx,dy])=>simCanPlace(p,p.x+dx,p.y+dy,occ,L.w,L.h));
+          if(dirs.length){const[dx,dy]=dirs[Math.floor(Math.random()*dirs.length)];
+            tryStep(p,dx,dy);await sleep(delay);acted=true;break;}
+        }
+      }
+      if(!acted)break;
+    }
+    return{cleared:S.pieces.length===0};
+  }
+};
+
+buildHome();
+requestAnimationFrame(fit);
+</script>
+</body>
+</html>

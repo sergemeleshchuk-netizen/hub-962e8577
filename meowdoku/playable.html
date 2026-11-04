@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Meow Doku — playable</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+  html,body{margin:0;padding:0;height:100%;background:#1c2330;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#fff;overflow:hidden}
+  #fit{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  #stage{position:relative;width:360px;height:640px;overflow:hidden;transform-origin:center center;
+    background:radial-gradient(120% 80% at 50% 0%, #3b4a6a 0%, #1c2330 70%);
+    border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.45)}
+  #hud{position:absolute;left:0;right:0;top:14px;text-align:center;z-index:10}
+  #hud .title{font-size:22px;font-weight:700;letter-spacing:.3px}
+  #hud .sub{font-size:13px;opacity:.75;margin-top:3px}
+  #progress{display:flex;gap:6px;justify-content:center;margin-top:10px}
+  #progress .dot{width:24px;height:6px;border-radius:3px;background:rgba(255,255,255,.18)}
+  #progress .dot.on{background:#ffd166}
+  #board-wrap{position:absolute;left:50%;top:120px;transform:translateX(-50%);}
+  #board{position:relative;display:grid;gap:0;background:#0e1320;border-radius:14px;padding:6px;
+    box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  .cell{position:relative;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
+    overflow:hidden;cursor:pointer}
+  .cell .icon{width:78%;height:78%;pointer-events:none;transition:transform .18s cubic-bezier(.4,1.6,.6,1),opacity .15s}
+  .cell .icon.hidden{transform:scale(.2);opacity:0}
+  .cell.bad{animation:shake .35s; background:#ff6464 !important}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  .cell.pop{animation:pop .35s ease}
+  @keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.12)}100%{transform:scale(1)}}
+  #tip{position:absolute;left:20px;right:20px;bottom:90px;text-align:center;font-size:14px;
+    line-height:1.35;opacity:.9;z-index:10}
+  #cta-row{position:absolute;left:0;right:0;bottom:18px;display:flex;justify-content:center;z-index:10}
+  #btn-next{padding:14px 28px;border:none;border-radius:14px;background:#ffd166;color:#33240f;font-weight:800;font-size:16px;
+    box-shadow:0 6px 0 #b58a2a, 0 10px 18px rgba(0,0,0,.3);cursor:pointer;letter-spacing:.4px}
+  #btn-next:active{transform:translateY(2px);box-shadow:0 4px 0 #b58a2a,0 8px 14px rgba(0,0,0,.3)}
+  #btn-next.hidden{display:none}
+  .hand{position:absolute;width:48px;height:42px;z-index:160;pointer-events:none;opacity:0;
+    transition:left .35s ease,top .35s ease,opacity .25s;
+    filter:drop-shadow(0 3px 4px rgba(0,0,0,.45))}
+  .hand.tap{animation:tap 1s ease-in-out infinite}
+  @keyframes tap{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-3px,-8px) scale(.93)}}
+  #end{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;
+    background:radial-gradient(80% 60% at 50% 40%,#3b4a6a 0%,#0e1320 80%);z-index:200;text-align:center;padding:30px}
+  #end.show{display:flex}
+  #end h2{font-size:30px;margin:8px 0;letter-spacing:.5px}
+  #end p{opacity:.85;margin:0 0 20px;font-size:15px;line-height:1.4}
+  #end button{padding:16px 32px;border:none;border-radius:16px;background:#ffd166;color:#33240f;font-weight:800;font-size:18px;
+    box-shadow:0 6px 0 #b58a2a, 0 10px 18px rgba(0,0,0,.3);cursor:pointer}
+  .spark{position:absolute;border-radius:50%;pointer-events:none;z-index:50}
+  .meow{position:absolute;font-weight:800;color:#ffd166;pointer-events:none;z-index:60;
+    font-size:22px;text-shadow:0 2px 4px rgba(0,0,0,.5);opacity:0}
+</style>
+</head>
+<body>
+<div id="fit">
+  <div id="stage">
+    <div id="hud">
+      <div class="title">Котики-судоку</div>
+      <div class="sub">тапни в каждую цветную зону — но коты не должны касаться</div>
+      <div id="progress"></div>
+    </div>
+    <div id="board-wrap"><div id="board"></div></div>
+    <div class="hand" id="hand"></div>
+    <div id="tip">Поставь кота в каждый цвет, ряд и столбец.<br>Соседи (даже по диагонали) — запрещены.</div>
+    <div id="cta-row"><button id="btn-next" class="hidden">Следующий уровень</button></div>
+    <div id="end">
+      <div style="font-size:48px">🏆</div>
+      <h2>Мур-р-р, отлично!</h2>
+      <p>Ты разгадал три головоломки.<br>Тысячи новых ждут в приложении.</p>
+      <button id="btn-cta">Играть бесплатно</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ====== ASSETS (inline SVG icons) ======
+var CAT_SVG = '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">'+
+  '<g>'+
+  '<path d="M14 22 L8 8 L22 18 Z" fill="#3a2618"/>'+
+  '<path d="M50 22 L56 8 L42 18 Z" fill="#3a2618"/>'+
+  '<ellipse cx="32" cy="34" rx="22" ry="20" fill="#3a2618"/>'+
+  '<circle cx="23" cy="32" r="3" fill="#ffd166"/>'+
+  '<circle cx="41" cy="32" r="3" fill="#ffd166"/>'+
+  '<circle cx="23" cy="32" r="1.4" fill="#1c1208"/>'+
+  '<circle cx="41" cy="32" r="1.4" fill="#1c1208"/>'+
+  '<path d="M30 40 Q32 42 34 40" stroke="#ffd1a0" stroke-width="1.5" fill="none" stroke-linecap="round"/>'+
+  '<path d="M32 38 L32 42" stroke="#ffd1a0" stroke-width="1.4" stroke-linecap="round"/>'+
+  '<path d="M24 38 L18 42 M40 38 L46 42 M24 41 L18 44 M40 41 L46 44" stroke="#ffd1a0" stroke-width="1" stroke-linecap="round" opacity=".6"/>'+
+  '</g></svg>';
+var MARK_SVG = '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">'+
+  '<path d="M18 18 L46 46 M46 18 L18 46" stroke="#ffffff" stroke-opacity=".5" stroke-width="6" stroke-linecap="round"/>'+
+  '</svg>';
+var HAND_SVG = '<svg viewBox="0 0 48 42" xmlns="http://www.w3.org/2000/svg">'+
+  '<path d="M6 24 L14 6 L18 8 L16 18 L40 18 L44 22 L40 30 L32 38 L18 38 L8 30 Z" '+
+  'fill="#ffd6a8" stroke="#7a4a20" stroke-width="2" stroke-linejoin="round"/>'+
+  '<path d="M16 18 L28 18 L30 22 L18 22 Z" fill="#7a4a20" opacity=".15"/>'+
+  '</svg>';
+
+document.getElementById('hand').style.background = "url(\"data:image/svg+xml;utf8,"+encodeURIComponent(HAND_SVG)+"\") center/contain no-repeat";
+
+// ====== LEVELS (data-first; pre-generated and verified unique) ======
+var LEVELS = [
+  // L1: N=4, easy, with one "given" cat to anchor the tutorial
+  { n:4,
+    zones:[[0,0,1,1],[2,0,0,1],[2,3,1,1],[2,3,3,3]],
+    solution:[[0,1],[1,3],[2,0],[3,2]],
+    colors:["#F4A6A0","#FCD27A","#A8D8B9","#9BC4E2"],
+    givens:[[2,0]]
+  },
+  // L2: N=5, easy (forced=4, branch=1)
+  { n:5,
+    zones:[[1,0,0,0,0],[1,2,2,2,0],[4,2,2,3,3],[4,4,3,3,3],[4,4,4,3,3]],
+    solution:[[0,3],[1,0],[2,2],[3,4],[4,1]],
+    colors:["#F4A6A0","#FCD27A","#A8D8B9","#9BC4E2","#D7B6E0"],
+    givens:[]
+  },
+  // L3: N=5, hard (forced=3, branch=2)
+  { n:5,
+    zones:[[0,0,0,1,1],[2,0,0,1,1],[2,2,2,1,1],[3,2,4,1,4],[3,3,4,4,4]],
+    solution:[[0,1],[1,4],[2,2],[3,0],[4,3]],
+    colors:["#F4A6A0","#FCD27A","#A8D8B9","#9BC4E2","#D7B6E0"],
+    givens:[]
+  }
+];
+
+// ====== STATE ======
+var STORE_URL = "https://play.google.com/store/apps/details?id=app.meow.doku";
+var stage = document.getElementById('stage');
+var board = document.getElementById('board');
+var hand = document.getElementById('hand');
+var tip = document.getElementById('tip');
+var btnNext = document.getElementById('btn-next');
+var btnCta = document.getElementById('btn-cta');
+var endScreen = document.getElementById('end');
+var progress = document.getElementById('progress');
+var currentIdx = 0;
+var state; // {n,zones,colors,grid: 0/1/2 [empty/mark/cat], cells:[][], complete:false}
+
+// ====== FIT ======
+function scale(){return Math.min(window.innerWidth/360,window.innerHeight/640);}
+function fit(){stage.style.transform="scale("+scale()+")";}
+function rectInStage(el){var r=el.getBoundingClientRect(),sr=stage.getBoundingClientRect(),s=scale();
+  return{x:(r.left-sr.left)/s,y:(r.top-sr.top)/s,w:r.width/s,h:r.height/s};}
+window.addEventListener("resize",fit);
+
+// ====== PROGRESS DOTS ======
+function renderProgress(){progress.innerHTML='';
+  for(var i=0;i<LEVELS.length;i++){
+    var d=document.createElement('div'); d.className='dot'+(i<=currentIdx?' on':''); progress.appendChild(d);
+  }
+}
+
+// ====== RENDER LEVEL ======
+function buildLevel(idx){
+  var L = LEVELS[idx];
+  state = { n:L.n, zones:L.zones, colors:L.colors, solution:L.solution,
+            grid:Array.from({length:L.n},function(){return Array(L.n).fill(0);}),
+            cells: Array.from({length:L.n},function(){return Array(L.n).fill(null);}),
+            complete:false, idx:idx };
+  // givens
+  if(L.givens){ L.givens.forEach(function(g){ state.grid[g[0]][g[1]] = 2; }); }
+
+  // sizing: aim for board ~300px wide
+  var size = Math.floor(300 / L.n);
+  var pad = 6;
+  board.style.gridTemplateColumns = 'repeat('+L.n+',1fr)';
+  board.style.width  = (size*L.n + pad*2) + 'px';
+  board.style.height = (size*L.n + pad*2) + 'px';
+  board.innerHTML = '';
+
+  for(var r=0;r<L.n;r++){
+    for(var c=0;c<L.n;c++){
+      var cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.style.width = size+'px';
+      cell.style.height = size+'px';
+      cell.style.background = L.colors[L.zones[r][c]];
+      cell.dataset.r = r; cell.dataset.c = c;
+
+      // soft borders between zones
+      var z = L.zones[r][c];
+      var bw = '2px solid rgba(0,0,0,.20)';
+      if(r===0 || L.zones[r-1][c]!==z) cell.style.borderTop = bw;
+      if(r===L.n-1 || L.zones[r+1][c]!==z) cell.style.borderBottom = bw;
+      if(c===0 || L.zones[r][c-1]!==z) cell.style.borderLeft = bw;
+      if(c===L.n-1 || L.zones[r][c+1]!==z) cell.style.borderRight = bw;
+
+      var icon = document.createElement('div');
+      icon.className = 'icon hidden';
+      cell.appendChild(icon);
+      board.appendChild(cell);
+      state.cells[r][c] = cell;
+      paintCell(r,c);
+    }
+  }
+  renderProgress();
+  hand.style.opacity = 0;
+  btnNext.classList.add('hidden');
+  if(idx===0){
+    tip.innerHTML = 'Поставь кота в каждый цвет, ряд и столбец.<br>Подсказка-рука покажет, куда тапнуть.';
+    setTimeout(showHint, 400);
+  } else if(idx===1){
+    tip.innerHTML = 'Тут уже 5 цветов. Двойной тап ставит ✕ как «не сюда».';
+  } else {
+    tip.innerHTML = 'Финальный уровень. Коты не касаются даже по диагонали.';
+  }
+}
+
+function paintCell(r,c){
+  var cell = state.cells[r][c];
+  var icon = cell.firstChild;
+  var v = state.grid[r][c];
+  if(v===0){ icon.classList.add('hidden'); icon.innerHTML=''; }
+  else if(v===1){ icon.classList.remove('hidden'); icon.innerHTML=MARK_SVG; }
+  else { icon.classList.remove('hidden'); icon.innerHTML=CAT_SVG; }
+}
+
+// ====== INPUT ======
+board.addEventListener('pointerdown', function(ev){
+  var el = ev.target.closest('.cell'); if(!el) return;
+  var r = +el.dataset.r, c = +el.dataset.c;
+  // cycle: empty(0) -> cat(2) -> mark(1) -> empty(0).
+  // Один тап до кота — самый быстрый путь к решению.
+  var v = state.grid[r][c];
+  state.grid[r][c] = (v===0) ? 2 : (v===2 ? 1 : 0);
+  paintCell(r,c);
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  hand.style.opacity = 0;
+  flashErrors();
+  checkWin();
+});
+
+// soft-feedback: highlight cells that touch / share row/col/zone with another cat
+function flashErrors(){
+  if(state.complete) return;
+  var n = state.n, zones = state.zones;
+  // find all cat cells
+  var cats = [];
+  for(var r=0;r<n;r++) for(var c=0;c<n;c++) if(state.grid[r][c]===2) cats.push([r,c]);
+  var bad = new Set();
+  for(var i=0;i<cats.length;i++){
+    for(var j=i+1;j<cats.length;j++){
+      var a=cats[i], b=cats[j];
+      if(a[0]===b[0] || a[1]===b[1] || zones[a[0]][a[1]]===zones[b[0]][b[1]]
+         || (Math.abs(a[0]-b[0])<=1 && Math.abs(a[1]-b[1])<=1)){
+        bad.add(a[0]+','+a[1]); bad.add(b[0]+','+b[1]);
+      }
+    }
+  }
+  bad.forEach(function(k){var p=k.split(',');var el=state.cells[+p[0]][+p[1]];
+    el.classList.remove('bad'); void el.offsetWidth; el.classList.add('bad');
+    setTimeout(function(){el.classList.remove('bad');}, 450);
+  });
+}
+
+function checkWin(){
+  if(state.complete) return;
+  var n = state.n, zones = state.zones, grid = state.grid;
+  var cats = [];
+  for(var r=0;r<n;r++) for(var c=0;c<n;c++) if(grid[r][c]===2) cats.push([r,c]);
+  if(cats.length !== n) return;
+  var rows={}, cols={}, z={};
+  for(var i=0;i<cats.length;i++){var a=cats[i]; rows[a[0]]=1; cols[a[1]]=1; z[zones[a[0]][a[1]]]=1;}
+  if(Object.keys(rows).length!==n || Object.keys(cols).length!==n || Object.keys(z).length!==n) return;
+  for(var i=0;i<cats.length;i++){
+    for(var j=i+1;j<cats.length;j++){
+      var a=cats[i], b=cats[j];
+      if(Math.abs(a[0]-b[0])<=1 && Math.abs(a[1]-b[1])<=1) return;
+    }
+  }
+  // WIN
+  state.complete = true;
+  for(var i=0;i<cats.length;i++){
+    var el = state.cells[cats[i][0]][cats[i][1]];
+    el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+    burst(el, 10, ['#ffd166','#ff8e8e','#a8d8b9','#9bc4e2','#ffffff'], 60);
+  }
+  meowPop();
+  setTimeout(function(){
+    if(state.idx === LEVELS.length-1){ showEndcard(); }
+    else {
+      btnNext.classList.remove('hidden');
+      tip.innerHTML = 'Отлично! Дальше — сложнее.';
+    }
+  }, 700);
+}
+
+function meowPop(){
+  var rc = rectInStage(board);
+  var el = document.createElement('div');
+  el.className = 'meow';
+  el.innerHTML = 'мяу!';
+  el.style.left = (rc.x + rc.w/2 - 20) + 'px';
+  el.style.top  = (rc.y + rc.h/2 - 14) + 'px';
+  stage.appendChild(el);
+  el.animate(
+    [{transform:'translateY(0) scale(.6)',opacity:0},{transform:'translateY(-30px) scale(1.2)',opacity:1,offset:.4},{transform:'translateY(-70px) scale(1)',opacity:0}],
+    {duration:1100, easing:'ease-out'}
+  );
+  setTimeout(function(){el.remove();}, 1120);
+}
+
+function burst(target,n,colors,spread){
+  var rc=rectInStage(target),cx=rc.x+rc.w/2,cy=rc.y+rc.h/2;
+  for(var i=0;i<n;i++){
+    var p=document.createElement("div");p.className="spark";var sz=6+(i%3)*3;
+    p.style.cssText="width:"+sz+"px;height:"+sz+"px;background:"+colors[i%colors.length]+";left:"+cx+"px;top:"+cy+"px";
+    stage.appendChild(p);var a=Math.PI*2*i/n,d=spread*(0.6+(i%4)*0.16);
+    (function(p,dx,dy){p.animate([{transform:"translate(0,0) scale(1)",opacity:1},{transform:"translate("+dx+"px,"+dy+"px) scale(0)",opacity:0}],
+      {duration:620,easing:"cubic-bezier(.2,.7,.3,1)"});setTimeout(function(){p.remove();},640);})(p,Math.cos(a)*d,Math.sin(a)*d);
+  }
+}
+
+// ====== HAND HINT (только на L1, до первого хода) ======
+function showHint(){
+  if(state.complete) return;
+  // first unsolved solution cell that's NOT already a cat
+  for(var i=0;i<state.solution.length;i++){
+    var s = state.solution[i];
+    if(state.grid[s[0]][s[1]] !== 2){ pointHandAt(state.cells[s[0]][s[1]]); return; }
+  }
+}
+function pointHandAt(el){
+  var r=rectInStage(el);
+  var tx=r.x+r.w*0.5, ty=r.y+r.h*0.55;
+  hand.style.opacity = 1;
+  hand.classList.add('tap');
+  hand.style.left=(tx-42.7)+'px'; hand.style.top=(ty-2.1)+'px';
+}
+
+// ====== NAV ======
+btnNext.addEventListener('click', function(){
+  currentIdx++;
+  if(currentIdx >= LEVELS.length){ showEndcard(); return; }
+  buildLevel(currentIdx);
+});
+
+function showEndcard(){
+  endScreen.classList.add('show');
+  setTimeout(function(){
+    // конфетти за фоном
+    var n = 30, colors=['#ffd166','#ff8e8e','#a8d8b9','#9bc4e2','#d7b6e0','#ffffff'];
+    var cx = 180, cy = 220;
+    for(var i=0;i<n;i++){
+      var p=document.createElement("div");p.className="spark";var sz=8+(i%3)*3;
+      p.style.cssText="width:"+sz+"px;height:"+sz+"px;background:"+colors[i%colors.length]+";left:"+cx+"px;top:"+cy+"px";
+      stage.appendChild(p);
+      var a=Math.PI*2*i/n,d=130*(0.6+(i%4)*0.16);
+      (function(p,dx,dy){p.animate([{transform:"translate(0,0) scale(1)",opacity:1},{transform:"translate("+dx+"px,"+dy+"px) scale(0)",opacity:0}],
+        {duration:900,easing:"cubic-bezier(.2,.7,.3,1)"});setTimeout(function(){p.remove();},920);})(p,Math.cos(a)*d,Math.sin(a)*d);
+    }
+  }, 200);
+}
+
+// ====== CTA ROUTER ======
+var ctaFired=false;
+function ctaClick(){
+  if(ctaFired) return; ctaFired=true;
+  try{if(window.FbPlayableAd&&FbPlayableAd.onCTAClick){FbPlayableAd.onCTAClick();return;}}catch(e){}
+  try{if(typeof ExitApi!=='undefined'&&ExitApi.exit){ExitApi.exit();return;}}catch(e){}
+  try{if(window.mraid&&mraid.open){mraid.open(STORE_URL);return;}}catch(e){}
+  try{window.open(STORE_URL,'_blank');}catch(e){}
+}
+btnCta.addEventListener('click', ctaClick);
+stage.addEventListener('click', function(ev){
+  if(endScreen.classList.contains('show') && ev.target !== btnCta){
+    // тап мимо кнопки — тоже CTA-роутинг (увеличиваем CTR)
+    ctaClick();
+  }
+});
+
+// ====== BOOT ======
+fit();
+buildLevel(0);
+</script>
+</body>
+</html>

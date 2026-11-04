@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Aquarium Words 🐟</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;overflow:hidden;background:#06243a;font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;}
+  #wrap{position:relative;width:100%;max-width:430px;height:100%;max-height:900px;margin:0 auto;
+        background:linear-gradient(180deg,#1f6f9e 0%,#0b3a5c 60%,#06243a 100%);overflow:hidden;touch-action:none;}
+  /* light rays */
+  .ray{position:absolute;top:-10%;width:60px;height:120%;background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0));
+       transform:skewX(-12deg);filter:blur(4px);pointer-events:none;}
+  #tank{position:absolute;inset:0;}
+  canvas{position:absolute;inset:0;width:100%;height:100%;}
+  /* top bar */
+  #bar{position:absolute;top:0;left:0;right:0;height:64px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;
+       background:linear-gradient(180deg,rgba(4,30,50,.55),rgba(4,30,50,0));z-index:20;color:#eaf6ff;pointer-events:none;}
+  #title{font-weight:800;font-size:17px;letter-spacing:.3px;text-shadow:0 1px 3px rgba(0,0,0,.5);}
+  #stats{display:flex;gap:14px;align-items:center;font-size:13px;font-weight:700;}
+  .stat b{display:block;font-size:18px;line-height:1;}
+  .stat span{opacity:.8;font-size:10px;text-transform:uppercase;letter-spacing:.5px;}
+  #restart{pointer-events:auto;cursor:pointer;width:38px;height:38px;border-radius:50%;border:none;
+           background:rgba(255,255,255,.18);color:#fff;font-size:19px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  #restart:active{background:rgba(255,255,255,.35);}
+  /* toast */
+  #toast{position:absolute;top:80px;left:50%;transform:translateX(-50%) translateY(-12px);opacity:0;
+         background:rgba(255,255,255,.95);color:#073;padding:10px 18px;border-radius:22px;font-weight:800;font-size:15px;
+         box-shadow:0 6px 18px rgba(0,0,0,.3);z-index:30;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  /* overlay */
+  #overlay{position:absolute;inset:0;z-index:40;background:rgba(4,24,40,.82);display:none;flex-direction:column;
+           align-items:center;justify-content:center;text-align:center;color:#fff;padding:24px;}
+  #overlay.show{display:flex;}
+  #ovEmoji{font-size:64px;margin-bottom:8px;}
+  #ovTitle{font-size:30px;font-weight:900;margin-bottom:6px;}
+  #ovText{font-size:15px;opacity:.85;margin-bottom:22px;}
+  #ovBtn{cursor:pointer;border:none;border-radius:30px;padding:15px 38px;font-size:17px;font-weight:800;
+         background:linear-gradient(180deg,#46d0ff,#1e8fce);color:#04263d;box-shadow:0 6px 16px rgba(0,0,0,.35);}
+  #ovBtn:active{transform:scale(.96);}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="cv"></canvas>
+  <div id="bar">
+    <div>
+      <div id="title">Aquarium Words 🐟</div>
+      <div id="lvl" style="font-size:11px;opacity:.8;font-weight:600;margin-top:2px;">Level 1</div>
+    </div>
+    <div id="stats">
+      <div class="stat"><b id="moves">16</b><span>Moves</span></div>
+      <div class="stat"><b id="prog">0/4</b><span>Schools</span></div>
+      <button id="restart" title="Restart">↻</button>
+    </div>
+  </div>
+  <div id="toast"></div>
+  <div id="overlay">
+    <div id="ovEmoji">🐠</div>
+    <div id="ovTitle">You Win!</div>
+    <div id="ovText"></div>
+    <button id="ovBtn">Next Level</button>
+  </div>
+</div>
+<script>
+"use strict";
+(function(){
+  // ---- content (verbatim from SHARED.md) ----
+  const CATS = [
+   {name:'Planets',     emoji:'🪐', color:'#7a5cf6', words:['MERCURY','VENUS','MARS','SATURN']},
+   {name:'Royalty',     emoji:'👑', color:'#e6a33f', words:['KING','QUEEN','PRINCE','PRINCESS']},
+   {name:'Writing',     emoji:'✏️', color:'#36c6c0', words:['PEN','PENCIL','CRAYON','MARKER']},
+   {name:'Boats',       emoji:'⛵', color:'#3f8fe6', words:['BOAT','SHIP','BARGE','RAFT']},
+   {name:'Organs',      emoji:'🫀', color:'#e8563f', words:['HEART','LIVER','LUNG','KIDNEY']},
+   {name:'Weather',     emoji:'🌪️', color:'#5b7cf5', words:['STORM','TORNADO','CYCLONE','BLIZZARD']},
+   {name:'Veggies',     emoji:'🥕', color:'#7da04a', words:['CARROT','CELERY','ONION','PEPPER']},
+   {name:'Reptiles',    emoji:'🦎', color:'#2ea49a', words:['GECKO','IGUANA','SNAKE','LIZARD']},
+   {name:'Birds',       emoji:'🦜', color:'#ef6aa0', words:['CROW','EAGLE','PARROT','ROBIN']},
+   {name:'Continents',  emoji:'🌍', color:'#4aa6a0', words:['EUROPE','AFRICA','ASIA','AMERICA']},
+   {name:'Pastry',      emoji:'🥐', color:'#d99b3f', words:['DONUT','BAGEL','MUFFIN','PRETZEL']},
+   {name:'Temperature', emoji:'🌡️', color:'#e07a3f', words:['HOT','WARM','COLD','COOL']},
+  ];
+
+  // ---- canvas / world ----
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  const wrap = document.getElementById('wrap');
+  let W=430, H=900, DPR=1;
+  function resize(){
+    const r = wrap.getBoundingClientRect();
+    W = r.width; H = r.height;
+    DPR = Math.min(window.devicePixelRatio||1, 2);
+    cv.width = W*DPR; cv.height = H*DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  window.addEventListener('resize', resize);
+
+  // play field bounds (avoid top bar + sand)
+  const TOP = 72;
+  function bottomY(){ return H - 70; }
+
+  // ---- state ----
+  let level=1, fish=[], moves=0, movesMax=0, schoolsDone=0, schoolsTotal=0, activeCats=[];
+  let drag=null;          // {f, dx, dy}
+  let gameOver=false;
+  let bubbles=[];
+
+  function rand(a,b){ return a + Math.random()*(b-a); }
+  function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+  // a Fish holds words of ONE category; count = words.length, full when ==4
+  function makeFish(catIdx, words, x, y){
+    return {
+      cat:catIdx, words:words.slice(),
+      x, y,
+      vx:rand(-0.35,0.35)||0.2, vy:rand(-0.12,0.12),
+      facing: Math.random()<0.5?-1:1,
+      phase: Math.random()*Math.PI*2,
+      swimOff:false, gone:false, snap:null
+    };
+  }
+  function fishScale(f){ return 1 + (f.words.length-1)*0.16; }     // bigger as it grows
+  function fishW(f){ return (96 + (f.words.length-1)*10) * 1; }
+  function fishH(f){ return 46 + (f.words.length-1)*6; }
+
+  function startLevel(){
+    gameOver=false;
+    document.getElementById('overlay').classList.remove('show');
+    const nCats = 3 + level;                 // level1 -> 4 categories
+    schoolsTotal = nCats;
+    schoolsDone = 0;
+    // pick categories
+    const idxs = shuffle(CATS.map((_,i)=>i)).slice(0,nCats);
+    activeCats = idxs.slice();
+    // moves budget: minimum needed = 3 merges per category; give a little slack
+    movesMax = nCats*3 + Math.max(2, Math.round(nCats*0.7));
+    moves = movesMax;
+    // seed: each category -> 4 single-word fish
+    fish = [];
+    idxs.forEach(ci=>{
+      CATS[ci].words.forEach(w=>{
+        fish.push(makeFish(ci, [w], 0, 0));
+      });
+    });
+    shuffle(fish);
+    // place spread out
+    const padX=70, padY=40;
+    fish.forEach(f=>{
+      f.x = rand(padX, W-padX);
+      f.y = rand(TOP+padY, bottomY()-padY);
+    });
+    bubbles=[];
+    updateHUD();
+  }
+
+  function updateHUD(){
+    document.getElementById('moves').textContent = moves;
+    document.getElementById('prog').textContent = schoolsDone+'/'+schoolsTotal;
+    document.getElementById('lvl').textContent = 'Level '+level;
+  }
+
+  // ---- toast ----
+  let toastT=null;
+  function toast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(toastT);
+    toastT=setTimeout(()=>t.classList.remove('show'), 1300);
+  }
+
+  // ---- hit test ----
+  function fishAt(px,py){
+    for(let i=fish.length-1;i>=0;i--){
+      const f=fish[i];
+      if(f.gone||f.swimOff) continue;
+      const w=fishW(f), h=fishH(f);
+      if(px>f.x-w/2 && px<f.x+w/2 && py>f.y-h/2 && py<f.y+h/2) return f;
+    }
+    return null;
+  }
+
+  // ---- merge logic (CORE rules) ----
+  function tryMerge(dragF, targetF){
+    if(dragF===targetF) return false;
+    if(dragF.cat!==targetF.cat){ return false; }      // different category -> no merge
+    // same category: combine words (unique)
+    const set = new Set(targetF.words.concat(dragF.words));
+    targetF.words = Array.from(set);
+    // remove dragged fish
+    dragF.gone = true;
+    fish = fish.filter(f=>f!==dragF);
+    moves--;                                            // successful merge costs a move
+    // completed school?
+    if(targetF.words.length >= 4){
+      targetF.words = targetF.words.slice(0,4);
+      targetF.swimOff = true;                           // swims off-screen
+      targetF.swimDir = (targetF.x < W/2) ? -1 : 1;
+      schoolsDone++;
+      toast('School swam away! 🐟');
+    } else {
+      toast(['Nice catch!','Splash!','Together!','Schooling!'][Math.floor(Math.random()*4)]);
+    }
+    updateHUD();
+    return true;
+  }
+
+  function checkEnd(){
+    if(gameOver) return;
+    if(schoolsDone>=schoolsTotal){ win(); }
+    else if(moves<=0){ lose(); }
+  }
+
+  function win(){
+    gameOver=true;
+    const o=document.getElementById('overlay');
+    document.getElementById('ovEmoji').textContent='🐠';
+    document.getElementById('ovTitle').textContent='You Win!';
+    document.getElementById('ovText').textContent='All schools swam free. On to deeper waters!';
+    document.getElementById('ovBtn').textContent='Next Level ▸';
+    o.dataset.action='next';
+    o.classList.add('show');
+  }
+  function lose(){
+    gameOver=true;
+    const o=document.getElementById('overlay');
+    document.getElementById('ovEmoji').textContent='🪼';
+    document.getElementById('ovTitle').textContent='Out of Moves';
+    document.getElementById('ovText').textContent='The school scattered. Try again!';
+    document.getElementById('ovBtn').textContent='Retry';
+    o.dataset.action='retry';
+    o.classList.add('show');
+  }
+
+  // ---- pointer ----
+  function getPos(e){
+    const r = cv.getBoundingClientRect();
+    const p = (e.touches && e.touches[0]) ? e.touches[0] : e;
+    return { x:(p.clientX-r.left), y:(p.clientY-r.top) };
+  }
+  function onDown(e){
+    if(gameOver) return;
+    const p=getPos(e);
+    const f=fishAt(p.x,p.y);
+    if(f){
+      drag={ f, dx:f.x-p.x, dy:f.y-p.y };
+      f.snap=null;
+      e.preventDefault();
+    }
+  }
+  function onMove(e){
+    if(!drag) return;
+    const p=getPos(e);
+    drag.f.x = p.x + drag.dx;
+    drag.f.y = p.y + drag.dy;
+    e.preventDefault();
+  }
+  function onUp(e){
+    if(!drag) return;
+    const f=drag.f;
+    const homeX=f.x, homeY=f.y;
+    // find target under center, excluding self
+    let target=null;
+    for(let i=fish.length-1;i>=0;i--){
+      const o=fish[i];
+      if(o===f||o.gone||o.swimOff) continue;
+      const w=fishW(o), h=fishH(o);
+      if(f.x>o.x-w/2 && f.x<o.x+w/2 && f.y>o.y-h/2 && f.y<o.y+h/2){ target=o; break; }
+    }
+    if(target){
+      const ok=tryMerge(f, target);
+      if(!ok){
+        // wrong category: snap back, no move spent
+        f.snap={ x:clampX(f), y:clampY(f) };
+        toast('Different fish! ✋');
+      }
+    } else {
+      // dropped on nothing: just keep position (clamp into tank), no move
+      f.x=clampX(f); f.y=clampY(f);
+    }
+    drag=null;
+    checkEnd();
+    e.preventDefault();
+  }
+  function clampX(f){ const w=fishW(f)/2; return Math.max(w+4, Math.min(W-w-4, f.x)); }
+  function clampY(f){ const h=fishH(f)/2; return Math.max(TOP+h+4, Math.min(bottomY()-h-4, f.y)); }
+
+  cv.addEventListener('pointerdown', onDown);
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', onUp);
+
+  document.getElementById('restart').addEventListener('click', ()=>{ level=1; startLevel(); });
+  document.getElementById('ovBtn').addEventListener('click', ()=>{
+    const a=document.getElementById('overlay').dataset.action;
+    if(a==='next') level++;
+    startLevel();
+  });
+
+  // ---- physics / drift ----
+  function step(dt){
+    const by=bottomY();
+    for(const f of fish){
+      if(f===(drag&&drag.f)) continue;   // paused while dragging
+      f.phase += dt*0.003;
+      if(f.swimOff){
+        // swim off the chosen side
+        f.x += f.swimDir * 0.55 * dt;
+        f.y += Math.sin(f.phase)*0.4;
+        f.facing = f.swimDir;
+        const w=fishW(f);
+        if(f.x < -w || f.x > W+w){ f.gone=true; }
+        continue;
+      }
+      if(f.snap){
+        f.x += (f.snap.x-f.x)*0.18;
+        f.y += (f.snap.y-f.y)*0.18;
+        if(Math.abs(f.snap.x-f.x)<0.6 && Math.abs(f.snap.y-f.y)<0.6){ f.snap=null; }
+        continue;
+      }
+      // gentle wander
+      f.x += f.vx * dt * 0.06;
+      f.y += (f.vy + Math.sin(f.phase)*0.25) * dt * 0.06;
+      f.facing = f.vx<0 ? -1 : 1;
+      const w=fishW(f)/2, h=fishH(f)/2;
+      if(f.x<w+6){ f.x=w+6; f.vx=Math.abs(f.vx); }
+      if(f.x>W-w-6){ f.x=W-w-6; f.vx=-Math.abs(f.vx); }
+      if(f.y<TOP+h+6){ f.y=TOP+h+6; f.vy=Math.abs(f.vy); }
+      if(f.y>by-h-6){ f.y=by-h-6; f.vy=-Math.abs(f.vy); }
+      // occasional small turn
+      if(Math.random()<0.004){ f.vx += rand(-0.15,0.15); f.vy += rand(-0.06,0.06);
+        f.vx=Math.max(-0.6,Math.min(0.6,f.vx)); f.vy=Math.max(-0.25,Math.min(0.25,f.vy)); }
+    }
+    fish = fish.filter(f=>!f.gone);
+    // bubbles
+    if(Math.random()<0.18){ bubbles.push({x:rand(20,W-20), y:by, r:rand(2,5), s:rand(0.4,1.0)}); }
+    for(const b of bubbles){ b.y -= b.s*dt*0.05; b.x += Math.sin(b.y*0.05)*0.2; }
+    bubbles = bubbles.filter(b=>b.y>TOP-10);
+  }
+
+  // ---- rendering ----
+  function drawFish(f){
+    const w=fishW(f), h=fishH(f);
+    const c=CATS[f.cat].color;
+    const x=f.x, y=f.y, dir=f.facing;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(dir,1);
+    // tail
+    ctx.fillStyle=c;
+    ctx.beginPath();
+    ctx.moveTo(-w*0.38,0);
+    ctx.lineTo(-w*0.62,-h*0.42);
+    ctx.lineTo(-w*0.52,0);
+    ctx.lineTo(-w*0.62,h*0.42);
+    ctx.closePath();
+    ctx.fill();
+    // body (rounded)
+    ctx.beginPath();
+    roundRect(ctx,-w*0.42,-h*0.5,w*0.84,h,h*0.5);
+    ctx.fillStyle=c;
+    ctx.fill();
+    // soft highlight
+    ctx.globalAlpha=0.18;
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); roundRect(ctx,-w*0.42,-h*0.5,w*0.84,h*0.42,h*0.4); ctx.fill();
+    ctx.globalAlpha=1;
+    // eye
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.arc(w*0.28,-h*0.12,h*0.13,0,7); ctx.fill();
+    ctx.fillStyle='#11303f';
+    ctx.beginPath(); ctx.arc(w*0.30,-h*0.12,h*0.06,0,7); ctx.fill();
+    ctx.restore();
+
+    // label (white capsule on body) — drawn unflipped so text is readable
+    const word=f.words[0];
+    ctx.font='800 '+Math.round(13+ (f.words.length-1)*1)+'px -apple-system,Segoe UI,Arial,sans-serif';
+    const tw=ctx.measureText(word).width;
+    const pad=8, capW=tw+pad*2, capH=20;
+    ctx.fillStyle='rgba(255,255,255,0.93)';
+    ctx.beginPath(); roundRect(ctx, x-capW/2, y-capH/2, capW, capH, capH/2); ctx.fill();
+    ctx.fillStyle='#0c2a3a'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(word, x, y+0.5);
+
+    // n/4 badge if a school (>1)
+    if(f.words.length>1){
+      const bx=x+w*0.30, by=y-h*0.5-4;
+      ctx.fillStyle=c;
+      ctx.beginPath(); ctx.arc(bx,by,12,0,7); ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.lineWidth=2; ctx.stroke();
+      ctx.fillStyle='#fff'; ctx.font='800 11px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(f.words.length+'/4', bx, by+0.5);
+    }
+  }
+  function roundRect(c,x,y,w,h,r){
+    r=Math.min(r,w/2,h/2);
+    c.beginPath();
+    c.moveTo(x+r,y);
+    c.arcTo(x+w,y,x+w,y+h,r);
+    c.arcTo(x+w,y+h,x,y+h,r);
+    c.arcTo(x,y+h,x,y,r);
+    c.arcTo(x,y,x+w,y,r);
+    c.closePath();
+  }
+
+  function drawSand(){
+    const by=bottomY();
+    // sand
+    ctx.fillStyle='#c9a86a';
+    ctx.beginPath();
+    ctx.moveTo(0,H);
+    ctx.lineTo(0,by+8);
+    for(let x=0;x<=W;x+=40){ ctx.lineTo(x, by+8 + Math.sin(x*0.05)*6); }
+    ctx.lineTo(W,H); ctx.closePath(); ctx.fill();
+    // seaweed
+    ctx.strokeStyle='rgba(60,160,110,.75)'; ctx.lineWidth=6; ctx.lineCap='round';
+    const t=performance.now()*0.001;
+    [30,80,W-50,W-100,W*0.5].forEach((sx,i)=>{
+      ctx.beginPath(); ctx.moveTo(sx,by+6);
+      for(let k=1;k<=4;k++){ const yy=by+6-k*22; ctx.lineTo(sx+Math.sin(t+i+k)*9, yy); }
+      ctx.stroke();
+    });
+  }
+  function drawBubbles(){
+    ctx.fillStyle='rgba(255,255,255,.35)';
+    for(const b of bubbles){ ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,7); ctx.fill(); }
+  }
+
+  let last=0;
+  function loop(ts){
+    const dt=Math.min(40, ts-last||16); last=ts;
+    if(!gameOver) step(dt);
+    ctx.clearRect(0,0,W,H);
+    drawSand();
+    drawBubbles();
+    for(const f of fish){ if(!f.gone) drawFish(f); }
+    requestAnimationFrame(loop);
+  }
+
+  // light rays (DOM, static)
+  function addRays(){
+    [0.15,0.45,0.75].forEach(p=>{
+      const d=document.createElement('div'); d.className='ray';
+      d.style.left=(p*100)+'%'; wrap.appendChild(d);
+    });
+  }
+
+  function init(){
+    resize();
+    addRays();
+    startLevel();
+    requestAnimationFrame(loop);
+  }
+  if(document.readyState==='loading') window.addEventListener('DOMContentLoaded', init);
+  else init();
+
+  // expose for verification
+  window.__aq = { get fish(){return fish;}, tryMerge, startLevel, get state(){return {moves,schoolsDone,schoolsTotal,level};} };
+})();
+</script>
+</body>
+</html>

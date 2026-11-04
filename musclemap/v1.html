@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Muscle Map — v1</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    height:100dvh;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;user-select:none;touch-action:none;
+    background:radial-gradient(120% 120% at 50% 0%,#2a2430,#120f16 80%);}
+
+  #phone{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;
+         background:radial-gradient(110% 70% at 50% 40%,#fbf7ef,#eee6d8 90%);}
+  @media (max-aspect-ratio:1/1){ #phone{width:100vw;height:100dvh;border-radius:0;} }
+  @media (min-aspect-ratio:1/1){
+    #phone{height:96dvh;aspect-ratio:9/16;width:auto;
+           border-radius:32px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 8px #0c0e15;}
+  }
+
+  /* ---- HUD ---- */
+  #hud{width:100%;padding:16px 16px 0;z-index:3;position:relative;height:92px;flex:none;}
+  #gearBtn{position:absolute;left:16px;top:20px;width:50px;height:50px;border:none;cursor:pointer;
+    border-radius:16px;background:linear-gradient(#e0534a,#c23b33);
+    box-shadow:0 5px 0 #8e2a24,0 8px 14px rgba(140,50,40,.3);
+    color:#fff;font-size:24px;display:flex;align-items:center;justify-content:center;}
+  #gearBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #8e2a24;}
+  #lvlWrap{position:absolute;left:50%;top:18px;transform:translateX(-50%);text-align:center;}
+  #lvlBadge{display:inline-block;background:#3b2f3a;color:#fff;font-weight:800;font-size:14px;
+    letter-spacing:1px;padding:5px 18px;border-radius:10px;box-shadow:0 3px 0 #221a22;}
+  #lvlName{margin-top:6px;color:#6c5a68;font-weight:700;font-size:13px;letter-spacing:.5px;}
+  #progress{position:absolute;right:16px;top:20px;height:50px;min-width:64px;padding:0 12px;border-radius:16px;
+    background:#fff;border:3px solid #e9d9c9;display:flex;align-items:center;justify-content:center;
+    color:#3b2f3a;font-weight:900;font-size:20px;box-shadow:0 4px 0 #dccbb8;}
+  #progress small{font-size:12px;font-weight:700;color:#9a8a95;margin-left:4px;margin-top:5px;}
+
+  /* ---- stage ---- */
+  #stage{flex:1;width:100%;position:relative;z-index:2;min-height:0;display:flex;align-items:center;justify-content:center;}
+  #board{width:100%;height:100%;display:block;overflow:visible;touch-action:none;}
+  #board.flip{animation:flip .42s ease-in-out;}
+  @keyframes flip{0%{transform:scaleX(1)}50%{transform:scaleX(.04)}100%{transform:scaleX(1)}}
+  .viewTag{font-weight:900;font-size:14px;fill:#b7a598;letter-spacing:2px;}
+  .bone{fill:#f7f3ea;stroke:#b8ad9c;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round;}
+  .boneL{fill:none;stroke:#f9f6ee;stroke-linecap:round;}
+  .boneO{fill:none;stroke:#b8ad9c;stroke-linecap:round;}
+  .boneL2{fill:none;stroke:#b8ad9c;stroke-width:1.2;stroke-linecap:round;}
+  .skin{fill:#f0dfd0;stroke:#c9ab99;stroke-width:2;stroke-linejoin:round;}
+  .muscle{fill:#d9463f;stroke:#8f1f1b;stroke-width:1.8;stroke-linejoin:round;opacity:.94;}
+  .muscle.ghost{opacity:.55;stroke-dasharray:4 3;}
+  .muscle.drag{opacity:.85;filter:drop-shadow(0 6px 6px rgba(0,0,0,.3));}
+  .muscle.truth{fill:#3ec06a;stroke:#1d7a3c;animation:pulse 1s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:.95}50%{opacity:.55}}
+  .miss{fill:none;stroke:#c8322b;stroke-width:3;stroke-linecap:round;}
+  .distLine{fill:none;stroke:#3b2f3a;stroke-width:2.5;stroke-dasharray:6 5;}
+  .distLbl{font-weight:900;font-size:22px;fill:#fff;}
+  .distBg{fill:#3b2f3a;rx:8;}
+
+  /* ---- tray ---- */
+  #tray{width:100%;height:170px;flex:none;position:relative;z-index:4;padding:0 14px 14px;}
+  #card{width:100%;height:100%;background:#fff;border:3px solid #e9d9c9;border-radius:22px;
+    box-shadow:0 6px 0 #dccbb8;display:flex;align-items:center;gap:14px;padding:12px 16px;position:relative;
+    cursor:grab;touch-action:none;}
+  #card.dim{opacity:.35;pointer-events:none;}
+  #shapeBox{width:120px;height:120px;flex:none;display:flex;align-items:center;justify-content:center;
+    background:#fbf5ee;border-radius:16px;border:2px dashed #e0cdbb;}
+  #shapeBox svg{width:104px;height:104px;overflow:visible;}
+  #cardTxt{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;}
+  #mName{font-weight:900;font-size:20px;color:#3b2f3a;line-height:1.1;}
+  #mView{font-weight:700;font-size:12px;color:#9a8a95;letter-spacing:1px;}
+  #tries{display:flex;gap:6px;align-items:center;margin-top:2px;}
+  .try{width:16px;height:16px;border-radius:50%;background:#e0534a;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18);}
+  .try.off{background:#e7dcd2;box-shadow:none;}
+  #triesLbl{font-size:12px;font-weight:700;color:#9a8a95;margin-left:4px;}
+  #hint{font-size:13px;color:#8a7a85;font-weight:600;}
+  #nextBtn{position:absolute;right:14px;bottom:12px;border:none;cursor:pointer;color:#fff;font-weight:900;font-size:18px;
+    letter-spacing:1px;padding:10px 24px;border-radius:14px;background:linear-gradient(#5fd435,#3fae1e);
+    box-shadow:0 5px 0 #2e8514;}
+  #nextBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #2e8514;}
+
+  #toast{position:absolute;left:50%;transform:translateX(-50%);bottom:186px;z-index:6;pointer-events:none;
+    background:#3b2f3a;color:#fff;font-weight:900;font-size:18px;padding:10px 22px;border-radius:30px;
+    opacity:0;transition:opacity .2s;white-space:nowrap;box-shadow:0 8px 18px rgba(0,0,0,.25);}
+  #toast.show{opacity:1;}
+  #toast.good{background:#2f9c52;}
+  #toast.bad{background:#c8322b;}
+
+  /* ---- overlays ---- */
+  .ov{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
+      flex-direction:column;background:rgba(40,24,30,.62);}
+  .hidden{display:none !important;}
+  .card{position:relative;width:80%;max-width:360px;background:#fbf5ee;border:6px solid #e0534a;
+    border-radius:28px;padding:60px 22px 26px;display:flex;flex-direction:column;align-items:center;
+    box-shadow:0 24px 60px rgba(0,0,0,.45);}
+  .ribbon{position:absolute;top:-26px;left:50%;transform:translateX(-50%);white-space:nowrap;
+    background:linear-gradient(#ff9b2e,#f07713);color:#fff;font-weight:900;font-size:24px;
+    letter-spacing:1px;padding:12px 30px;border-radius:14px;
+    text-shadow:0 3px 0 rgba(160,70,0,.55);box-shadow:0 6px 0 #c85c08,0 10px 18px rgba(0,0,0,.3);}
+  .ribbon.red{background:linear-gradient(#ff5964,#e0333f);box-shadow:0 6px 0 #b0222c,0 10px 18px rgba(0,0,0,.3);
+    text-shadow:0 3px 0 rgba(150,20,30,.55);}
+  .emoji{font-size:72px;margin:4px 0 8px;}
+  .stars{font-size:34px;letter-spacing:4px;margin-bottom:8px;}
+  .stars span{opacity:.22;}
+  .stars span.on{opacity:1;}
+  .resPill{background:#3b2f3a;color:#fff;font-weight:900;font-size:22px;border-radius:40px;
+    padding:10px 26px;margin-bottom:18px;}
+  .resSub{color:#7a6a75;font-weight:700;font-size:14px;margin:-10px 0 16px;}
+  .bigBtn{border:none;cursor:pointer;color:#fff;font-weight:900;font-size:24px;letter-spacing:1px;
+    padding:14px 56px;border-radius:18px;background:linear-gradient(#5fd435,#3fae1e);
+    box-shadow:0 6px 0 #2e8514,0 10px 18px rgba(0,0,0,.25);text-shadow:0 2px 0 rgba(30,90,10,.5);}
+  .bigBtn:active{transform:translateY(4px);box-shadow:0 2px 0 #2e8514;}
+  .bigBtn.blue{background:linear-gradient(#5b9cf6,#3a78d6);box-shadow:0 6px 0 #27579e,0 10px 18px rgba(0,0,0,.25);
+    text-shadow:0 2px 0 rgba(20,60,120,.5);}
+  #menuCard{display:flex;flex-direction:column;gap:16px;align-items:center;}
+
+  /* ---- home ---- */
+  #home{background:radial-gradient(110% 70% at 50% 30%,#fbf7ef,#eadfcf 90%);justify-content:flex-start;padding-top:52px;}
+  #homeIcon{margin-bottom:14px;}
+  #home h1{margin:0;font-size:42px;line-height:1;color:#3b2f3a;text-align:center;letter-spacing:1px;
+    text-shadow:0 3px 0 #e9d9c9;}
+  #home h1 em{color:#d9463f;font-style:normal;}
+  #home .hint{width:78%;text-align:center;color:#6c5a68;font-weight:600;font-size:14px;margin:14px 0 22px;line-height:1.35;}
+  #home .sub{color:#9a8a95;font-weight:800;font-size:13px;letter-spacing:2px;margin-bottom:10px;}
+  #lvlRow{display:flex;gap:10px;margin-bottom:26px;}
+  .lvlBtn{width:52px;height:52px;border-radius:14px;border:none;cursor:pointer;font-weight:900;font-size:20px;
+    background:#fff;color:#3b2f3a;box-shadow:0 4px 0 #dccbb8;}
+  .lvlBtn.sel{background:linear-gradient(#e0534a,#c23b33);color:#fff;box-shadow:0 4px 0 #8e2a24;}
+  #lvlNames{display:flex;flex-direction:column;gap:3px;color:#8a7a85;font-size:12px;font-weight:600;margin-top:-14px;margin-bottom:22px;text-align:center;}
+</style>
+</head>
+<body>
+<div id="phone">
+  <div id="hud">
+    <button id="gearBtn" title="Menu">⚙️</button>
+    <div id="lvlWrap">
+      <div id="lvlBadge">LEVEL 1</div>
+      <div id="lvlName">Front basics</div>
+    </div>
+    <div id="progress"><span id="progNum">0/4</span><small>found</small></div>
+  </div>
+
+  <div id="stage">
+    <svg id="board" viewBox="0 0 360 860" preserveAspectRatio="xMidYMid meet">
+      <text id="viewTag" class="viewTag" x="14" y="40" text-anchor="start">FRONT VIEW</text>
+      <g id="gSkin"></g>
+      <g id="gBones"></g>
+      <g id="gPlaced"></g>
+      <g id="gMarks"></g>
+      <g id="gDrag"></g>
+    </svg>
+  </div>
+
+  <div id="tray">
+    <div id="card">
+      <div id="shapeBox"></div>
+      <div id="cardTxt">
+        <div id="mName">Pectoralis major</div>
+        <div id="mView">FRONT VIEW</div>
+        <div id="tries"><div class="try"></div><div class="try"></div><div class="try"></div><span id="triesLbl">tries</span></div>
+        <div id="hint">Drag the muscle onto the body</div>
+      </div>
+      <button id="nextBtn" class="hidden">NEXT ▶</button>
+    </div>
+  </div>
+  <div id="toast"></div>
+
+  <div id="winOv" class="ov hidden">
+    <div class="card">
+      <div class="ribbon">LEVEL DONE!</div>
+      <div class="emoji">💪</div>
+      <div class="stars" id="stars"><span>★</span><span>★</span><span>★</span></div>
+      <div class="resPill" id="winRes">Found 4 / 4</div>
+      <button class="bigBtn" id="winNext">NEXT</button>
+    </div>
+  </div>
+
+  <div id="loseOv" class="ov hidden">
+    <div class="card">
+      <div class="ribbon red">TOO MANY MISSES</div>
+      <div class="emoji">🩻</div>
+      <div class="resPill" id="loseRes">Found 1 / 4</div>
+      <div class="resSub" id="loseSub">You need 3 to pass</div>
+      <button class="bigBtn blue" id="retryBtn">RETRY</button>
+    </div>
+  </div>
+
+  <div id="menuOv" class="ov hidden">
+    <div id="menuCard">
+      <button class="bigBtn blue" id="mRestart">RESTART</button>
+      <button class="bigBtn" id="mHome" style="background:linear-gradient(#f79e2d,#e0801a);box-shadow:0 6px 0 #b56412;">HOME</button>
+      <button class="bigBtn blue" id="mClose" style="background:#8a8ab0;box-shadow:0 6px 0 #6b6b8f;">CLOSE</button>
+    </div>
+  </div>
+
+  <div id="home" class="ov">
+    <div id="homeIcon"></div>
+    <h1>MUSCLE<br><em>MAP</em></h1>
+    <div class="hint">You get a muscle. Drag it to where it lives on the body.
+      Three tries per muscle: on the third miss you see how far off you were.</div>
+    <div class="sub">CHOOSE A LEVEL</div>
+    <div id="lvlRow"></div>
+    <div id="lvlNames"></div>
+    <button class="bigBtn" id="playBtn">PLAY</button>
+  </div>
+</div>
+
+<script src="../proto-kit/proto-kit.js"></script>
+<script>
+'use strict';
+/* ================= Muscle Map v1 =================
+   Найди мышцу на теле. Экран: силуэт человека + скелет (вид спереди или со спины).
+   Внизу карточка с формой и названием мышцы. Тянешь форму на тело, отпускаешь — попытка.
+   Попадание = центр формы в радиусе допуска от истинного центра мышцы (на любой из двух сторон,
+   мышцы парные). 3 попытки; после третьего промаха показываем истинное место и
+   расстояние от последнего промаха до правильного места в см (рост фигуры 175 см).
+   Уровень пройден, если найдено ≥ need мышц; проигрыш показываем сразу, как только
+   пройти уже невозможно. Арт: силуэт, кости и мышцы — векторные (SVG кодом). */
+
+const $=id=>document.getElementById(id);
+const SVG_NS='http://www.w3.org/2000/svg';
+const BODY_H_PX=800, BODY_H_CM=175, CM_PER_PX=BODY_H_CM/BODY_H_PX;
+
+/* ---------- геометрия: сглаживание полигона в кривую ---------- */
+function smooth(pts){
+  const n=pts.length;let d=`M${pts[0][0]} ${pts[0][1]}`;
+  for(let i=0;i<n;i++){
+    const p0=pts[(i-1+n)%n],p1=pts[i],p2=pts[(i+1)%n],p3=pts[(i+2)%n];
+    const c1x=p1[0]+(p2[0]-p0[0])/6,c1y=p1[1]+(p2[1]-p0[1])/6;
+    const c2x=p2[0]-(p3[0]-p1[0])/6,c2y=p2[1]-(p3[1]-p1[1])/6;
+    d+=`C${c1x.toFixed(1)} ${c1y.toFixed(1)} ${c2x.toFixed(1)} ${c2y.toFixed(1)} ${p2[0]} ${p2[1]}`;
+  }
+  return d+'Z';
+}
+function mirrorPts(half){ // половина (x>=180) сверху вниз → полный симметричный контур
+  const full=half.slice();
+  for(let i=half.length-2;i>0;i--)full.push([360-half[i][0],half[i][1]]);
+  return full;
+}
+function bl(g,x1,y1,x2,y2,w){el('line',{class:'boneO',x1,y1,x2,y2,'stroke-width':w+2.4},g);el('line',{class:'boneL',x1,y1,x2,y2,'stroke-width':w},g);}
+function bp(g,d,w,tr){el('path',{class:'boneO',d,'stroke-width':w+2.4,transform:tr||''},g);el('path',{class:'boneL',d,'stroke-width':w,transform:tr||''},g);}
+const el=(tag,attrs,parent)=>{const e=document.createElementNS(SVG_NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;};
+const MIRROR='translate(360,0) scale(-1,1)';
+
+/* ---------- силуэт ---------- */
+const TORSO_HALF=[[180,18],[212,28],[224,60],[216,94],[200,110],[194,120],[196,140],[232,148],[258,156],[268,172],
+  [250,200],[242,232],[236,280],[233,310],[238,345],[250,380],[256,420],[248,470],[240,540],[232,590],[228,620],
+  [234,660],[228,720],[222,760],[232,790],[240,808],[226,818],[200,816],[196,790],[200,760],[204,700],[198,650],
+  [196,600],[200,560],[194,500],[184,440]];
+const ARM=[[252,158],[276,180],[280,230],[272,290],[268,340],[262,400],[266,440],[258,472],[244,470],[238,430],
+  [240,400],[244,340],[248,290],[250,240],[250,205],[258,175]];
+const SKIN_D=smooth(mirrorPts(TORSO_HALF)), ARM_D=smooth(ARM);
+
+/* ---------- скелет ---------- */
+function drawSkeleton(g,view){
+  g.textContent='';
+  // череп
+  el('ellipse',{class:'bone',cx:180,cy:56,rx:31,ry:35},g);
+  if(view==='front'){
+    el('path',{class:'bone',d:'M151 64 C150 84 158 100 172 106 L188 106 C202 100 210 84 209 64 Z'},g);
+    el('ellipse',{class:'bone',cx:167,cy:58,rx:8,ry:9,style:'fill:#a99d8e'},g);
+    el('ellipse',{class:'bone',cx:193,cy:58,rx:8,ry:9,style:'fill:#a99d8e'},g);
+    el('path',{class:'boneL2',d:'M180 68 L175 82 L185 82 Z'},g);
+    el('path',{class:'boneL2',d:'M166 96 L194 96 M171 92 L171 100 M177 91 L177 101 M183 91 L183 101 M189 92 L189 100'},g);
+  }else{
+    el('path',{class:'bone',d:'M152 66 C154 88 164 102 180 104 C196 102 206 88 208 66 Z'},g);
+  }
+  // позвоночник
+  for(let y=104;y<392;y+=13){const w=y<150?10:16;el('rect',{class:'bone',x:180-w/2,y:y,width:w,height:10,rx:2},g);}
+  // рёбра + грудина / лопатки
+  const ribW=[34,46,54,58,58,54,46,36];
+  if(view==='front'){
+    bp(g,'M186 148 C210 142 240 150 262 158',5);
+    bp(g,'M174 148 C150 142 120 150 98 158',5);
+    el('rect',{class:'bone',x:175,y:154,width:10,height:110,rx:4},g);
+  }
+  ribW.forEach((w,i)=>{
+    const y=164+i*15;
+    const d=`M184 ${y} C${184+w*0.7} ${y-6} ${184+w} ${y+4} ${182+w} ${y+16}`;
+    bp(g,d,4);bp(g,d,4,MIRROR);
+  });
+  if(view==='back'){
+    const sc='M204 164 L246 160 L250 176 L232 236 L210 226 L200 186 Z';
+    el('path',{class:'bone',d:sc,style:'fill-opacity:.85'},g);
+    el('path',{class:'bone',d:sc,style:'fill-opacity:.85',transform:MIRROR},g);
+  }
+  // таз
+  const pelvis=smooth([[182,340],[212,336],[236,346],[242,372],[232,396],[218,420],[200,432],[186,424],[190,404],[204,392],[206,372],[196,356]]);
+  el('path',{class:'bone',d:pelvis},g);el('path',{class:'bone',d:pelvis,transform:MIRROR},g);
+  el('path',{class:'bone',d:'M180 338 L196 350 L184 414 L176 414 L164 350 Z'},g);
+  // руки и ноги на обе стороны
+  for(const tr of ['',MIRROR]){
+    const gg=el('g',{transform:tr},g);
+    bl(gg,262,170,270,292,9);
+    el('circle',{class:'bone',cx:262,cy:170,r:8},gg);el('circle',{class:'bone',cx:270,cy:292,r:9},gg);
+    bl(gg,266,300,258,400,5);
+    bl(gg,276,298,250,404,4);
+    el('circle',{class:'bone',cx:254,cy:412,r:8},gg);
+    for(const [tx,ty] of [[240,440],[244,466],[250,470],[256,470],[262,466]])
+      bl(gg,254,416,tx,ty,3.5);
+    bl(gg,226,390,214,410,9);
+    el('circle',{class:'bone',cx:228,cy:388,r:9},gg);
+    bl(gg,214,410,212,588,11);
+    el('circle',{class:'bone',cx:212,cy:592,r:10},gg);
+    if(view==='front')el('circle',{class:'bone',cx:212,cy:594,r:6,style:'fill:#e6dfd0'},gg);
+    bl(gg,210,604,210,762,9);
+    bl(gg,226,608,224,760,4);
+    el('circle',{class:'bone',cx:210,cy:772,r:7},gg);
+    for(const [tx,ty] of [[200,812],[208,814],[216,812],[224,808],[232,802]])
+      bl(gg,208,778,tx,ty,3.5);
+  }
+}
+function drawSkin(g){
+  g.textContent='';
+  el('path',{class:'skin',d:SKIN_D},g);
+  el('path',{class:'skin',d:ARM_D},g);
+  el('path',{class:'skin',d:ARM_D,transform:MIRROR},g);
+}
+
+/* ---------- мышцы (координаты тела, сторона x>=180; парные принимаются с любой стороны) ---------- */
+const M=(id,name,view,pts,opt={})=>({id,name,view,d:smooth(pts),midline:!!opt.midline});
+const MUSCLES=[
+  M('pec','Pectoralis major','front',[[184,152],[232,152],[250,168],[254,196],[246,222],[224,232],[196,238],[184,236]]),
+  M('delt','Deltoid','front',[[238,150],[258,148],[274,162],[280,190],[274,215],[262,222],[250,205],[240,180]]),
+  M('bic','Biceps brachii','front',[[254,215],[268,214],[274,250],[272,290],[258,296],[250,260]]),
+  M('flex','Forearm flexors','front',[[250,300],[270,300],[266,350],[256,395],[246,392],[244,340]]),
+  M('abs','Rectus abdominis','front',[[166,238],[194,238],[198,300],[196,370],[190,395],[170,395],[164,370],[162,300]],{midline:true}),
+  M('obl','External oblique','front',[[200,240],[246,224],[240,280],[236,330],[244,370],[232,388],[206,392],[200,320]]),
+  M('serr','Serratus anterior','front',[[228,200],[250,206],[248,246],[238,262],[226,250],[222,225]]),
+  M('quad','Quadriceps','front',[[194,430],[250,430],[256,480],[248,540],[238,580],[218,600],[204,592],[196,540],[190,480]]),
+  M('sart','Sartorius','front',[[246,414],[256,420],[232,470],[212,530],[204,600],[196,596],[206,520],[226,466]]),
+  M('add','Adductors','front',[[186,440],[204,436],[216,470],[214,540],[200,540],[186,500]]),
+  M('tib','Tibialis anterior','front',[[214,606],[228,610],[226,660],[220,720],[214,760],[206,758],[208,700],[210,650]]),
+  M('scm','Sternocleidomastoid','front',[[200,104],[208,108],[196,150],[184,152],[180,144],[192,122]]),
+  M('tfl','Tensor fasciae latae','front',[[240,400],[254,400],[258,440],[250,470],[240,450],[236,420]]),
+  M('trap','Trapezius','back',[[180,108],[200,116],[252,152],[258,168],[226,186],[196,300],[180,332],[164,300],[134,186],[102,168],[108,152],[160,116]],{midline:true}),
+  M('lat','Latissimus dorsi','back',[[250,196],[260,210],[246,262],[230,300],[206,340],[190,368],[180,372],[184,320],[200,270],[222,230]]),
+  M('tri','Triceps brachii','back',[[256,208],[274,206],[280,250],[276,296],[262,300],[254,262]]),
+  M('infra','Infraspinatus','back',[[208,172],[240,166],[250,184],[238,214],[216,222],[206,196]]),
+  M('erec','Erector spinae','back',[[166,200],[194,200],[196,300],[194,380],[166,380],[164,300]],{midline:true}),
+  M('gmax','Gluteus maximus','back',[[188,372],[216,372],[250,392],[256,430],[244,466],[214,478],[190,466],[184,420]]),
+  M('gmed','Gluteus medius','back',[[232,352],[252,360],[258,392],[248,400],[232,384],[226,366]]),
+  M('ham','Hamstrings','back',[[196,476],[240,478],[246,530],[240,580],[222,610],[204,600],[194,540]]),
+  M('gas','Gastrocnemius','back',[[200,614],[232,614],[238,650],[232,700],[216,712],[204,700],[196,650]]),
+  M('ext','Forearm extensors','back',[[250,300],[270,300],[266,350],[256,395],[246,392],[244,340]]),
+];
+const BY_ID=Object.fromEntries(MUSCLES.map(m=>[m.id,m]));
+
+/* центроид и допуск считаем по заливке формы (canvas), один раз */
+(function measure(){
+  const cv=document.createElement('canvas');cv.width=360;cv.height=860;const cx=cv.getContext('2d');
+  for(const m of MUSCLES){
+    const p=new Path2D(m.d);let sx=0,sy=0,n=0,minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
+    for(let y=0;y<860;y+=2)for(let x=0;x<360;x+=2)if(cx.isPointInPath(p,x,y)){sx+=x;sy+=y;n++;
+      if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;}
+    m.cx=sx/n;m.cy=sy/n;m.area=n*4;m.bbox={x:minx,y:miny,w:maxx-minx,h:maxy-miny};
+    m.tol=Math.min(30,Math.max(14,0.38*Math.sqrt(m.area)));
+  }
+})();
+
+/* ---------- уровни ---------- */
+const LEVELS=[
+  {name:'Front basics',   ids:['pec','bic','abs','quad'],                                need:3,tolMul:1.0},
+  {name:'Back basics',    ids:['trap','lat','gmax','ham','gas'],                         need:3,tolMul:1.0},
+  {name:'Arms & sides',   ids:['delt','tri','obl','flex','tib'],                         need:3,tolMul:0.9},
+  {name:'Deep cuts',      ids:['scm','serr','sart','add','infra','erec'],                need:4,tolMul:0.85},
+  {name:'Anatomy exam',   ids:['gmed','tfl','ext','serr','sart','infra','add','scm'],    need:6,tolMul:0.7},
+];
+
+/* ---------- состояние ---------- */
+let level=1,playing=false,view='front';
+let queue=[],idx=0,misses=0,found=0,lost=0,phase='idle',over=false;
+const board=$('board'),gSkin=$('gSkin'),gBones=$('gBones'),gPlaced=$('gPlaced'),gMarks=$('gMarks'),gDrag=$('gDrag');
+let placedByView={front:[],back:[]};
+
+function setView(v,anim){
+  if(v===view&&anim!=='force')return;
+  const doSwap=()=>{view=v;drawSkin(gSkin);drawSkeleton(gBones,v);$('viewTag').textContent=(v==='front'?'FRONT':'BACK')+' VIEW';
+    gPlaced.textContent='';for(const p of placedByView[v])el('path',{class:'muscle',d:p.d,transform:p.tr},gPlaced);};
+  if(anim===true){board.classList.remove('flip');void board.offsetWidth;board.classList.add('flip');setTimeout(doSwap,200);}
+  else doSwap();
+}
+function cur(){return BY_ID[queue[idx]];}
+function buildLevel(n){
+  level=n;const L=LEVELS[n-1];
+  queue=L.ids.slice();idx=0;misses=0;found=0;lost=0;over=false;phase='idle';
+  placedByView={front:[],back:[]};gMarks.textContent='';gDrag.textContent='';
+  $('lvlBadge').textContent='LEVEL '+n;$('lvlName').textContent=L.name;
+  $('winOv').classList.add('hidden');$('loseOv').classList.add('hidden');$('menuOv').classList.add('hidden');
+  playing=true;setView(cur().view,'force');
+  showMuscle(false);
+}
+function updProgress(){$('progNum').textContent=`${found}/${queue.length}`;}
+function showMuscle(animView){
+  const m=cur();phase='drag';misses=0;
+  gMarks.textContent='';gDrag.textContent='';
+  if(m.view!==view)setView(m.view,animView);
+  // карточка
+  const box=$('shapeBox');box.textContent='';
+  const s=el('svg',{viewBox:`${m.bbox.x-6} ${m.bbox.y-6} ${m.bbox.w+12} ${m.bbox.h+12}`,preserveAspectRatio:'xMidYMid meet'},box);
+  el('path',{class:'muscle',d:m.d},s);
+  $('mName').textContent=m.name;$('mView').textContent=(m.view==='front'?'FRONT':'BACK')+' VIEW';
+  $('hint').textContent='Drag the muscle onto the body';$('hint').classList.remove('hidden');$('tries').classList.remove('hidden');
+  $('nextBtn').classList.add('hidden');$('card').classList.remove('dim');
+  renderTries();updProgress();
+}
+function renderTries(){
+  const dots=document.querySelectorAll('#tries .try');
+  dots.forEach((d,i)=>d.classList.toggle('off',i<misses));
+  $('triesLbl').textContent=(3-misses)+(3-misses===1?' try':' tries');
+}
+function toast(txt,cls){const t=$('toast');t.textContent=txt;t.className='show '+(cls||'');clearTimeout(t._h);t._h=setTimeout(()=>t.className='',1400);}
+
+/* ---------- попытка ---------- */
+function attempt(px,py){ // px,py — центр формы в координатах тела
+  if(phase!=='drag'||over)return null;
+  const m=cur(),tol=m.tol*LEVELS[level-1].tolMul;
+  const candidates=m.midline?[{cx:m.cx,cy:m.cy,tr:''}]:[{cx:m.cx,cy:m.cy,tr:''},{cx:360-m.cx,cy:m.cy,tr:MIRROR}];
+  let best=null;for(const c of candidates){const d=Math.hypot(px-c.cx,py-c.cy);if(!best||d<best.d)best={...c,d};}
+  const hit=best.d<=tol;
+  if(hit){
+    phase='wait';found++;updProgress();
+    placedByView[m.view].push({d:m.d,tr:best.tr});
+    const p=el('path',{class:'muscle',d:m.d,transform:`translate(${(px-best.cx).toFixed(1)},${(py-best.cy).toFixed(1)}) ${best.tr}`},gPlaced);
+    p.style.transition='transform .22s ease-out';requestAnimationFrame(()=>requestAnimationFrame(()=>p.setAttribute('transform',best.tr)));
+    toast('Correct!  ✓','good');$('card').classList.add('dim');
+    setTimeout(advance,900);
+  }else{
+    misses++;renderTries();
+    const mk=el('g',{class:'miss',transform:`translate(${px.toFixed(1)},${py.toFixed(1)})`},gMarks);
+    el('path',{d:'M-7 -7 L7 7 M7 -7 L-7 7'},mk);
+    if(misses<3){toast(`Not there — ${3-misses} ${3-misses===1?'try':'tries'} left`,'bad');}
+    else{
+      phase='reveal';lost++;
+      // истинное место + расстояние от последнего промаха
+      el('path',{class:'muscle ghost',d:m.d,transform:`translate(${(px-m.cx).toFixed(1)},${(py-m.cy).toFixed(1)})`},gMarks);
+      el('path',{class:'muscle truth',d:m.d,transform:best.tr},gMarks);
+      el('line',{class:'distLine',x1:px,y1:py,x2:best.cx,y2:best.cy},gMarks);
+      const cm=Math.max(1,Math.round(best.d*CM_PER_PX));
+      const lx=(px+best.cx)/2,ly=(py+best.cy)/2;
+      const lbl=el('g',{transform:`translate(${lx.toFixed(1)},${ly.toFixed(1)})`},gMarks);
+      el('rect',{class:'distBg',x:-40,y:-17,width:80,height:32},lbl);
+      el('text',{class:'distLbl',x:0,y:8,'text-anchor':'middle'},lbl).textContent=`${cm} cm`;
+      toast(`${cm} cm off`,'bad');
+      $('hint').classList.add('hidden');$('tries').classList.add('hidden');
+      $('nextBtn').classList.remove('hidden');
+    }
+    // проигрыш сразу, если пройти уже нельзя
+    const L=LEVELS[level-1];
+    if(misses>=3&&found+(queue.length-idx-1)<L.need){over=true;phase='over';setTimeout(()=>lose(L),600);}
+  }
+  return {hit,d:best.d};
+}
+function advance(){
+  if(over)return;
+  idx++;
+  if(idx>=queue.length){over=true;phase='over';setTimeout(win,1000);return;}
+  showMuscle(true);
+}
+$('nextBtn').onclick=()=>{if(phase==='reveal')advance();};
+
+/* ---------- drag ---------- */
+const card=$('card');let drag=null;
+function toBody(clientX,clientY){const pt=board.createSVGPoint();pt.x=clientX;pt.y=clientY;const q=pt.matrixTransform(board.getScreenCTM().inverse());return [q.x,q.y];}
+card.addEventListener('pointerdown',e=>{
+  if(phase!=='drag'||!playing)return;
+  e.preventDefault();card.setPointerCapture(e.pointerId);
+  const m=cur();const lift=e.pointerType==='touch'?70:0;
+  const [bx,by]=toBody(e.clientX,e.clientY-lift);
+  drag={id:e.pointerId,lift,x:bx,y:by,m};
+  gDrag.textContent='';
+  drag.el=el('path',{class:'muscle drag',d:m.d,transform:`translate(${(bx-m.cx).toFixed(1)},${(by-m.cy).toFixed(1)})`},gDrag);
+});
+card.addEventListener('pointermove',e=>{
+  if(!drag||e.pointerId!==drag.id)return;
+  const [bx,by]=toBody(e.clientX,e.clientY-drag.lift);drag.x=bx;drag.y=by;
+  drag.el.setAttribute('transform',`translate(${(bx-drag.m.cx).toFixed(1)},${(by-drag.m.cy).toFixed(1)})`);
+});
+function endDrag(e,cancel){
+  if(!drag||e.pointerId!==drag.id)return;
+  const d=drag;drag=null;gDrag.textContent='';
+  // отпустили над сценой (не над карточкой и не в HUD) → попытка
+  const st=$('stage').getBoundingClientRect();
+  const y=e.clientY-d.lift;
+  if(cancel||y<st.top||y>st.bottom)return;
+  attempt(d.x,d.y);
+}
+card.addEventListener('pointerup',e=>endDrag(e,false));
+card.addEventListener('pointercancel',e=>endDrag(e,true));
+
+/* ---------- экраны ---------- */
+function win(){
+  const n=queue.length;const stars=found===n?3:found>=n-1?2:1;
+  $('stars').querySelectorAll('span').forEach((s,i)=>s.classList.toggle('on',i<stars));
+  $('winRes').textContent=`Found ${found} / ${n}`;
+  $('winOv').classList.remove('hidden');
+}
+function lose(L){
+  $('loseRes').textContent=`Found ${found} / ${queue.length}`;
+  $('loseSub').textContent=`You need ${L.need} to pass`;
+  $('loseOv').classList.remove('hidden');
+}
+$('winNext').onclick=()=>{$('winOv').classList.add('hidden');ProtoKit.play(level%LEVELS.length+1);};
+$('retryBtn').onclick=()=>{$('loseOv').classList.add('hidden');buildLevel(level);};
+$('playBtn').onclick=()=>ProtoKit.play(level);
+function renderLevelRow(){
+  const row=$('lvlRow');row.textContent='';
+  for(let i=1;i<=LEVELS.length;i++){
+    const b=document.createElement('button');b.className='lvlBtn'+(i===level?' sel':'');b.textContent=i;
+    b.onclick=()=>ProtoKit.play(i);row.appendChild(b);
+  }
+  $('lvlNames').innerHTML=LEVELS.map((L,i)=>`${i+1}. ${L.name} · ${L.ids.length} muscles, find ${L.need}`).join('<br>');
+}
+$('gearBtn').onclick=()=>{if(playing)$('menuOv').classList.remove('hidden');};
+$('mClose').onclick=()=>$('menuOv').classList.add('hidden');
+$('mRestart').onclick=()=>{$('menuOv').classList.add('hidden');buildLevel(level);};
+$('mHome').onclick=()=>{$('menuOv').classList.add('hidden');ProtoKit.home();};
+
+/* ---------- габариты поля (для аудитора) ---------- */
+function boardBounds(){
+  const ph=$('phone').getBoundingClientRect(),r=board.getBoundingClientRect();
+  const s=Math.min(r.width/360,r.height/860);const w=360*s,h=860*s;
+  const left=r.left+(r.width-w)/2-ph.left,top=r.top+(r.height-h)/2-ph.top;
+  return {left,top,right:left+w,bottom:top+h};
+}
+
+/* ---------- тест-хук ---------- */
+window.__game={
+  get state(){return {level,idx,misses,found,lost,phase,over,playing,view,muscle:queue[idx]||null,total:queue.length};},
+  muscles:MUSCLES,levels:LEVELS,
+  load(n){level=n;buildLevel(n);},
+  place(x,y){return attempt(x,y);},
+  next(){if(phase==='reveal')advance();},
+  bounds(){return boardBounds();},
+  // случайный бот: n попыток случайных точек внутри силуэта → доля попаданий на текущей мышце
+  hitRate(id,n=4000,tolMul=1){
+    const m=BY_ID[id];const cv=document.createElement('canvas');const c=cv.getContext('2d');
+    const skin=new Path2D(SKIN_D),arm=new Path2D(ARM_D);let inside=0,hits=0;
+    while(inside<n){const x=Math.random()*360,y=Math.random()*860;const xm=360-x;
+      if(!(c.isPointInPath(skin,x,y)||c.isPointInPath(arm,x,y)||c.isPointInPath(arm,xm,y)))continue;
+      inside++;const tol=m.tol*tolMul;
+      const d=m.midline?Math.hypot(x-m.cx,y-m.cy):Math.min(Math.hypot(x-m.cx,y-m.cy),Math.hypot(xm-m.cx,y-m.cy));
+      if(d<=tol)hits++;}
+    return hits/n;
+  },
+};
+
+$('homeIcon').appendChild(ProtoKit.iconTile(104));
+ProtoKit.init({slug:'musclemap',name:'Muscle Map',icon:'icon.png',iconEmoji:'💪',accent:'#e0534a',levels:LEVELS.length,
+  startLevel(n){level=n;localStorage.setItem('muscleMap.level',n);
+    $('home').classList.add('hidden');buildLevel(n);},
+  showHome(){playing=false;$('winOv').classList.add('hidden');$('loseOv').classList.add('hidden');
+    renderLevelRow();$('home').classList.remove('hidden');},
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Sand Pour — proto v1</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    height:100dvh;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;user-select:none;touch-action:none;
+    background:radial-gradient(120% 120% at 50% 0%,#222838,#10131c 80%);}
+  #phone{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;
+         background:linear-gradient(180deg,#7a72d6 0%,#6b63c9 60%,#5f57bd 100%);}
+  @media (max-aspect-ratio:1/1){ #phone{width:100vw;height:100dvh;border-radius:0;} }
+  @media (min-aspect-ratio:1/1){
+    #phone{height:96dvh;aspect-ratio:9/16;width:auto;
+           border-radius:32px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 8px #0c0e15;}
+  }
+  #hud{width:100%;padding:10px 12px;z-index:3;display:flex;align-items:center;gap:8px;}
+  .pill{background:#3d3785;color:#fff;border-radius:16px;padding:7px 14px;font-weight:800;
+        font-size:15px;box-shadow:inset 0 -2px 0 rgba(0,0,0,.35),0 2px 4px rgba(0,0,0,.25);}
+  .ibtn{width:38px;height:38px;border-radius:12px;background:#3d3785;color:#e6e2ff;border:0;
+        font-size:18px;font-weight:900;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  #stage{flex:1;width:100%;position:relative;z-index:2;min-height:0;}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+
+  .ov{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;gap:14px;background:rgba(40,32,96,.88);backdrop-filter:blur(3px);}
+  .ov h1{color:#fff;font-size:34px;margin:0;text-shadow:0 3px 0 rgba(0,0,0,.35);letter-spacing:1px;}
+  .ov .sub{color:#d8d3ff;font-size:15px;margin:0 28px;text-align:center;line-height:1.45;}
+  .btn{background:linear-gradient(180deg,#ffd54d,#f4a825);border:0;border-radius:18px;padding:14px 34px;
+       font-size:19px;font-weight:900;color:#5b3a00;cursor:pointer;box-shadow:0 5px 0 #b97b12;}
+  .btn:active{transform:translateY(3px);box-shadow:0 2px 0 #b97b12;}
+  .btn.sec{background:linear-gradient(180deg,#8a7cf0,#6a5ad6);color:#fff;box-shadow:0 5px 0 #4a3fa8;}
+  /* карта-путь уровней: снизу вверх */
+  #path{display:flex;flex-direction:column-reverse;align-items:center;gap:0;margin:6px 0;}
+  .node{width:58px;height:58px;border-radius:50%;border:0;cursor:pointer;font-size:22px;font-weight:900;color:#fff;
+        background:linear-gradient(180deg,#8a7cf0,#6a5ad6);box-shadow:0 5px 0 #4a3fa8,0 8px 16px rgba(0,0,0,.3);}
+  .node.spike{background:linear-gradient(180deg,#ff8a5c,#e9553c);box-shadow:0 5px 0 #a8321f,0 8px 16px rgba(0,0,0,.3);}
+  .node:active{transform:translateY(3px);}
+  .link{width:6px;height:22px;background:repeating-linear-gradient(180deg,#cfc9ff 0 5px,transparent 5px 10px);margin:2px 0;}
+  .hidden{display:none!important;}
+</style>
+</head>
+<body>
+<div id="phone">
+  <div id="hud">
+    <button class="ibtn" id="btnHome">⌂</button>
+    <div style="flex:1"></div>
+    <div class="pill" id="lvlLab">Level 1</div>
+    <div style="flex:1"></div>
+    <button class="ibtn" id="btnRetry">⟳</button>
+  </div>
+  <div id="stage"><canvas id="cv"></canvas></div>
+
+  <div class="ov" id="home">
+    <h1 id="title">SAND POUR</h1>
+    <p class="sub" id="homeSub">Тапни кубик: он рассыпается в песок и стекает в приёмник.<br>
+      Песок идёт в <b>переднюю чашку своего цвета</b>. Чужой цвет ждёт в приёмнике,<br>
+      мест мало: переполнил, проиграл. Заполни все чашки!</p>
+    <div id="path"></div>
+  </div>
+  <div class="ov hidden" id="win">
+    <h1>LEVEL DONE!</h1>
+    <button class="btn" id="btnNext">Next level</button>
+    <button class="btn sec" id="btnWinHome">Home</button>
+  </div>
+  <div class="ov hidden" id="lose">
+    <h1>OVERFLOW!</h1>
+    <p class="sub">Приёмник переполнен чужим песком.</p>
+    <button class="btn" id="btnRetryOv">Retry</button>
+    <button class="btn sec" id="btnLoseHome">Home</button>
+  </div>
+</div>
+
+<script>
+/* ================= Sand Pour proto v1 =================
+   Наклонный бак с кубиками песка. Тап: кубик рассыпается,
+   песок стекает в горловину -> приёмник -> чашки-очереди.
+   Чужой цвет копится в приёмнике (CAP мест), переполнение = LOSE.
+   ======================================================== */
+const MODE='sand';                       // 'sand' | 'liquid'
+const LW=396, LH=650, GP=2;
+const TANK={x:16,y:6,w:364,h:368,r:36};
+const IN={x:30,y:20,w:336,h:342};
+const GW=IN.w/GP|0, GH=IN.h/GP|0;        // 112 x 114
+const NECK={cx:198,hw:18};
+const COLR={x:34,y:384,w:328,h:60,r:30}; // приёмник (овал)
+const BAR={x:98,y:401,w:200,h:26};
+const SLOTY=461;
+const CUPS={x:38,y:478,colw:80,frontH:46,rowH:24,gap:5,panelY:472};
+const ROT=40*Math.PI/180, RC=Math.cos(ROT), RS=Math.sin(ROT);
+const RATE=2.6;                          // заполнение чашки, ед/с
+const PAL=[
+  {n:'orange',a:'#f5901f',b:'#b8620a',l:'#ffb954'},
+  {n:'yellow',a:'#f9c930',b:'#c08f0e',l:'#ffe27a'},
+  {n:'blue',  a:'#3ec5f6',b:'#1a86b8',l:'#93e4ff'},
+  {n:'green', a:'#55d43b',b:'#2f961e',l:'#a0f088'},
+  {n:'pink',  a:'#ff7fd8',b:'#c2459f',l:'#ffb7ec'},
+  {n:'brown', a:'#95603b',b:'#5e351b',l:'#bf8d69'},
+  {n:'red',   a:'#e84d5a',b:'#a52a36',l:'#ff8f98'},
+];
+// rows: '.' пусто, '0'-'6' цвет кубика, 'X' бомба (счётчики в bombs по порядку чтения);
+// hid: '#' скрытый кубик ('?'); cap: мест ожидания в приёмнике
+const LEVELS=[
+ {name:'Warm-up', cap:2, seed:7,
+  rows:['012','120','201'],
+  hid: ['...','...','...'], bombs:[]},
+ {name:'Hidden', cap:2, seed:13,
+  rows:['.012','2301','1230','30.2'],
+  hid: ['.#..','..#.','#...','...#'], bombs:[]},
+ {name:'Bomb', cap:1, seed:22,
+  rows:['0123.','4X012','34120','.2340'],
+  hid: ['#.#.#','.###.','#.#.#','.##..'], bombs:[3]},
+ {name:'Deep', cap:1, seed:35,
+  rows:['.012.','3X120','20134','412X0','.3401'],
+  hid: ['.#.#.','#.##.','.##.#','#.#.#','.#..#'], bombs:[3,3]},
+ {name:'Spike', cap:0, seed:56,
+  rows:['..012.','.3451.','X20345','15X201','.43520','..1.4.'],
+  hid: ['..#.#.','.#.##.','.#.#..','##.#.#','.#.##.','..#.#.'], bombs:[3,3]},
+];
+
+/* ---------- состояние ---------- */
+let L, level=0, cubes=[], bombs=[], cups=[], cupsTotal=0, cupsDone=0;
+let arrived=new Float64Array(7), unitsIF=new Float64Array(7), grainsIF=new Int32Array(7), pool=[0,0,0,0,0,0,0];
+let grid, mv, mask, exitCol, shapeSet, CS=40, cx=198, cy=150, Wb=3, Hb=3, yB=160, yF=210;
+let drops=[], streams=[], confetti=[], popAnims=[], colOff=[0,0,0,0], shakeT=0, badTap=null;
+let playing=false, winFlag=false, loseFlag=false, winAt=0, tick=0, stall=0, speed=1, stamp=1;
+let botKind=null, botPlan=null, botTimer=0, lastTime=performance.now();
+let cav; // offscreen canvas для отрисовки полости
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+const idx=(x,y)=>y*GW+x;
+
+/* ---------- геометрия ---------- */
+function toLocal(px,py){const dx=px-cx,dy=py-cy;return [(dx*RC+dy*RS)/CS+(Wb-1)/2, (-dx*RS+dy*RC)/CS+(Hb-1)/2];}
+function cellCenter(i,j){const lx=(i-(Wb-1)/2)*CS, ly=(j-(Hb-1)/2)*CS;return [cx+lx*RC-ly*RS, cy+lx*RS+ly*RC];}
+function inCells(px,py){const [lx,ly]=toLocal(px,py);const i=Math.round(lx),j=Math.round(ly);
+  if(!shapeSet.has(i+','+j))return false;const pad=0.5+1.6/CS;return Math.abs(lx-i)<=pad&&Math.abs(ly-j)<=pad;}
+function funnelX(py){ // левая стенка канала на высоте py (правая симметрична)
+  if(py<yF)return IN.x; const t=(py-yF)/(IN.y+IN.h-yF); return IN.x+(NECK.cx-NECK.hw-IN.x)*t;}
+function inFunnel(px,py){if(py<yB)return false;const xl=funnelX(py);return px>=xl&&px<=2*NECK.cx-xl;}
+
+function buildMask(){
+  mask=new Int8Array(GW*GH); exitCol=new Uint8Array(GW);
+  for(let gy=0;gy<GH;gy++)for(let gx=0;gx<GW;gx++){
+    const px=IN.x+(gx+.5)*GP, py=IN.y+(gy+.5)*GP;
+    mask[idx(gx,gy)]=(inCells(px,py)||inFunnel(px,py))?0:1;
+  }
+  for(let gx=0;gx<GW;gx++){const px=IN.x+(gx+.5)*GP; exitCol[gx]=(Math.abs(px-NECK.cx)<NECK.hw&&!mask[idx(gx,GH-1)])?1:0;}
+  // полость на offscreen (векторно)
+  cav=document.createElement('canvas');cav.width=LW*2;cav.height=LH*2;const c=cav.getContext('2d');c.scale(2,2);
+  c.fillStyle='#b9b6f5';
+  c.beginPath();c.moveTo(IN.x,yB);c.lineTo(IN.x+IN.w,yB);c.lineTo(IN.x+IN.w,yF);
+  c.lineTo(NECK.cx+NECK.hw,IN.y+IN.h+30);c.lineTo(NECK.cx-NECK.hw,IN.y+IN.h+30);c.lineTo(IN.x,yF);c.closePath();c.fill();
+  for(const key of shapeSet){const [i,j]=key.split(',').map(Number);const [x,y]=cellCenter(i,j);
+    c.save();c.translate(x,y);c.rotate(ROT);rr(c,-CS/2-1.6,-CS/2-1.6,CS+3.2,CS+3.2,3);c.fill();c.restore();}
+}
+
+/* ---------- уровень ---------- */
+function buildLevel(n){
+  L=LEVELS[n]; level=n; document.getElementById('lvlLab').textContent='Level '+(n+1);
+  Hb=L.rows.length; Wb=Math.max(...L.rows.map(r=>r.length));
+  cubes=[];bombs=[];shapeSet=new Set();let bi=0;
+  L.rows.forEach((r,j)=>[...r].forEach((ch,i)=>{ if(ch==='.')return; shapeSet.add(i+','+j);
+    if(ch==='X'){bombs.push({i,j,n:L.bombs[bi++],alive:true});return;}
+    cubes.push({i,j,col:+ch,hidden:L.hid[j][i]==='#',alive:true,id:cubes.length}); }));
+  CS=Math.min(46, Math.floor(318/(Wb*RC+Hb*RS)), Math.floor(282/(Wb*RS+Hb*RC)));
+  const bh=(Wb*RS+Hb*RC)*CS; cx=198; cy=IN.y+8+bh/2; yB=cy; yF=Math.min(yB+50, IN.y+IN.h-150);
+  buildMask();
+  grid=new Int8Array(GW*GH); mv=new Uint8Array(GW*GH);
+  arrived.fill(0);unitsIF.fill(0);grainsIF.fill(0);
+  drops=[];streams=[];confetti=[];popAnims=[];colOff=[0,0,0,0];
+  winFlag=false;loseFlag=false;winAt=0;tick=0;stall=0;cupsDone=0;botPlan=null;
+  // очереди чашек: реверс-генерация из случайного допустимого порядка тапов
+  const rng=mulberry32(L.seed);
+  const st=logicState(); const seq=[];
+  let guard=0;
+  while(st.alive.some(a=>a)&&guard++<500){
+    let cands=[];for(let k=0;k<cubes.length;k++)if(st.alive[k]&&!st.hidden[k])cands.push(k);
+    if(!cands.length){for(let k=0;k<cubes.length;k++)if(st.alive[k]){st.hidden[k]=false;cands.push(k);break;}}
+    logicPop(st,cands[Math.floor(rng()*cands.length)],seq);
+  }
+  cups=[[],[],[],[]];
+  for(const col of seq){const min=Math.min(...cups.map(q=>q.length));let k;
+    if(rng()<.55){const ms=[0,1,2,3].filter(q=>cups[q].length===min);k=ms[Math.floor(rng()*ms.length)];}
+    else k=Math.floor(rng()*4); cups[k].push({col,fill:0,as:false,done:false});}
+  pool=[0,0,0,0,0,0,0];
+  cupsTotal=seq.length;
+  console.assert(cupsTotal===cubes.length,'economy');
+  playing=true;
+}
+
+/* ---------- логика (общая для игры, генератора, солвера, бота) ---------- */
+function logicState(){return {alive:cubes.map(c=>c.alive),hidden:cubes.map(c=>c.hidden),bn:bombs.map(b=>b.alive?b.n:0)};}
+function logicPop(st,k,out){ // out: массив цветов (или индексов при out.idx)
+  if(!st.alive[k])return; st.alive[k]=false; st.hidden[k]=false; out.push(out.idx?k:cubes[k].col);
+  const c=cubes[k];
+  for(let q=0;q<cubes.length;q++){const o=cubes[q];if(st.alive[q]&&st.hidden[q]&&Math.abs(o.i-c.i)+Math.abs(o.j-c.j)===1)st.hidden[q]=false;}
+  for(let b=0;b<bombs.length;b++){const B=bombs[b];if(st.bn[b]<=0)continue;
+    if(Math.max(Math.abs(B.i-c.i),Math.abs(B.j-c.j))===1){st.bn[b]--; if(st.bn[b]<=0){
+      for(let q=0;q<cubes.length;q++){const o=cubes[q];if(st.alive[q]&&Math.max(Math.abs(o.i-B.i),Math.abs(o.j-B.j))===1)logicPop(st,q,out);}}}}
+}
+// МОДЕЛЬ ОЧЕРЕДЕЙ: единица песка при тапе бронирует ЛЕВУЮ свободную (небронированную)
+// чашку своего цвета; иначе ждёт в pool. Освободившаяся «виртуальная передняя» чашка
+// сразу берёт из pool. Ожидание = сумма pool. Одна модель для игры, солвера и бота.
+function qmodel(){return {vf:cups.map(q=>q.filter(c=>c.as).length),pool:pool.slice()};}
+function qcols(){return cups.map(q=>q.map(c=>c.col));}
+function assignUnit(m,cols,c){ // m: {vf,pool}; true если забронировано
+  for(let k=0;k<cols.length;k++){const q=cols[k];if(m.vf[k]<q.length&&q[m.vf[k]]===c){advance(m,cols,k);return true;}}
+  m.pool[c]++;return false;}
+function advance(m,cols,k){m.vf[k]++;const q=cols[k];
+  while(m.vf[k]<q.length&&m.pool[q[m.vf[k]]]>=1){m.pool[q[m.vf[k]]]--;m.vf[k]++;}}
+function poolSum(m){return m.pool.reduce((a,b)=>a+b,0);}
+function logicalWaiting(){return pool.reduce((a,b)=>a+b,0);}
+// солвер-оракул (знает скрытые цвета): последовательность индексов кубиков с ожиданием <= cap
+function solve(maxNodes=150000){
+  const cap=L.cap; const memo=new Set(); let nodes=0; const cols=qcols(); const total=cols.reduce((a,q)=>a+q.length,0);
+  function key(st,m){return st.alive.map(a=>a?1:0).join('')+'|'+st.bn.join(',')+'|'+m.vf.join(',')+'|'+m.pool.join(',');}
+  function dfs(st,m){
+    if(m.vf.reduce((a,b)=>a+b,0)>=total)return [];
+    if(++nodes>maxNodes)return null;
+    const k0=key(st,m);if(memo.has(k0))return null;
+    const fronts=new Set();cols.forEach((q,k)=>{if(m.vf[k]<q.length)fronts.add(q[m.vf[k]]);});
+    const cands=[];for(let k=0;k<cubes.length;k++)if(st.alive[k]&&!st.hidden[k])cands.push(k);
+    cands.sort((a,b)=>(fronts.has(cubes[b].col)?1:0)-(fronts.has(cubes[a].col)?1:0));
+    for(const k of cands){
+      const ns={alive:st.alive.slice(),hidden:st.hidden.slice(),bn:st.bn.slice()};const out=[];out.idx=true;logicPop(ns,k,out);
+      const nm={vf:m.vf.slice(),pool:m.pool.slice()};for(const q of out)assignUnit(nm,cols,cubes[q].col);
+      if(poolSum(nm)>cap)continue;
+      const r=dfs(ns,nm);if(r)return [k,...r];
+    }
+    memo.add(k0);return null;
+  }
+  return dfs(logicState(),qmodel());
+}
+// слепой бот (не знает скрытые цвета): жадный выбор с одношаговой оценкой
+function naivePick(){const cols=qcols();const m=qmodel();const fronts=new Set();cols.forEach((q,k)=>{if(m.vf[k]<q.length)fronts.add(q[m.vf[k]]);});
+  const vis=cubes.filter(c=>c.alive&&!c.hidden);if(!vis.length)return -1;const good=vis.filter(c=>fronts.has(c.col));
+  const pick=(good.length?good:vis)[Math.floor(Math.random()*(good.length?good:vis).length)];return pick.id;}
+function blindPick(rnd=Math.random){
+  const cols=qcols();let best=null,bs=-1e9;
+  for(let k=0;k<cubes.length;k++){const c=cubes[k];if(!c.alive||c.hidden)continue;
+    const st=logicState();const out=[];out.idx=true;logicPop(st,k,out);
+    const m=qmodel();let unknown=0,reveals=0;
+    for(const q of out){if(cubes[q].hidden&&q!==k)unknown++;else assignUnit(m,cols,cubes[q].col);}
+    for(let q=0;q<cubes.length;q++)if(cubes[q].hidden&&!st.hidden[q]&&st.alive[q])reveals++;
+    const w=poolSum(m)+unknown;
+    let depth=99;cols.forEach((qq,kk)=>{for(let d=m.vf[kk];d<qq.length;d++)if(qq[d]===c.col){depth=Math.min(depth,d-m.vf[kk]);break;}});
+    let s=-w*10+reveals*1.5-Math.min(depth,6)*1.2+rnd()*0.5;
+    if(w>L.cap)s-=1000;
+    if(s>bs){bs=s;best=k;}
+  }
+  return best;
+}
+
+// логическая симуляция без физики: winrate наивного/жадного бота на текущем уровне
+function simBots(kind,runs){let wins=0;const cols=qcols();const total=cubes.length;
+  for(let r=0;r<runs;r++){const st=logicState();const m={vf:[0,0,0,0],pool:[0,0,0,0,0,0,0]};let lose=false,guard=0;
+    while(m.vf.reduce((a,b)=>a+b,0)<total&&!lose&&guard++<200){
+      const vis=[];for(let k=0;k<cubes.length;k++)if(st.alive[k]&&!st.hidden[k])vis.push(k);
+      if(!vis.length)break;
+      let pick;
+      if(kind==='naive'){const fronts=new Set();cols.forEach((q,k)=>{if(m.vf[k]<q.length)fronts.add(q[m.vf[k]]);});
+        const good=vis.filter(k=>fronts.has(cubes[k].col));const arr=good.length?good:vis;pick=arr[Math.floor(Math.random()*arr.length)];}
+      else{let bs=-1e9;for(const k of vis){const ns={alive:st.alive.slice(),hidden:st.hidden.slice(),bn:st.bn.slice()};const out=[];out.idx=true;logicPop(ns,k,out);
+          const nm={vf:m.vf.slice(),pool:m.pool.slice()};let unknown=0,reveals=0;for(const q of out){if(st.hidden[q]&&q!==k)unknown++;else assignUnit(nm,cols,cubes[q].col);}
+          for(let q=0;q<cubes.length;q++)if(st.hidden[q]&&!ns.hidden[q]&&ns.alive[q])reveals++;
+          const w=poolSum(nm)+unknown;let depth=99;cols.forEach((qq,kk)=>{for(let d=m.vf[kk];d<qq.length;d++)if(qq[d]===cubes[k].col){depth=Math.min(depth,d-m.vf[kk]);break;}});
+          let sc=-w*10+reveals*1.5-Math.min(depth,6)*1.2+Math.random()*.5;if(w>L.cap)sc-=1000;if(sc>bs){bs=sc;pick=k;}}}
+      const out=[];out.idx=true;logicPop(st,pick,out);for(const q of out)assignUnit(m,cols,cubes[q].col);
+      if(poolSum(m)>L.cap)lose=true;}
+    if(!lose&&m.vf.reduce((a,b)=>a+b,0)>=total)wins++;}
+  return wins/runs;}
+
+/* ---------- физика песка/жидкости ---------- */
+function spawnGrains(c){
+  const [x0,y0]=cellCenter(c.i,c.j);let G=0;const col=c.col+1;
+  const gx0=Math.floor((x0-IN.x-CS)/GP), gy0=Math.floor((y0-IN.y-CS)/GP);
+  for(let gy=gy0;gy<gy0+2*CS/GP+2;gy++)for(let gx=gx0;gx<gx0+2*CS/GP+2;gx++){
+    if(gx<0||gy<0||gx>=GW||gy>=GH)continue;const i=idx(gx,gy);if(mask[i])continue;
+    const px=IN.x+(gx+.5)*GP,py=IN.y+(gy+.5)*GP;const [lx,ly]=toLocal(px,py);
+    if(Math.abs(lx-c.i)<=0.5-3/CS&&Math.abs(ly-c.j)<=0.5-3/CS){if(grid[i]>0){if(grainsIF[grid[i]-1]>0)grainsIF[grid[i]-1]--;}grid[i]=col;G++;}
+  }
+  unitsIF[c.col]+=1;grainsIF[c.col]+=G;
+}
+function arrive(v,gx){const c=v-1;
+  if(grainsIF[c]>0){const u=unitsIF[c]/grainsIF[c];arrived[c]+=u;unitsIF[c]-=u;grainsIF[c]--;}
+  if(drops.length<420)drops.push({x:IN.x+(gx+.5)*GP+(Math.random()-.5)*4,y:IN.y+IN.h-2,vy:60+Math.random()*60,vx:(Math.random()-.5)*20,col:c});
+}
+function simStep(dirFlag){
+  stamp=(stamp%250)+1;let moved=0;const liquid=MODE==='liquid';
+  for(let y=GH-1;y>=0;y--){
+    const xs=dirFlag?0:GW-1, xe=dirFlag?GW:-1, dx=dirFlag?1:-1;
+    for(let x=xs;x!==xe;x+=dx){
+      const i=idx(x,y);const v=grid[i];if(v<=0||mv[i]===stamp)continue;
+      if(y===GH-1){if(exitCol[x]){grid[i]=0;arrive(v,x);moved++;}continue;}
+      const b=i+GW;
+      if(!mask[b]&&grid[b]===0){grid[b]=v;grid[i]=0;mv[b]=stamp;moved++;continue;}
+      const d=Math.random()<.5?-1:1;
+      for(let t=0;t<2;t++){const nx=x+(t?-d:d);if(nx<0||nx>=GW)continue;const n=b+(t?-d:d);
+        if(!mask[n]&&grid[n]===0&&(liquid||(!mask[i+(t?-d:d)]&&grid[i+(t?-d:d)]===0))){grid[n]=v;grid[i]=0;mv[n]=stamp;moved++;t=9;}}
+      if(grid[i]!==v)continue;
+      // боковое стекание к горловине
+      if(liquid||Math.random()<.22){
+        const toNeck=Math.sign(NECK.cx-(IN.x+(x+.5)*GP))||d;const s=Math.random()<(liquid?.55:.8)?toNeck:-toNeck;
+        let best=-1;for(let st=1;st<=(liquid?2:1);st++){const nx=x+s*st;if(nx<0||nx>=GW)break;const n=i+s*st;if(mask[n]||grid[n]!==0)break;best=n;}
+        if(best>=0){grid[best]=v;grid[i]=0;mv[best]=stamp;moved++;}
+      }
+    }
+  }
+  return moved;
+}
+function grainsTotal(){let s=0;for(let c=0;c<7;c++)s+=grainsIF[c];return s;}
+
+/* ---------- игровой тик ---------- */
+function update(dt){
+  if(!playing)return; tick++;
+  let moved=0;const sub=MODE==='liquid'?4:3;for(let s=0;s<sub;s++)moved+=simStep((tick*sub+s)&1);
+  for(let c=0;c<7;c++)if(grainsIF[c]<=0&&unitsIF[c]>1e-9){arrived[c]+=unitsIF[c];unitsIF[c]=0;grainsIF[c]=0;} // сироты без зёрен
+  if(grainsTotal()>0){ if(moved===0){if(++stall>40){ // страховка: застрявшие зёрна досыпаем в приёмник
+      for(let i=0;i<grid.length;i++)if(grid[i]>0){arrive(grid[i],i%GW);grid[i]=0;} stall=0;}} else stall=0; }
+  // капли из горловины в приёмник
+  for(let k=drops.length-1;k>=0;k--){const p=drops[k];p.vy+=900*dt;p.y+=p.vy*dt;p.x+=p.vx*dt;if(p.y>COLR.y+COLR.h-10)drops.splice(k,1);}
+  // заполнение: физически передняя чашка колонки, если забронирована
+  for(let k=0;k<4;k++){const cup=cups[k].find(c=>!c.done);if(!cup||!cup.as)continue;const c=cup.col;
+    if(arrived[c]<=1e-9)continue;const d=Math.min(arrived[c],1-cup.fill,RATE*dt);
+    cup.fill+=d;arrived[c]-=d;
+    if(Math.random()<.9&&streams.length<200)streams.push({x:CUPS.x+k*CUPS.colw+CUPS.colw/2+(Math.random()-.5)*10,y:COLR.y+COLR.h-6,vy:120,col:c});
+    if(cup.fill>=1-1e-6){cup.done=true;cupsDone++;popAnims.push({k,col:c,t:0});colOff[k]=CUPS.frontH+CUPS.gap;}
+  }
+  for(let k=0;k<4;k++)colOff[k]=Math.max(0,colOff[k]-dt*220);
+  for(let k=streams.length-1;k>=0;k--){const p=streams[k];p.y+=p.vy*dt;p.vy+=500*dt;if(p.y>CUPS.y+8)streams.splice(k,1);}
+  for(let k=popAnims.length-1;k>=0;k--){popAnims[k].t+=dt;if(popAnims[k].t>.4)popAnims.splice(k,1);}
+  if(shakeT>0)shakeT-=dt;
+  // конфетти
+  for(let k=confetti.length-1;k>=0;k--){const p=confetti[k];p.vy+=600*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.r+=p.vr*dt;p.life-=dt;if(p.life<=0)confetti.splice(k,1);}
+  // lose / win
+  if(!winFlag&&!loseFlag&&logicalWaiting()>L.cap){loseFlag=true;playing=false;botKind=null;showOv('lose');}
+  if(!winFlag&&!loseFlag&&cupsDone>=cupsTotal){winFlag=true;winAt=performance.now();burstConfetti();}
+  if(winFlag&&playing&&performance.now()-winAt>1000){playing=false;botKind=null;showOv('win');}
+  // бот
+  if(botKind&&playing&&!winFlag){botTimer-=dt;if(botTimer<=0){botTimer=.25;botStep();}}
+}
+function popCube(k){const c=cubes[k];if(!c.alive)return;
+  const st=logicState();const out=[];out.idx=true;logicPop(st,k,out);
+  const cols=qcols();const m=qmodel();
+  for(const q of out){const o=cubes[q];o.alive=false;o.hidden=false;spawnGrains(o);assignUnit(m,cols,o.col);}
+  pool=m.pool;cups.forEach((q,k)=>q.forEach((cup,d)=>{cup.as=d<m.vf[k];}));
+  cubes.forEach((o,q)=>{o.hidden=st.hidden[q];});
+  bombs.forEach((b,q)=>{b.n=st.bn[q];if(b.n<=0)b.alive=false;});
+}
+function tapAt(px,py){if(!playing||winFlag||loseFlag)return false;
+  const [lx,ly]=toLocal(px,py);const i=Math.round(lx),j=Math.round(ly);
+  if(Math.abs(lx-i)>.5||Math.abs(ly-j)>.5)return false;
+  const k=cubes.findIndex(c=>c.alive&&c.i===i&&c.j===j);if(k<0)return false;
+  if(cubes[k].hidden){badTap={k,t:.3};return false;}
+  popCube(k);return true;
+}
+function botStep(){
+  if(botKind==='oracle'){
+    if(!botPlan||!botPlan.length){botPlan=solve();if(!botPlan){console.log('oracle: no solution');botKind=null;return;}}
+    const k=botPlan[0];if(!cubes[k].alive||cubes[k].hidden){botPlan=null;return;}
+    botPlan.shift();popCube(k);
+  }else{ // blind: ждём, пока песок дойдёт и чашки примут своё
+    if(grainsTotal()>0)return;
+    if(cups.some(q=>q.some(c=>c.as&&!c.done)))return;
+    const k=botKind==='naive'?naivePick():blindPick();if(k==null||k<0){botKind=null;return;}popCube(k);
+  }
+}
+
+/* ---------- отрисовка ---------- */
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+let scale=1,offX=0,offY=0,dpr=1;
+const low=document.createElement('canvas');low.width=GW;low.height=GH;const lctx=low.getContext('2d');
+const img=lctx.createImageData(GW,GH);
+const NOISE=new Uint8Array(GW*GH);for(let i=0;i<NOISE.length;i++)NOISE[i]=Math.random()*256;
+const PALRGB=PAL.map(p=>[hex(p.a),hex(p.l),hex(p.b)]);
+function hex(h){return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+function resize(){const st=document.getElementById('stage');dpr=Math.min(2,window.devicePixelRatio||1);
+  cv.width=st.clientWidth*dpr;cv.height=st.clientHeight*dpr;
+  scale=Math.min(st.clientWidth/LW,st.clientHeight/LH);offX=(st.clientWidth-LW*scale)/2;offY=(st.clientHeight-LH*scale)/2;}
+window.addEventListener('resize',resize);
+
+function draw(){
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.setTransform(dpr*scale,0,0,dpr*scale,offX*dpr,offY*dpr);
+  if(!L)return;
+  const shx=shakeT>0?Math.sin(shakeT*60)*3:0;
+  ctx.save();ctx.translate(shx,0);
+  // бак
+  ctx.fillStyle='#aeaaf0';rr(ctx,TANK.x,TANK.y,TANK.w,TANK.h,TANK.r);ctx.fill();
+  ctx.fillStyle='#4d489c';rr(ctx,IN.x,IN.y,IN.w,IN.h,26);ctx.fill();
+  ctx.save();rr(ctx,IN.x,IN.y,IN.w,IN.h,26);ctx.clip();
+  ctx.drawImage(cav,0,0,LW,LH);
+  // песок
+  drawGrid();
+  if(MODE==='liquid'){ctx.imageSmoothingEnabled=true;ctx.filter='blur(1.4px)';ctx.drawImage(low,IN.x,IN.y,IN.w,IN.h);ctx.filter='none';ctx.globalAlpha=.55;ctx.drawImage(low,IN.x,IN.y,IN.w,IN.h);ctx.globalAlpha=1;}
+  else{ctx.imageSmoothingEnabled=true;ctx.drawImage(low,IN.x,IN.y,IN.w,IN.h);ctx.globalAlpha=.6;ctx.drawImage(low,IN.x,IN.y,IN.w,IN.h);ctx.globalAlpha=1;}
+  ctx.restore();
+  // горловина
+  ctx.fillStyle='#b9b6f5';ctx.fillRect(NECK.cx-NECK.hw,IN.y+IN.h-2,NECK.hw*2,COLR.y-IN.y-IN.h+6);
+  ctx.fillStyle='#aeaaf0';ctx.fillRect(NECK.cx-NECK.hw-12,TANK.y+TANK.h-2,12,COLR.y-TANK.y-TANK.h+8);ctx.fillRect(NECK.cx+NECK.hw,TANK.y+TANK.h-2,12,COLR.y-TANK.y-TANK.h+8);
+  // кубики и бомбы
+  for(const c of cubes)if(c.alive)drawCube(c);
+  for(const b of bombs)if(b.alive)drawBomb(b);
+  // приёмник
+  ctx.fillStyle='#aeaaf0';rr(ctx,COLR.x,COLR.y,COLR.w,COLR.h,COLR.r);ctx.fill();
+  ctx.fillStyle='#8f8be0';rr(ctx,COLR.x+8,COLR.y+8,COLR.w-16,COLR.h-16,COLR.r-8);ctx.fill();
+  drawPile();
+  ctx.fillStyle='#5a55b0';rr(ctx,BAR.x,BAR.y,BAR.w,BAR.h,13);ctx.fill();
+  const prog=cupsTotal?cups.reduce((s,q)=>s+q.reduce((a,c)=>a+c.fill,0),0)/cupsTotal:0;
+  ctx.fillStyle='#8f8be0';rr(ctx,BAR.x+3,BAR.y+3,Math.max(0,(BAR.w-6)*prog),BAR.h-6,10);if(prog>0)ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='900 17px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.shadowColor='rgba(0,0,0,.35)';ctx.shadowBlur=0;ctx.shadowOffsetY=2;ctx.fillText(Math.round(prog*100)+'%',BAR.x+BAR.w/2,BAR.y+BAR.h/2+1);ctx.shadowColor='transparent';
+  // капли
+  for(const p of drops){ctx.fillStyle=PAL[p.col].a;ctx.fillRect(p.x-1.5,p.y-1.5,3,3);}
+  // слоты ожидания
+  drawSlots();
+  // чашки
+  drawCups();
+  for(const p of streams){ctx.fillStyle=PAL[p.col].a;ctx.fillRect(p.x-1.5,p.y-1.5,3,3);}
+  ctx.restore();
+  // конфетти
+  for(const p of confetti){ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.fillStyle=p.c;ctx.fillRect(-4,-3,8,6);ctx.restore();}
+}
+function drawGrid(){const d=img.data;
+  for(let i=0,p=0;i<grid.length;i++,p+=4){const v=grid[i];
+    if(v<=0){d[p+3]=0;continue;}
+    const rgb=PALRGB[v-1];const sh=MODE==='sand'?(NOISE[i]<64?1:(NOISE[i]>232?2:0)):0;const c=rgb[sh];
+    d[p]=c[0];d[p+1]=c[1];d[p+2]=c[2];d[p+3]=255;}
+  lctx.putImageData(img,0,0);}
+function drawCube(c){const [x,y]=cellCenter(c.i,c.j);const s=CS-7,r=Math.max(6,CS*.2);
+  let wob=0;if(badTap&&badTap.k===c.id){wob=Math.sin(badTap.t*50)*3;badTap.t-=1/60;if(badTap.t<=0)badTap=null;}
+  const pal=c.hidden?{a:'#c9c6dc',b:'#8c88a8',l:'#ecebf5'}:PAL[c.col];
+  ctx.save();ctx.translate(x+wob,y+4);ctx.rotate(ROT);ctx.fillStyle=pal.b;rr(ctx,-s/2,-s/2,s,s,r);ctx.fill();ctx.restore();
+  ctx.save();ctx.translate(x+wob,y);ctx.rotate(ROT);
+  ctx.fillStyle='#2a2650';rr(ctx,-s/2-2,-s/2-2,s+4,s+4,r+2);ctx.fill();
+  const g=ctx.createLinearGradient(0,-s/2,0,s/2);g.addColorStop(0,pal.l);g.addColorStop(.35,pal.a);g.addColorStop(1,pal.a);
+  ctx.fillStyle=g;rr(ctx,-s/2,-s/2,s,s,r);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.45)';ctx.beginPath();ctx.ellipse(-s*.2,-s*.25,s*.16,s*.1,-.5,0,Math.PI*2);ctx.fill();
+  if(c.hidden){ctx.fillStyle='#fff';ctx.font='900 '+Math.round(s*.6)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('?',0,2);}
+  ctx.restore();
+}
+function drawBomb(b){const [x,y]=cellCenter(b.i,b.j);const r=CS*.42;
+  ctx.save();ctx.translate(x,y);
+  ctx.fillStyle='#14204a';ctx.beginPath();ctx.arc(0,4,r,0,7);ctx.fill();
+  const g=ctx.createRadialGradient(-r*.3,-r*.3,r*.1,0,0,r);g.addColorStop(0,'#5d7cff');g.addColorStop(1,'#2438a0');ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,r,0,7);ctx.fill();
+  ctx.strokeStyle='#ffd34d';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,r*.78,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,b.n/3));ctx.stroke();
+  ctx.fillStyle='#fff';ctx.font='900 '+Math.round(r*1.1)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(b.n,0,1);
+  ctx.fillStyle='#ffd34d';ctx.beginPath();ctx.moveTo(r*.45,-r*.95);ctx.lineTo(r*.15,-r*.45);ctx.lineTo(r*.4,-r*.45);ctx.lineTo(r*.1,r*.05);ctx.lineTo(r*.55,-r*.6);ctx.lineTo(r*.3,-r*.6);ctx.closePath();ctx.fill();
+  ctx.restore();
+}
+// куча чужого песка в приёмнике: детерминированные точки вокруг бара
+const PILE_PTS=(()=>{const r=mulberry32(99);const pts=[];while(pts.length<520){
+  const x=COLR.x+10+r()*(COLR.w-20),y=COLR.y+10+r()*(COLR.h-20);
+  const nx=(x-(COLR.x+COLR.w/2))/(COLR.w/2-8),ny=(y-(COLR.y+COLR.h/2))/(COLR.h/2-8);
+  if(nx*nx+ny*ny<=1&&!(x>BAR.x-2&&x<BAR.x+BAR.w+2&&y>BAR.y-2&&y<BAR.y+BAR.h+2))pts.push([x,y]);}
+  pts.sort((a,b)=>(b[1]-a[1])||(a[0]-b[0]));return pts;})();
+function drawPile(){
+  const av=Array.from(arrived);
+  for(const q of cups)for(const cup of q)if(cup.as&&!cup.done)av[cup.col]=Math.max(0,av[cup.col]-(1-cup.fill));
+  let p=0;const per=160;
+  for(let c=0;c<7;c++){let n=Math.round(av[c]*per);ctx.fillStyle=PAL[c].a;
+    while(n-->0&&p<PILE_PTS.length){const [x,y]=PILE_PTS[p++];ctx.fillRect(x-1.5,y-1.5,3,3);}}
+}
+function drawSlots(){const cap=L.cap;const w=22,gap=8;const x0=198-(cap*w+(cap-1)*gap)/2;
+  const waitCols=[];for(let c=0;c<7;c++)for(let u=0;u<pool[c];u++)waitCols.push(c);
+  const over=waitCols.length>cap;
+  for(let k=0;k<cap;k++){const x=x0+k*(w+gap);
+    ctx.fillStyle=over?'#e0444f':'#3d3785';rr(ctx,x,SLOTY-11,w,22,8);ctx.fill();
+    ctx.fillStyle='#8f8be0';rr(ctx,x+3,SLOTY-8,w-6,16,6);ctx.fill();
+    if(k<waitCols.length){ctx.fillStyle=PAL[waitCols[k]].a;rr(ctx,x+3,SLOTY-8,w-6,16,6);ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.35)';rr(ctx,x+6,SLOTY-6,w-12,4,2);ctx.fill();}}
+  if(cap===0){const x=198-w/2;ctx.fillStyle=over?'#e0444f':'#3d3785';rr(ctx,x,SLOTY-11,w,22,8);ctx.fill();ctx.strokeStyle='#ff8a93';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x+6,SLOTY-6);ctx.lineTo(x+w-6,SLOTY+6);ctx.moveTo(x+w-6,SLOTY-6);ctx.lineTo(x+6,SLOTY+6);ctx.stroke();}
+  ctx.fillStyle='#e6e2ff';ctx.font='800 11px system-ui';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(cap===0?'NO WAIT':'WAIT',cap===0?198-w/2-56:x0-40,SLOTY);
+}
+function drawCups(){
+  ctx.fillStyle='#3a3478';rr(ctx,CUPS.x-8,CUPS.panelY,CUPS.colw*4+16,LH-CUPS.panelY+20,18);ctx.fill();
+  for(let k=0;k<4;k++){const q=cups[k].filter(c=>!c.done);const xc=CUPS.x+k*CUPS.colw+CUPS.colw/2;
+    for(let d=0;d<q.length;d++){const cup=q[d];const pal=PAL[cup.col];
+      if(d===0){const w=CUPS.colw-12,h=CUPS.frontH,x=xc-w/2,y=CUPS.y+colOff[k]*0.5;
+        ctx.fillStyle=pal.b;rr(ctx,x,y+4,w,h,12);ctx.fill();ctx.fillStyle=pal.a;rr(ctx,x,y,w,h,12);ctx.fill();
+        ctx.fillStyle='rgba(0,0,0,.28)';rr(ctx,x+7,y+7,w-14,h-14,7);ctx.fill();
+        const fh=(h-14)*cup.fill;if(fh>0){ctx.fillStyle=pal.l;rr(ctx,x+7,y+h-7-fh,w-14,fh,6);ctx.fill();}
+        ctx.fillStyle='#fff';ctx.font='900 14px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowOffsetY=1.5;ctx.fillText(Math.round(cup.fill*100)+'%',xc,y+h/2+1);ctx.shadowColor='transparent';
+      }else{const w=CUPS.colw-18,h=CUPS.rowH,x=xc-w/2,y=CUPS.y+CUPS.frontH+CUPS.gap+(d-1)*(h+CUPS.gap)+colOff[k];
+        if(y+h>LH)break;
+        ctx.fillStyle=pal.b;rr(ctx,x,y+3,w,h,9);ctx.fill();ctx.fillStyle=pal.a;rr(ctx,x,y,w,h,9);ctx.fill();
+        ctx.fillStyle='rgba(255,255,255,.22)';rr(ctx,x+5,y+4,w-10,6,3);ctx.fill();}
+    }
+  }
+  for(const a of popAnims){const xc=CUPS.x+a.k*CUPS.colw+CUPS.colw/2;const t=a.t/.4;const s=1+t*.5;
+    ctx.save();ctx.globalAlpha=1-t;ctx.translate(xc,CUPS.y+CUPS.frontH/2);ctx.scale(s,s);ctx.fillStyle=PAL[a.col].l;rr(ctx,-(CUPS.colw-12)/2,-CUPS.frontH/2,CUPS.colw-12,CUPS.frontH,12);ctx.fill();ctx.restore();}
+}
+function burstConfetti(){for(let i=0;i<120;i++)confetti.push({x:198+(Math.random()-.5)*200,y:300,vx:(Math.random()-.5)*400,vy:-300-Math.random()*300,r:Math.random()*6,vr:(Math.random()-.5)*10,life:2.2+Math.random(),c:PAL[i%7].a});}
+
+/* ---------- UI ---------- */
+function showOv(id){document.getElementById(id).classList.remove('hidden');}
+function hideOvs(){for(const id of ['home','win','lose'])document.getElementById(id).classList.add('hidden');}
+function start(n){hideOvs();buildLevel(n);}
+const path=document.getElementById('path');
+LEVELS.forEach((l,i)=>{if(i>0){const s=document.createElement('div');s.className='link';path.appendChild(s);}
+  const b=document.createElement('button');b.className='node'+(i===LEVELS.length-1?' spike':'');b.textContent=i+1;b.title=l.name;b.onclick=()=>start(i);path.appendChild(b);});
+document.getElementById('btnHome').onclick=()=>{playing=false;botKind=null;hideOvs();showOv('home');};
+document.getElementById('btnRetry').onclick=()=>start(level);
+document.getElementById('btnRetryOv').onclick=()=>start(level);
+document.getElementById('btnNext').onclick=()=>start(Math.min(LEVELS.length-1,level+1));
+document.getElementById('btnWinHome').onclick=document.getElementById('btnLoseHome').onclick=()=>{hideOvs();showOv('home');};
+cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const px=(e.clientX-r.left-offX)/scale,py=(e.clientY-r.top-offY)/scale;tapAt(px,py);});
+
+/* ---------- цикл: setInterval с реальным dt (headless-friendly) ---------- */
+resize();
+setInterval(()=>{const now=performance.now();let dt=Math.min(.12,(now-lastTime)/1000);lastTime=now;
+  for(let s=0;s<speed;s++)update(dt);draw();},16);
+buildLevel(0);playing=false; // фон под home
+showOv('home');
+
+window.__game={start,get L(){return L},get cubes(){return cubes},get cups(){return cups},get arrived(){return arrived},
+  tap:(i,j)=>{const k=cubes.findIndex(c=>c.alive&&c.i===i&&c.j===j);if(k<0||cubes[k].hidden)return false;popCube(k);return true;},
+  pop:popCube,solve,blindPick,naivePick,simBots,bot:(kind)=>{botKind=kind;botPlan=null;botTimer=0;},setSpeed:(s)=>{speed=s;},
+  snap:()=>({level:level+1,cubesLeft:cubes.filter(c=>c.alive).length,cupsDone,cupsTotal,pool:pool.slice(),wait:logicalWaiting(),grains:grainsTotal(),win:winFlag,lose:loseFlag,playing}),
+  state:()=>({cubes:cubes.map(c=>({i:c.i,j:c.j,col:c.col,hidden:c.hidden,alive:c.alive})),bombs:bombs.map(b=>({i:b.i,j:b.j,n:b.n,alive:b.alive})),cups:cups.map(q=>q.filter(c=>!c.done).map(c=>c.col))}),
+  cellCenter, LEVELS};
+</script>
+</body>
+</html>

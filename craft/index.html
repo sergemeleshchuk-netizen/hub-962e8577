@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Pocket Craft</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#79b3ff; font-family:-apple-system,Segoe UI,Roboto,sans-serif; touch-action:none; }
+  #game { position:fixed; inset:0; display:block; }
+  /* crosshair */
+  #cross { position:fixed; left:50%; top:50%; width:34px; height:34px; transform:translate(-50%,-50%); pointer-events:none; z-index:5; }
+  #cross::before,#cross::after{ content:""; position:absolute; background:rgba(255,255,255,.95); box-shadow:0 0 3px rgba(0,0,0,.8); border-radius:2px; }
+  #cross::before{ left:50%; top:0; width:3px; height:100%; transform:translateX(-50%); }
+  #cross::after{ top:50%; left:0; height:3px; width:100%; transform:translateY(-50%); }
+
+  /* joystick */
+  #joy { position:fixed; left:24px; bottom:90px; width:130px; height:130px; border-radius:50%;
+         background:rgba(255,255,255,.10); border:2px solid rgba(255,255,255,.35); z-index:6; touch-action:none; }
+  #joyKnob { position:absolute; left:50%; top:50%; width:58px; height:58px; margin:-29px 0 0 -29px; border-radius:50%;
+             background:rgba(255,255,255,.55); border:2px solid rgba(255,255,255,.8); transition:opacity .15s; }
+
+  /* action buttons */
+  .btn { position:fixed; z-index:6; border-radius:50%; display:flex; align-items:center; justify-content:center;
+         color:#fff; font-weight:700; background:rgba(255,255,255,.16); border:2px solid rgba(255,255,255,.4);
+         text-shadow:0 1px 2px rgba(0,0,0,.5); backdrop-filter:blur(2px); }
+  .btn:active { background:rgba(255,255,255,.4); }
+  #jump  { right:26px; bottom:178px; width:78px; height:78px; font-size:13px; }
+  #place { right:118px; bottom:96px; width:72px; height:72px; font-size:13px; }
+  #mine  { right:26px;  bottom:96px; width:72px; height:72px; font-size:13px; }
+  #respawn { right:118px; bottom:190px; width:62px; height:62px; font-size:10px; background:rgba(255,120,90,.22); border-color:rgba(255,150,120,.55); }
+
+  /* hotbar */
+  #hotbar { position:fixed; left:50%; bottom:14px; transform:translateX(-50%); display:flex; gap:6px; z-index:7;
+            padding:6px; background:rgba(0,0,0,.28); border-radius:12px; }
+  .slot { width:46px; height:46px; border-radius:8px; border:2px solid rgba(255,255,255,.25); overflow:hidden;
+          position:relative; background:#222; }
+  .slot canvas { width:100%; height:100%; image-rendering:pixelated; display:block; }
+  .slot.sel { border-color:#ffe45e; box-shadow:0 0 0 2px rgba(255,228,94,.5); transform:translateY(-4px); }
+  .slot .num { position:absolute; left:2px; top:0; font-size:9px; color:#fff; text-shadow:0 1px 1px #000; }
+
+  #hint { position:fixed; left:50%; top:14px; transform:translateX(-50%); z-index:7; color:#fff; font-size:12px;
+          background:rgba(0,0,0,.35); padding:6px 12px; border-radius:20px; text-align:center; pointer-events:none;
+          transition:opacity .6s; }
+  #fps { position:fixed; right:8px; top:8px; z-index:7; color:#fff; font-size:11px; opacity:.6; }
+
+  #loader { position:fixed; inset:0; z-index:20; background:#0d1b2a; color:#fff; display:flex; flex-direction:column;
+            align-items:center; justify-content:center; gap:14px; }
+  #loader h1 { font-size:26px; letter-spacing:1px; }
+  #loader .bar { width:200px; height:8px; background:rgba(255,255,255,.15); border-radius:4px; overflow:hidden; }
+  #loader .bar i { display:block; height:100%; width:0; background:#7ec850; transition:width .2s; }
+  #loader small { opacity:.6; font-size:12px; }
+
+  /* intro / controls overlay */
+  #intro { position:fixed; inset:0; z-index:15; background:rgba(8,14,26,.82); color:#fff;
+           display:flex; align-items:center; justify-content:center; padding:24px; }
+  #intro .card { max-width:340px; background:#15233c; border:1px solid #2c4166; border-radius:18px;
+           padding:22px 22px 18px; text-align:left; box-shadow:0 20px 50px #0008; }
+  #intro h2 { font-size:20px; margin-bottom:12px; }
+  #intro ul { list-style:none; font-size:14px; line-height:1.9; }
+  #intro b { color:#ffe45e; }
+  #intro .play { margin-top:16px; width:100%; padding:13px; border:none; border-radius:12px; font-size:16px;
+           font-weight:800; color:#0d1b2a; background:#7ec850; cursor:pointer; }
+  .hide { display:none !important; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="cross"></div>
+
+<div id="joy"><div id="joyKnob"></div></div>
+<div id="respawn" class="btn">⤴ ВЫБРАТЬСЯ</div>
+<div id="jump" class="btn">JUMP</div>
+<div id="place" class="btn">BUILD</div>
+<div id="mine" class="btn">MINE</div>
+<div id="hotbar"></div>
+<div id="hint">Джойстик — ходьба · тащи справа — камера · MINE копать · BUILD строить</div>
+<div id="fps"></div>
+
+<div id="loader">
+  <h1>⛏ POCKET&nbsp;CRAFT</h1>
+  <div class="bar"><i id="ldbar"></i></div>
+  <small id="ldtxt">generating world…</small>
+</div>
+
+<div id="intro" class="hide">
+  <div class="card">
+    <h2>⛏ Pocket Craft</h2>
+    <ul>
+      <li>🕹 <b>Джойстик</b> (слева) — ходьба</li>
+      <li>👆 <b>Тащи по правой части</b> — крутить камеру</li>
+      <li>⛏ <b>MINE</b> / тап по миру — копать блок в прицеле</li>
+      <li>🧱 <b>BUILD</b> — поставить выбранный блок</li>
+      <li>⬆️ <b>JUMP</b> — прыжок · <b>⤴ ВЫБРАТЬСЯ</b> — если закопался</li>
+      <li>🎨 Полоса внизу — выбор блока</li>
+    </ul>
+    <button class="play" id="playBtn">Играть ▶</button>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+
+/* ===================== WORLD CONSTANTS ===================== */
+const WX = 48, WZ = 48, WY = 40;      // world dims
+const SEA = 11;                        // water level
+const REACH = 6.5;                     // block reach distance
+
+/* block ids */
+const AIR=0, GRASS=1, DIRT=2, STONE=3, COBBLE=4, SAND=5, LOG=6, LEAVES=7, PLANK=8, WATER=9;
+
+/* atlas tile indices */
+const T = { grass_top:0, grass_side:1, dirt:2, stone:3, cobble:4, sand:5, log_top:6, log_side:7, leaves:8, plank:9, water:10 };
+const TILES = 11;
+
+/* block -> faces [ +x,-x,+y,-y,+z,-z ] tile ; we use {top,bottom,side} */
+const BLOCKS = {
+  [GRASS]:  {top:T.grass_top, bottom:T.dirt,    side:T.grass_side},
+  [DIRT]:   {top:T.dirt,      bottom:T.dirt,    side:T.dirt},
+  [STONE]:  {top:T.stone,     bottom:T.stone,   side:T.stone},
+  [COBBLE]: {top:T.cobble,    bottom:T.cobble,  side:T.cobble},
+  [SAND]:   {top:T.sand,      bottom:T.sand,    side:T.sand},
+  [LOG]:    {top:T.log_top,   bottom:T.log_top, side:T.log_side},
+  [LEAVES]: {top:T.leaves,    bottom:T.leaves,  side:T.leaves},
+  [PLANK]:  {top:T.plank,     bottom:T.plank,   side:T.plank},
+  [WATER]:  {top:T.water,     bottom:T.water,   side:T.water, fluid:true},
+};
+const isSolidId = id => id!==AIR && id!==WATER;
+
+/* ===================== VOXEL STORAGE ===================== */
+const world = new Uint8Array(WX*WY*WZ);
+const idx = (x,y,z)=> (y*WZ + z)*WX + x;
+const inB = (x,y,z)=> x>=0&&x<WX&&y>=0&&y<WY&&z>=0&&z<WZ;
+function getB(x,y,z){ if(!inB(x,y,z)) return AIR; return world[idx(x,y,z)]; }
+function setB(x,y,z,v){ if(inB(x,y,z)) world[idx(x,y,z)]=v; }
+
+/* ===================== NOISE ===================== */
+function hash2(x,z){ let h = (x*374761393 + z*668265263) | 0; h = (h ^ (h>>13)) * 1274126177 | 0; return ((h ^ (h>>16))>>>0)/4294967295; }
+const smooth = t => t*t*(3-2*t);
+const lerp = (a,b,t)=> a+(b-a)*t;
+function vnoise(x,z){
+  const xi=Math.floor(x), zi=Math.floor(z), xf=x-xi, zf=z-zi;
+  const v00=hash2(xi,zi), v10=hash2(xi+1,zi), v01=hash2(xi,zi+1), v11=hash2(xi+1,zi+1);
+  const u=smooth(xf), v=smooth(zf);
+  return lerp(lerp(v00,v10,u), lerp(v01,v11,u), v);
+}
+function fbm(x,z){
+  let a=0, amp=0.5, f=1;
+  for(let o=0;o<4;o++){ a += vnoise(x*f, z*f)*amp; f*=2; amp*=0.5; }
+  return a;
+}
+
+/* ===================== WORLD GEN ===================== */
+function generate(){
+  for(let x=0;x<WX;x++) for(let z=0;z<WZ;z++){
+    const n = fbm(x*0.07+10.5, z*0.07+4.2);
+    let h = Math.floor(8 + n*16);            // surface height
+    if(h<3) h=3; if(h>WY-6) h=WY-6;
+    for(let y=0;y<=h;y++){
+      let id;
+      if(y===h){
+        id = (h<=SEA) ? SAND : GRASS;
+      } else if(y > h-3){
+        id = (h<=SEA) ? SAND : DIRT;
+      } else id = STONE;
+      setB(x,y,z,id);
+    }
+    // water fill
+    for(let y=h+1;y<=SEA;y++) setB(x,y,z, WATER);
+  }
+  // trees
+  for(let x=2;x<WX-2;x++) for(let z=2;z<WZ-2;z++){
+    if(hash2(x*7+1, z*7+3) > 0.978){
+      // find surface
+      let sy=-1;
+      for(let y=WY-1;y>0;y--){ if(getB(x,y,z)===GRASS){ sy=y; break; } }
+      if(sy>SEA){
+        const th = 4 + ((hash2(x,z)*3)|0);
+        for(let i=1;i<=th;i++) setB(x,sy+i,z, LOG);
+        const top = sy+th;
+        for(let dx=-2;dx<=2;dx++) for(let dz=-2;dz<=2;dz++) for(let dy=-1;dy<=2;dy++){
+          const lx=x+dx, ly=top+dy, lz=z+dz;
+          if(getB(lx,ly,lz)!==AIR) continue;
+          const d = Math.abs(dx)+Math.abs(dz)+Math.abs(dy);
+          if(d<=3 && hash2(lx*3+ly, lz*5+dy) > 0.18) setB(lx,ly,lz, LEAVES);
+        }
+      }
+    }
+  }
+}
+
+/* ===================== TEXTURE ATLAS ===================== */
+function buildAtlas(){
+  const ts = 16;                       // tile px
+  const cv = document.createElement('canvas');
+  cv.width = ts*TILES; cv.height = ts;
+  const g = cv.getContext('2d');
+  const rnd = (s)=>{ s=Math.sin(s)*43758.5453; return s-Math.floor(s); };
+
+  function fillNoise(t, base, vary, fn){
+    for(let py=0;py<ts;py++) for(let px=0;px<ts;px++){
+      let [r,gg,b] = base;
+      const k = (rnd(t*99 + px*12.9898 + py*78.233)-0.5)*vary;
+      r+=k; gg+=k; b+=k;
+      if(fn) { const c=fn(px,py); if(c){ r=c[0]; gg=c[1]; b=c[2]; } }
+      g.fillStyle = `rgb(${r|0},${gg|0},${b|0})`;
+      g.fillRect(t*ts+px, py, 1, 1);
+    }
+  }
+  fillNoise(T.grass_top, [104,168,68], 26);
+  fillNoise(T.dirt, [134,98,66], 26);
+  // grass side: dirt with green top band
+  fillNoise(T.grass_side, [134,98,66], 24, (px,py)=>{
+    if(py < 3 + ((rnd(px*5+T.grass_side)*2)|0)){ const k=(rnd(px*3+py)-0.5)*24; return [96+k,160+k,62+k]; }
+    return null;
+  });
+  fillNoise(T.stone, [128,128,132], 22);
+  fillNoise(T.cobble, [110,110,114], 40, (px,py)=>{ // chunky
+    const c = ((px>>2)+(py>>2))&1; const k=(rnd(px+py*3)-.5)*30; const base=c?96:124; return [base+k,base+k,base+4+k];
+  });
+  fillNoise(T.sand, [222,206,150], 18);
+  fillNoise(T.log_side, [110,82,52], 16, (px)=>{ const dark = (px%4===0); const k=dark?-22:0; return [120+k,90+k,58+k]; });
+  fillNoise(T.log_top, [150,118,78], 14, (px,py)=>{ const dx=px-8,dy=py-8; const r=Math.sqrt(dx*dx+dy*dy); const ring=(Math.floor(r)%2)?-16:0; return [156+ring,124+ring,82+ring]; });
+  fillNoise(T.leaves, [60,128,48], 34, (px,py)=>{ if(rnd(px*7+py*13+T.leaves)>0.82) return null; return null; });
+  fillNoise(T.plank, [168,132,84], 14, (px,py)=>{ const line=(py%4===0)?-26:0; return [176+line,138+line,88+line]; });
+  fillNoise(T.water, [54,108,196], 16);
+
+  const tex = new THREE.CanvasTexture(cv);
+  tex.magFilter = THREE.NearestFilter;
+  tex.minFilter = THREE.NearestFilter;
+  tex.generateMipmaps = false;
+  return tex;
+}
+
+/* ===================== MESH BUILD ===================== */
+const FACES = [
+  { n:[ 1,0,0], shade:0.62, key:'side', c:[[1,0,1],[1,0,0],[1,1,0],[1,1,1]] }, // +x
+  { n:[-1,0,0], shade:0.62, key:'side', c:[[0,0,0],[0,0,1],[0,1,1],[0,1,0]] }, // -x
+  { n:[0, 1,0], shade:1.00, key:'top',  c:[[0,1,1],[1,1,1],[1,1,0],[0,1,0]] }, // +y
+  { n:[0,-1,0], shade:0.48, key:'bottom',c:[[0,0,0],[1,0,0],[1,0,1],[0,0,1]] },// -y
+  { n:[0,0, 1], shade:0.80, key:'side', c:[[0,0,1],[1,0,1],[1,1,1],[0,1,1]] }, // +z
+  { n:[0,0,-1], shade:0.80, key:'side', c:[[1,0,0],[0,0,0],[0,1,0],[1,1,0]] }, // -z
+];
+const uvCorner = [[0,1],[1,1],[1,0],[0,0]];
+const INSET = 0.001;
+
+function tileUV(tile, cx, cy){
+  const u = (tile + cx*(1-2*INSET) + INSET)/TILES;
+  const v = cy; // single row
+  return [u, v];
+}
+
+let solidMesh, waterMesh, scene;
+function buildGeometry(fluidPass){
+  const pos=[], uv=[], col=[], idxs=[];
+  let vc=0;
+  for(let y=0;y<WY;y++) for(let z=0;z<WZ;z++) for(let x=0;x<WX;x++){
+    const id = world[idx(x,y,z)];
+    if(id===AIR) continue;
+    const fluid = !!BLOCKS[id].fluid;
+    if(fluid !== fluidPass) continue;
+    for(const f of FACES){
+      const nb = getB(x+f.n[0], y+f.n[1], z+f.n[2]);
+      // cull face if neighbor hides it
+      if(fluid){ if(nb!==AIR && !(nb===WATER)) ; if(nb===WATER) continue; if(nb!==AIR) continue; }
+      else { if(isSolidId(nb)) continue; }
+      const tile = (f.key==='top')?BLOCKS[id].top : (f.key==='bottom')?BLOCKS[id].bottom : BLOCKS[id].side;
+      const s = f.shade;
+      for(let i=0;i<4;i++){
+        const c=f.c[i];
+        pos.push(x+c[0], y+c[1], z+c[2]);
+        const [cu,cv]=uvCorner[i];
+        const [u,v]=tileUV(tile, cu, cv);
+        uv.push(u,v);
+        col.push(s,s,s);
+      }
+      idxs.push(vc, vc+1, vc+2, vc, vc+2, vc+3);
+      vc+=4;
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv,2));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col,3));
+  geo.setIndex(idxs);
+  return geo;
+}
+
+function rebuild(){
+  const gs = buildGeometry(false);
+  const gw = buildGeometry(true);
+  solidMesh.geometry.dispose(); solidMesh.geometry = gs;
+  waterMesh.geometry.dispose(); waterMesh.geometry = gw;
+}
+
+/* ===================== THREE SETUP ===================== */
+const canvas = document.getElementById('game');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:false, powerPreference:'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+scene = new THREE.Scene();
+scene.background = new THREE.Color(0x8ec5ff);
+scene.fog = new THREE.Fog(0x8ec5ff, 28, 60);
+
+const camera = new THREE.PerspectiveCamera(72, 1, 0.1, 200);
+
+const atlas = buildAtlas();
+const solidMat = new THREE.MeshBasicMaterial({ map:atlas, vertexColors:true });
+const waterMat = new THREE.MeshBasicMaterial({ map:atlas, vertexColors:true, transparent:true, opacity:0.72, depthWrite:false });
+solidMesh = new THREE.Mesh(new THREE.BufferGeometry(), solidMat);
+waterMesh = new THREE.Mesh(new THREE.BufferGeometry(), waterMat);
+scene.add(solidMesh); scene.add(waterMesh);
+
+/* highlight box for targeted block */
+const hl = new THREE.LineSegments(
+  new THREE.EdgesGeometry(new THREE.BoxGeometry(1.002,1.002,1.002)),
+  new THREE.LineBasicMaterial({ color:0x000000, transparent:true, opacity:0.5 })
+);
+hl.visible=false; scene.add(hl);
+
+/* ===================== PLAYER ===================== */
+const player = { x:WX/2, y:0, z:WZ/2, vy:0, yaw:0.6, pitch:-0.15, onGround:false };
+const PW=0.3, PH=1.72, EYE=1.62;
+function spawn(){
+  const cx=Math.floor(WX/2), cz=Math.floor(WZ/2);
+  let sy=WY-1; for(let y=WY-1;y>0;y--){ if(isSolidId(getB(cx,y,cz))){ sy=y; break; } }
+  player.x=cx+0.5; player.z=cz+0.5; player.y=sy+1.2; player.vy=0;
+}
+
+function collides(px,py,pz){
+  const x0=Math.floor(px-PW), x1=Math.floor(px+PW);
+  const y0=Math.floor(py), y1=Math.floor(py+PH);
+  const z0=Math.floor(pz-PW), z1=Math.floor(pz+PW);
+  for(let x=x0;x<=x1;x++) for(let y=y0;y<=y1;y++) for(let z=z0;z<=z1;z++)
+    if(isSolidId(getB(x,y,z))) return true;
+  return false;
+}
+
+const keys = {};
+let moveX=0, moveZ=0;       // joystick input (-1..1)
+let wantJump=false;
+
+function physics(dt){
+  // desired horizontal velocity from joystick + keyboard
+  let ix=moveX, iz=moveZ;
+  if(keys['w']) iz-=1; if(keys['s']) iz+=1; if(keys['a']) ix-=1; if(keys['d']) ix+=1;
+  const len=Math.hypot(ix,iz); if(len>1){ ix/=len; iz/=len; }
+  const speed=4.6;
+  const sin=Math.sin(player.yaw), cos=Math.cos(player.yaw);
+  // forward = -z when iz negative (push up)
+  const fwd = -iz, strafe = ix;
+  // horizontal forward = (-sin yaw, -cos yaw), right = (cos yaw, -sin yaw)
+  let dx = (cos*strafe - sin*fwd)*speed*dt;
+  let dz = (-sin*strafe - cos*fwd)*speed*dt;
+
+  // gravity
+  player.vy -= 26*dt; if(player.vy<-40) player.vy=-40;
+  let dy = player.vy*dt;
+
+  // move X
+  if(!collides(player.x+dx, player.y, player.z)) player.x+=dx;
+  // move Z
+  if(!collides(player.x, player.y, player.z+dz)) player.z+=dz;
+  // move Y
+  player.onGround=false;
+  if(!collides(player.x, player.y+dy, player.z)) player.y+=dy;
+  else { if(dy<0) player.onGround=true; player.vy=0; }
+
+  if((wantJump||keys[' ']) && player.onGround){ player.vy=8.2; player.onGround=false; }
+  wantJump=false;
+
+  // clamp inside world
+  player.x=Math.max(0.4,Math.min(WX-0.4,player.x));
+  player.z=Math.max(0.4,Math.min(WZ-0.4,player.z));
+  if(player.y<-5) spawn();
+}
+
+function updateCamera(){
+  camera.position.set(player.x, player.y+EYE, player.z);
+  const e=new THREE.Euler(player.pitch, player.yaw, 0, 'YXZ');
+  camera.quaternion.setFromEuler(e);
+}
+
+/* ===================== RAYCAST (DDA) ===================== */
+function raycast(){
+  const o=camera.position;
+  const dir=new THREE.Vector3(); camera.getWorldDirection(dir);
+  let x=Math.floor(o.x), y=Math.floor(o.y), z=Math.floor(o.z);
+  const sx=Math.sign(dir.x), sy=Math.sign(dir.y), sz=Math.sign(dir.z);
+  const txD = sx!==0?Math.abs(1/dir.x):Infinity;
+  const tyD = sy!==0?Math.abs(1/dir.y):Infinity;
+  const tzD = sz!==0?Math.abs(1/dir.z):Infinity;
+  let tx = sx>0?(x+1-o.x)*txD : sx<0?(o.x-x)*txD : Infinity;
+  let ty = sy>0?(y+1-o.y)*tyD : sy<0?(o.y-y)*tyD : Infinity;
+  let tz = sz>0?(z+1-o.z)*tzD : sz<0?(o.z-z)*tzD : Infinity;
+  let nx=0,ny=0,nz=0, t=0;
+  for(let i=0;i<128;i++){
+    if(isSolidId(getB(x,y,z))) return { x,y,z, nx,ny,nz };
+    if(tx<ty && tx<tz){ x+=sx; t=tx; tx+=txD; nx=-sx; ny=0; nz=0; }
+    else if(ty<tz){ y+=sy; t=ty; ty+=tyD; nx=0; ny=-sy; nz=0; }
+    else { z+=sz; t=tz; tz+=tzD; nx=0; ny=0; nz=-sz; }
+    if(t>REACH) break;
+  }
+  return null;
+}
+
+function playerOccupies(x,y,z){
+  const x0=Math.floor(player.x-PW), x1=Math.floor(player.x+PW);
+  const y0=Math.floor(player.y), y1=Math.floor(player.y+PH);
+  const z0=Math.floor(player.z-PW), z1=Math.floor(player.z+PW);
+  return x>=x0&&x<=x1&&y>=y0&&y<=y1&&z>=z0&&z<=z1;
+}
+
+function doMine(){
+  const h=raycast(); if(!h) return;
+  if(h.y<=0) return;                       // bedrock floor
+  setB(h.x,h.y,h.z, AIR); rebuild();
+}
+function doBuild(){
+  const h=raycast(); if(!h) return;
+  const px=h.x+h.nx, py=h.y+h.ny, pz=h.z+h.nz;
+  if(!inB(px,py,pz)) return;
+  if(getB(px,py,pz)!==AIR) return;
+  if(playerOccupies(px,py,pz)) return;
+  setB(px,py,pz, selBlock); rebuild();
+}
+
+/* ===================== HOTBAR ===================== */
+const HOTBAR = [GRASS,DIRT,STONE,COBBLE,SAND,LOG,PLANK,LEAVES];
+let selBlock = GRASS, selSlot=0;
+function tileToCanvas(tile){
+  const c=document.createElement('canvas'); c.width=16;c.height=16;
+  const g=c.getContext('2d');
+  g.drawImage(atlas.image, tile*16,0,16,16, 0,0,16,16);
+  return c;
+}
+function buildHotbar(){
+  const bar=document.getElementById('hotbar');
+  HOTBAR.forEach((id,i)=>{
+    const slot=document.createElement('div'); slot.className='slot'+(i===0?' sel':'');
+    const face = BLOCKS[id].side;
+    slot.appendChild(tileToCanvas(face));
+    const n=document.createElement('div'); n.className='num'; n.textContent=i+1; slot.appendChild(n);
+    slot.addEventListener('pointerdown', e=>{ e.preventDefault(); selectSlot(i); });
+    bar.appendChild(slot);
+  });
+}
+function selectSlot(i){
+  selSlot=i; selBlock=HOTBAR[i];
+  [...document.querySelectorAll('.slot')].forEach((s,j)=>s.classList.toggle('sel', j===i));
+}
+
+/* ===================== INPUT: TOUCH ===================== */
+const joy=document.getElementById('joy'), knob=document.getElementById('joyKnob');
+let joyId=null, joyCx=0, joyCy=0; const JOYR=52;
+joy.addEventListener('pointerdown', e=>{
+  e.preventDefault(); joyId=e.pointerId;
+  const r=joy.getBoundingClientRect(); joyCx=r.left+r.width/2; joyCy=r.top+r.height/2;
+  joy.setPointerCapture(e.pointerId); moveJoy(e);
+});
+joy.addEventListener('pointermove', e=>{ if(e.pointerId===joyId) moveJoy(e); });
+function endJoy(e){ if(e.pointerId===joyId){ joyId=null; moveX=0;moveZ=0; knob.style.transform='translate(0,0)'; } }
+joy.addEventListener('pointerup', endJoy);
+joy.addEventListener('pointercancel', endJoy);
+function moveJoy(e){
+  let dx=e.clientX-joyCx, dy=e.clientY-joyCy;
+  const d=Math.hypot(dx,dy); if(d>JOYR){ dx=dx/d*JOYR; dy=dy/d*JOYR; }
+  knob.style.transform=`translate(${dx}px,${dy}px)`;
+  moveX=dx/JOYR; moveZ=dy/JOYR;
+}
+
+/* look: any pointer on right half not on a control */
+let lookId=null, lastLX=0, lastLY=0, lookMoved=0, lookStart=0;
+const LOOK_SENS=0.0042;
+canvas.addEventListener('pointerdown', e=>{
+  if(lookId!==null) return;
+  lookId=e.pointerId; lastLX=e.clientX; lastLY=e.clientY; lookMoved=0; lookStart=performance.now();
+});
+window.addEventListener('pointermove', e=>{
+  if(e.pointerId!==lookId) return;
+  const dx=e.clientX-lastLX, dy=e.clientY-lastLY; lastLX=e.clientX; lastLY=e.clientY;
+  lookMoved+=Math.abs(dx)+Math.abs(dy);
+  player.yaw -= dx*LOOK_SENS;
+  player.pitch -= dy*LOOK_SENS;
+  player.pitch=Math.max(-1.5,Math.min(1.5,player.pitch));
+});
+window.addEventListener('pointerup', e=>{
+  if(e.pointerId!==lookId) return;
+  const dt=performance.now()-lookStart;
+  if(lookMoved<12 && dt<260) doMine();      // tap on world = mine
+  lookId=null;
+});
+
+function bindBtn(id, fn, repeat){
+  const el=document.getElementById(id);
+  let timer=null;
+  el.addEventListener('pointerdown', e=>{ e.preventDefault(); e.stopPropagation(); fn();
+    if(repeat) timer=setInterval(fn, 220); });
+  const stop=e=>{ if(timer){clearInterval(timer);timer=null;} };
+  el.addEventListener('pointerup', stop); el.addEventListener('pointercancel', stop); el.addEventListener('pointerleave', stop);
+}
+bindBtn('jump', ()=>{ wantJump=true; });
+bindBtn('mine', doMine, true);
+bindBtn('place', doBuild, true);
+bindBtn('respawn', ()=>{ spawn(); });
+
+/* ===================== INPUT: DESKTOP ===================== */
+window.addEventListener('keydown', e=>{ keys[e.key.toLowerCase()]=true;
+  const n=parseInt(e.key); if(n>=1&&n<=HOTBAR.length) selectSlot(n-1);
+});
+window.addEventListener('keyup', e=>{ keys[e.key.toLowerCase()]=false; });
+canvas.addEventListener('mousedown', e=>{
+  if(document.pointerLockElement!==canvas){ canvas.requestPointerLock?.(); return; }
+  if(e.button===0) doMine(); else if(e.button===2) doBuild();
+});
+canvas.addEventListener('contextmenu', e=>e.preventDefault());
+document.addEventListener('mousemove', e=>{
+  if(document.pointerLockElement!==canvas) return;
+  player.yaw -= e.movementX*0.0025;
+  player.pitch -= e.movementY*0.0025;
+  player.pitch=Math.max(-1.5,Math.min(1.5,player.pitch));
+});
+
+/* ===================== RESIZE ===================== */
+function resize(){
+  const w=window.innerWidth, h=window.innerHeight;
+  renderer.setSize(w,h,false);
+  camera.aspect=w/h; camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+
+/* ===================== LOOP ===================== */
+let last=performance.now(), fpsT=0, fpsN=0;
+const fpsEl=document.getElementById('fps');
+function loop(now){
+  let dt=(now-last)/1000; last=now; if(dt>0.05) dt=0.05;
+  physics(dt);
+  updateCamera();
+  // highlight
+  const h=raycast();
+  if(h){ hl.visible=true; hl.position.set(h.x+0.5,h.y+0.5,h.z+0.5); } else hl.visible=false;
+  renderer.render(scene,camera);
+  fpsN++; fpsT+=dt; if(fpsT>=0.5){ fpsEl.textContent=Math.round(fpsN/fpsT)+' fps'; fpsN=0; fpsT=0; }
+  requestAnimationFrame(loop);
+}
+
+/* ===================== BOOT ===================== */
+function setLoad(p,txt){ document.getElementById('ldbar').style.width=(p*100)+'%'; if(txt) document.getElementById('ldtxt').textContent=txt; }
+async function boot(){
+  setLoad(0.15,'carving terrain…'); await new Promise(r=>setTimeout(r,30));
+  generate();
+  setLoad(0.55,'building meshes…'); await new Promise(r=>setTimeout(r,30));
+  rebuild();
+  buildHotbar();
+  spawn();
+  resize(); updateCamera();
+  setLoad(1,'ready');
+  setTimeout(()=>{ document.getElementById('loader').classList.add('hide');
+                   document.getElementById('intro').classList.remove('hide'); }, 250);
+  const playBtn=document.getElementById('playBtn');
+  playBtn.addEventListener('click', ()=>document.getElementById('intro').classList.add('hide'));
+  // fade hint
+  setTimeout(()=>{ const hint=document.getElementById('hint'); hint.style.opacity='0'; setTimeout(()=>hint.classList.add('hide'),700); }, 9000);
+  requestAnimationFrame(loop);
+}
+
+/* debug hook for headless verification */
+window.__game = {
+  get player(){ return player; },
+  camera,
+  setMove(x,z){ moveX=x; moveZ=z; },
+  step(dt){ physics(dt); updateCamera(); },
+  mine:doMine, build:doBuild, raycast,
+  getB, world,
+  verts(){ const a=solidMesh.geometry.attributes.position; return a?a.count:0; },
+};
+boot();
+</script>
+</body>
+</html>

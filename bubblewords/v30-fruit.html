@@ -1,0 +1,1463 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Fruit Bubble Jam · ORIGINAL · v28</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    height:100dvh;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;user-select:none;touch-action:none;
+    background:radial-gradient(120% 120% at 50% 0%,#222838,#10131c 80%);}
+
+  /* ===== РАМКА-ТЕЛЕФОН 9:16 ===== */
+  #phone{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;
+         background:#0a4a7e;}
+  @media (max-aspect-ratio:1/1){ #phone{width:100vw;height:100dvh;border-radius:0;} }
+  @media (min-aspect-ratio:1/1){ #phone{height:96dvh;aspect-ratio:9/16;width:auto;
+         border-radius:32px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 8px #0c0e15;} }
+
+  /* ===== подводный фон ===== */
+  #bg{position:absolute;inset:0;z-index:0;overflow:hidden;
+      background:linear-gradient(180deg,#7fd8ec 0%,#2b9fd0 16%,#1479b4 40%,#0b5490 68%,#073a63 100%);}
+  .ray{position:absolute;top:-12%;width:14%;height:70%;transform:rotate(14deg);
+       background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0) 80%);
+       filter:blur(6px);border-radius:50%;}
+  .amb{position:absolute;bottom:-30px;border-radius:50%;
+       border:2px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);
+       animation:rise linear infinite;}
+  @keyframes rise{to{transform:translateY(-115vh);}}
+  .coral{position:absolute;bottom:-6px;font-size:42px;opacity:.55;filter:saturate(.8);}
+
+  /* ===== HUD ===== */
+  #hud{width:100%;padding:12px 14px 4px;z-index:5;display:flex;align-items:flex-start;gap:10px;}
+  #movesWrap{position:relative;width:78px;height:78px;flex:0 0 auto;}
+  #movesWrap svg{position:absolute;inset:0;transform:rotate(-90deg);}
+  #movesTxt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;}
+  #movesNum{font-size:26px;font-weight:800;line-height:1;}
+  #movesLbl{font-size:10px;font-weight:800;letter-spacing:.5px;}
+  #hudMid{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding-top:6px;}
+  #lvl{color:#fff;font-weight:800;font-size:14px;text-shadow:0 1px 3px rgba(0,0,0,.4);letter-spacing:1px;}
+  #pill{width:82%;max-width:220px;height:24px;background:#1b2340;border-radius:13px;position:relative;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.3);}
+  #pillFill{position:absolute;left:3px;top:3px;bottom:3px;width:0;min-width:18px;border-radius:10px;
+            background:linear-gradient(180deg,#ffb340,#f5820b);transition:width .4s;}
+  #pillTxt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;}
+  #gear{flex:0 0 auto;width:40px;height:40px;margin-top:14px;border:none;border-radius:50%;font-size:26px;
+        background:transparent;color:#fff;cursor:pointer;text-shadow:0 2px 5px rgba(0,0,0,.4);}
+
+  /* ===== поле ===== */
+  #stage{flex:1;width:100%;position:relative;z-index:2;min-height:0;}
+  #board{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);transform-origin:center;
+         width:390px;height:600px;}
+  .bub{position:absolute;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+       color:#fff;font-weight:800;text-align:center;cursor:grab;touch-action:none;
+       text-shadow:0 1px 3px rgba(0,0,0,.45);
+       box-shadow:inset -6px -10px 18px rgba(0,20,80,.25), inset 4px 8px 14px rgba(255,255,255,.28), 0 6px 14px rgba(0,20,60,.25);}
+  .bub::before{content:'';position:absolute;left:16%;top:9%;width:34%;height:20%;border-radius:50%;
+       background:linear-gradient(180deg,rgba(255,255,255,.85),rgba(255,255,255,0));transform:rotate(-24deg);}
+  .t1{background:radial-gradient(circle at 35% 30%,rgba(120,160,255,.95),rgba(62,98,208,.92) 70%,rgba(40,70,170,.95));}
+  .t2{background:radial-gradient(circle at 35% 30%,rgba(140,220,110,.96),rgba(72,178,66,.93) 70%,rgba(45,130,45,.95));}
+  .t3{background:radial-gradient(circle at 35% 30%,rgba(205,140,245,.96),rgba(154,84,208,.94) 70%,rgba(110,50,165,.96));}
+  .t4{background:radial-gradient(circle at 35% 30%,rgba(255,190,110,.97),rgba(235,150,55,.94) 70%,rgba(200,110,30,.96));}
+  .bub .ln{line-height:1.22;pointer-events:none;white-space:nowrap;}
+  /* мета-пузырь с картинкой: эмодзи вместо слова, без текстовых начертаний */
+  .bub .ln.icon{line-height:1;letter-spacing:0;font-weight:400;
+                text-shadow:0 1px 3px rgba(0,0,0,.35);}
+  .bub .val{margin-top:2px;font-size:11px;font-weight:800;color:#ffe9a8;pointer-events:none;
+            background:rgba(0,0,0,.22);padding:1px 7px;border-radius:8px;}
+  .bub.lift{cursor:grabbing;filter:brightness(1.12);z-index:60!important;}
+  .bub.hintGlow{animation:hintP .55s ease-in-out infinite alternate;}
+  @keyframes hintP{from{box-shadow:0 0 0 3px #ffd94a,0 0 18px 6px rgba(255,217,74,.75);}
+                   to{box-shadow:0 0 0 5px #ffd94a,0 0 30px 12px rgba(255,217,74,.95);}}
+  .bub.popping{transition:transform .3s,opacity .3s;transform:scale(1.45)!important;opacity:0;}
+  /* секунда на чтение имени собранной категории: шар подсвечивается и слегка
+     подпрыгивает, чтобы взгляд успел на него перейти */
+  .bub.named{box-shadow:0 0 0 4px rgba(255,226,150,.95),0 0 30px 12px rgba(255,180,60,.6);
+             animation:namePop .32s ease-out;}
+  @keyframes namePop{0%{transform:scale(1);}45%{transform:scale(1.14);}100%{transform:scale(1);}}
+  .bub.merged{animation:mpulse .28s ease-out;}
+  @keyframes mpulse{0%{filter:brightness(1.35);}50%{filter:brightness(1.15);}100%{filter:none;}}
+  .part{position:absolute;width:10px;height:10px;border-radius:50%;pointer-events:none;z-index:70;
+        border:2px solid rgba(255,255,255,.8);background:rgba(255,255,255,.25);
+        transition:transform .7s ease-out,opacity .7s;}
+
+  /* ===== драг: путь читается подсветкой, а не линией ===== */
+  /* Пузырь тащат, и по дороге загораются шары, над которыми он прошёл: игрок
+     видит условную траекторию и понимает, на каком шаре будет остановка.
+     Обведённый белым — точка остановки. Порядок правил важен: .tgt объявлен
+     после .pass, поэтому цель перебивает след. */
+  .bub.pass{box-shadow:0 0 0 3px rgba(130,225,255,.7),0 0 20px 7px rgba(130,225,255,.45)!important;}
+  .bub.tgt{box-shadow:0 0 0 4px #fff,0 0 28px 11px rgba(130,225,255,.8)!important;}
+  .bub.err{box-shadow:0 0 0 4px #ff5148,0 0 26px 9px rgba(255,81,72,.75)!important;animation:shk .34s;}
+  .bub.blk{box-shadow:0 0 0 4px #e8f7ff,0 0 24px 8px rgba(205,240,255,.8)!important;animation:shk .34s;}
+  @keyframes shk{0%,100%{margin-left:0;}25%{margin-left:-5px;}75%{margin-left:5px;}}
+  /* покинутое место: видно, что досыпка его не занимает, пока шар в руке */
+  #ghost{position:absolute;border-radius:50%;border:3px dashed rgba(255,255,255,.45);
+         pointer-events:none;z-index:3;display:none;}
+
+  /* ===== модификаторы (GDD §7) ===== */
+  .bub.half{border:3px dashed rgba(255,255,255,.85);
+    background:radial-gradient(circle at 35% 30%,rgba(155,235,255,.97),rgba(70,180,225,.94) 70%,rgba(38,128,175,.96));}
+  .bub.ice{cursor:not-allowed;filter:saturate(.45) brightness(1.22);
+    box-shadow:inset 0 0 0 5px rgba(255,255,255,.82),0 0 18px rgba(205,245,255,.8);}
+  .bub.hid{cursor:not-allowed;
+    background:radial-gradient(circle at 35% 30%,rgba(168,168,208,.96),rgba(98,98,150,.94) 70%,rgba(62,62,112,.96));}
+  .bub .cnt{margin-top:2px;font-size:11px;font-weight:800;color:#fff;pointer-events:none;
+            background:rgba(0,0,0,.34);padding:1px 7px;border-radius:8px;}
+  #chain{position:absolute;left:0;right:0;height:14px;margin-top:-7px;z-index:55;
+    background:repeating-linear-gradient(90deg,#d3dae4 0 10px,#69727e 10px 18px);
+    border-top:2px solid rgba(255,255,255,.55);border-bottom:2px solid rgba(0,0,0,.4);
+    box-shadow:0 4px 12px rgba(0,0,0,.5);transition:opacity .35s;}
+  #chain .cn{position:absolute;right:10px;top:-13px;background:#12213a;color:#fff;
+    font-size:11px;font-weight:800;border-radius:12px;padding:2px 9px;
+    border:2px solid #d3dae4;white-space:nowrap;}
+  #chain.hit{animation:shk .34s;
+    background:repeating-linear-gradient(90deg,#ff5148 0 10px,#8e2b22 10px 18px);}
+
+  /* ===== бустеры ===== */
+  #boosters{width:100%;display:flex;justify-content:center;gap:18px;padding:6px 0 16px;z-index:5;}
+  .boost{position:relative;width:64px;height:64px;border:none;border-radius:18px;cursor:pointer;font-size:30px;
+         background:linear-gradient(180deg,#d8f4fb,#a8dcee);box-shadow:0 4px 10px rgba(0,20,60,.35),inset 0 -3px 6px rgba(60,140,180,.35);}
+  .boost:active{transform:scale(.93);}
+  .boost.off{filter:grayscale(1) brightness(.75);}
+  .badge{position:absolute;top:-7px;right:-7px;min-width:22px;height:22px;border-radius:11px;background:#35c24d;
+         color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;
+         box-shadow:0 2px 4px rgba(0,0,0,.3);padding:0 5px;}
+
+  /* ===== тост / попапы ===== */
+  #toast{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%) scale(.5);z-index:30;pointer-events:none;
+         font-size:44px;font-weight:900;font-style:italic;color:#fff;opacity:0;white-space:nowrap;
+         text-shadow:0 0 18px rgba(80,200,255,.9),0 3px 6px rgba(0,0,0,.5);}
+  #toast.show{animation:tpop 1.1s ease-out;}
+  @keyframes tpop{0%{opacity:0;transform:translate(-50%,-50%) scale(.5);}
+    18%{opacity:1;transform:translate(-50%,-50%) scale(1.15);}
+    30%{transform:translate(-50%,-50%) scale(1);}
+    75%{opacity:1;}100%{opacity:0;transform:translate(-50%,-62%) scale(1);}}
+  #ov{position:absolute;inset:0;z-index:40;background:rgba(4,20,40,.62);display:none;
+      align-items:center;justify-content:center;}
+  #ov.show{display:flex;}
+  #card{background:linear-gradient(180deg,#fdfeff,#dceefb);border-radius:22px;padding:26px 30px;text-align:center;
+        width:78%;max-width:300px;box-shadow:0 18px 50px rgba(0,0,0,.5);animation:cardIn .35s ease-out;}
+  @keyframes cardIn{from{transform:scale(.7);opacity:0;}to{transform:scale(1);opacity:1;}}
+  #cardTtl{font-size:24px;font-weight:900;color:#15406b;margin-bottom:8px;}
+  #cardMsg{font-size:14px;color:#3a6083;margin-bottom:18px;font-weight:600;}
+  #cardBtn{border:none;border-radius:14px;padding:12px 34px;font-size:17px;font-weight:800;color:#fff;cursor:pointer;
+        background:linear-gradient(180deg,#4fc463,#2d9e41);box-shadow:0 4px 0 #1f7530;}
+  #cardBtn:active{transform:translateY(2px);box-shadow:0 2px 0 #1f7530;}
+  .conf{position:absolute;width:9px;height:14px;z-index:45;pointer-events:none;
+        transition:transform 1.1s ease-in,opacity 1.1s;}
+</style>
+<style>
+  /* v28: только визуальный fruit-reskin; логика v27 не меняется */
+  #phone{background:#8ed4f2;}
+  #bg{background:url('fruit-v28/bg.jpg') center bottom/cover no-repeat;}
+  .bub{border-radius:50%;overflow:hidden;background-position:center;background-size:97% 97%;background-repeat:no-repeat;
+       box-shadow:none!important;text-shadow:0 2px 4px rgba(40,30,20,.8);}
+  .bub::before{display:none;}
+  .bub.t1{background-image:url('fruit-v28/green_apple.png');}
+  .bub.t2{background-image:url('fruit-v28/mango.png');}
+  .bub.t3{background-image:url('fruit-v28/pineapple.png');}
+  .bub.t4{background-image:url('fruit-v28/watermelon.png');}
+  .bub.half,.bub.ice,.bub.hid{background-color:transparent;}
+  .bub .ln{display:block;max-width:92%;margin-inline:auto;background:rgba(42,28,18,.48);border-radius:8px;padding:2px 5px;text-align:center;line-height:1.12;transform:scale(.9);transform-origin:center;}
+  .bub .ln.icon{background:rgba(42,28,18,.34);}
+  #movesWrap{background:url('fruit-v28/moves.png') center/contain no-repeat;}
+  #movesWrap svg{display:none;}
+  #pill{background:url('fruit-v28/pill.png') center/100% 100% no-repeat;}
+  #pillFill{background:url('fruit-v28/pill_fill.png') center/100% 100% no-repeat;}
+  #gear{background:url('fruit-v28/gear.png') center/contain no-repeat;font-size:0;}
+  .boost{background:transparent center/contain no-repeat;border-radius:0;box-shadow:none;}
+  #bPlus{background-image:url('fruit-v28/btn_plus.png');}
+  #bHint{background-image:url('fruit-v28/btn_hint.png');}
+  #bMag{background-image:url('fruit-v28/btn_mag.png');}
+</style>
+</head>
+<body>
+<div id="phone">
+  <div id="bg"></div>
+
+  <div id="hud">
+    <div id="movesWrap">
+      <svg viewBox="0 0 78 78">
+        <circle cx="39" cy="39" r="35" fill="#1b2340" stroke="#0e1327" stroke-width="7"/>
+        <circle id="ring" cx="39" cy="39" r="35" fill="none" stroke="url(#rg)" stroke-width="6"
+                stroke-linecap="round" stroke-dasharray="219.9" stroke-dashoffset="0"/>
+        <defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#ff4fd8"/><stop offset="1" stop-color="#8a4dff"/>
+        </linearGradient></defs>
+      </svg>
+      <div id="movesTxt"><div id="movesNum">42</div><div id="movesLbl">MOVES</div></div>
+    </div>
+    <div id="hudMid">
+      <div id="lvl">ORIGINAL · v28 · LVL 1</div>
+      <div id="pill"><div id="pillFill"></div><div id="pillTxt">0/12</div></div>
+    </div>
+    <button id="gear">⚙️</button>
+  </div>
+
+  <div id="stage"><div id="board">
+    <div id="ghost"></div>
+    <div id="chain" hidden><span class="cn">0/2</span></div>
+  </div></div>
+
+  <div id="boosters">
+    <button class="boost" id="bPlus">➕<div class="badge" id="nPlus">3</div></button>
+    <button class="boost" id="bHint">🔍<div class="badge" id="nHint">3</div></button>
+    <button class="boost" id="bMag">🧲<div class="badge" id="nMag">3</div></button>
+  </div>
+
+  <div id="toast"></div>
+  <div id="ov"><div id="card">
+    <div id="cardTtl"></div><div id="cardMsg"></div>
+    <button id="cardBtn">Заново</button>
+  </div></div>
+</div>
+
+<script>
+/* ===== масштаб поля под рамку ===== */
+function fit(){
+  const stage=document.getElementById('stage'), board=document.getElementById('board');
+  if(!board.offsetWidth) return;
+  const sw=stage.clientWidth-8, sh=stage.clientHeight-8;
+  const s=Math.max(.4, Math.min(sw/board.offsetWidth, sh/board.offsetHeight, 1.5));
+  board.style.transform=`translate(-50%,-50%) scale(${s})`;
+  boardScale=s;
+}
+window.addEventListener('resize',fit);
+let boardScale=1;
+
+/* ===== декорации фона ===== */
+(function(){
+  const bg=document.getElementById('bg');
+  [[8,'8%'],[16,'26%'],[10,'55%'],[14,'72%']].forEach(([w,l])=>{
+    const r=document.createElement('div');r.className='ray';r.style.left=l;r.style.width=w+'%';bg.appendChild(r);
+  });
+  for(let i=0;i<10;i++){
+    const b=document.createElement('div');b.className='amb';
+    const s=4+((i*7)%12);b.style.width=b.style.height=s+'px';
+    b.style.left=(5+i*9.5)+'%';
+    b.style.animationDuration=(9+(i*3)%8)+'s';b.style.animationDelay=(-i*1.7)+'s';
+    bg.appendChild(b);
+  }
+  ['🪸','🌿','🪸','🌿','🪸'].forEach((e,i)=>{
+    const c=document.createElement('div');c.className='coral';c.textContent=e;
+    c.style.left=(3+i*21)+'%';c.style.fontSize=(30+(i*11)%22)+'px';bg.appendChild(c);
+  });
+})();
+
+/* ===== контент уровня =======================================================
+   Своего контента у прототипа НЕТ. Он исполняет уровень, который ему передали:
+   `?level=<json>`, `?pack=<id>&n=<N>` или пакет из хранилища (`?gen=N`).
+
+   Раньше здесь лежали двенадцать зашитых категорий — SEASONS, SPACE, FOOD и так
+   далее, — и любой сбой загрузки молча подменял ими настоящий уровень. Читалось
+   это как «прототип работает»: поле полное, пузыри тащатся, категории
+   собираются. На деле проверяющий играл не в тот уровень, который проверял, и
+   заметить подмену можно было только по словам на пузырях. Так уже терялись
+   ошибки: пакет без `board` роняло обращение к `L.board.move_limit`, ошибку
+   гасил общий catch, и вместо своего уровня показывался демо-контент.
+
+   Поэтому уровня нет — играть нечего, и прототип говорит это вслух (`noLevel`
+   в конце файла). Пустой экран с объяснением честнее полного экрана с чужими
+   словами. */
+let TARGETS=[];
+/* Сколько слов каждой категории лежит на старте. Заполняется выкладкой уровня
+   (`applyLevel`); своих значений здесь больше нет. */
+let START_COUNTS=[];
+/* Вместимость поля: сколько пузырей видно одновременно. 24 — замер целевой игры
+   (TARGET_GAME_OBSERVATIONS §2), то же число стоит в BOARD_CAPACITY инструмента.
+   Раньше здесь было 19, взятое из зашитого демо-контента, и уровень в проверке
+   выглядел разреженнее, чем он есть. Демо-контента больше нет вовсе. */
+const BOARD_CAPACITY=24;
+
+/* ===== лимит ходов ==========================================================
+   Давление ходов — половина механики (GDD §2 п.10), поэтому уровень без лимита
+   это ИСКЛЮЧЕНИЕ, которое объявляется здесь явно, а не получается само собой из
+   недостающего поля в пакете. Раньше было наоборот: пакет приезжал без
+   move_limit, прототип молча включал ∞, и вся сданная линейка игралась
+   безлимитной — проверить баланс на ней было нельзя.
+
+   Формула лимита одна на проект: move_limit = ceil((3*M + chunks) * K),
+   M = категорий, chunks = склейки половинок, K от 1.6 (просторно) до 1.25
+   (спайк). Дублируется в core/levelMath.ts и scripts/pack_to_handoff.py. */
+const MIN_MOVE_LIMIT_K=1.25, MAX_MOVE_LIMIT_K=1.6;
+/* K для уровня, приехавшего вообще без лимита: середина коридора. Такой уровень
+   всё равно играется с лимитом — «данных нет» не повод снимать механику. */
+const FALLBACK_MOVE_LIMIT_K=1.4;
+const UNLIMITED={
+  /* Туториал: в референсе L1 без лимита, там учат одному драгу. */
+  levels:[1],
+  /* Режимы, где ресурс игрока не ходы: ?mode=timed | daily */
+  modes:['timed','daily'],
+};
+const MODE=new URLSearchParams(location.search).get('mode')||'';
+/* Уровень безлимитен, только если так сказал этот конфиг: номер в списке,
+   режим из списка или явный ?unlimited=1 для ручной проверки. */
+function isUnlimited(levelId){
+  if(new URLSearchParams(location.search).get('unlimited')==='1') return true;
+  if(UNLIMITED.modes.includes(MODE)) return true;
+  return UNLIMITED.levels.includes(levelId);
+}
+function computeMoveLimit(categories,chunks){
+  const floor=categories*3+(chunks||0);
+  return Math.ceil(floor*FALLBACK_MOVE_LIMIT_K);
+}
+
+/* ===== досыпка: поводы ======================================================
+   Досыпка приходит на четыре повода и только на них, и на каждый — своё
+   фиксированное число шаров (GDD §2 п.6, §3):
+     1) собрана категория            4 (мета-категория 3: одно место уже занято
+                                        шаром-именем родителя);
+     2) склеены две половинки        1;
+     3) тупик — на поле не осталось ни одной возможной пары   4, с перепроверкой
+        поля после приземления: если и четвёрка хода не дала, придёт следующая;
+     4) MISS_RESCUE неверных попыток ПОДРЯД                   1.
+   Обычный мердж досыпку не вызывает: пустеющее поле — это давление, ради
+   которого механика и существует.
+
+   Почему у двух предохранителей числа РАЗНЫЕ, и именно такие (решение владельца
+   продукта 03.08). Оба они наша добавка: в ТЗ предохранителей нет вовсе, поэтому
+   правило «сколько мест освободилось, столько и приходит» ни к одному из них не
+   применяется — при обоих не освободилось ни одного места. Разница в том, ЧТО
+   они лечат. Тупик — поле: ходов физически нет, и его надо вернуть в играбельное
+   состояние, а четвёрка делает это почти всегда с первого раза. Безыдейность —
+   не поле, а взгляд игрока: ходы есть, он их не видит. Чинить тут нечего, и
+   четвёрка случайных слов работала против него, добавляя шума в поле, которое и
+   так запутало. Поэтому подсказка — один шар.
+
+   MISS_RESCUE — настраиваемое число, а не константа «на глаз», поэтому оно
+   стоит здесь, в конфиге, и переопределяется в адресной строке (`?miss=N`)
+   для ручной проверки без пересборки.
+
+   Почему 5. Начинали с 3: одна ошибка это опечатка драга, две бывают на
+   честной ловушке. Но три подряд ещё не значит «перебираю наугад» — на
+   уровне 12 оригинала ловушек в четвёрках сразу несколько (`black`/`green`
+   в TEA, а не в цветах; `may`/`march` как обычные слова, а не месяцы), и
+   три промаха там набирает игрок, который как раз ДУМАЕТ. Планка поднята
+   до 5: помощь не должна приходить раньше, чем человек действительно упёрся.
+   Число временное и подбирается наигровкой — на то оно и в конфиге. */
+const MISS_RESCUE_DEFAULT=5;
+const MISS_RESCUE=(()=>{
+  const raw=new URLSearchParams(location.search).get('miss');
+  const n=raw===null?NaN:Number(raw);
+  return Number.isInteger(n)&&n>0&&n<=20?n:MISS_RESCUE_DEFAULT;
+})();
+
+let FULL={}, MOVES_START=48, CATS_TOTAL=0, FIELD_TARGET=BOARD_CAPACITY, NO_LIMIT=false;
+const FRUIT_FAMILIES=['apples','pears','berries','citrus','grapes','stonefruit','melons','tropical','pitaya','cherries'];
+let FRUIT_FAMILY='apples';
+let METAW=new Set(); /* мета-слова уровня: не спавнятся, приходят превращением четвёрки */
+/* Картинки мета-пузырей от пакета: {СЛОВО -> эмодзи}. Пузырь рисуется значком
+   вместо текста, но словом БЫТЬ не перестаёт: мерджи, категория и мета-связь
+   считаются по слову. Ключ в верхнем регистре — прототип весь текст уровня
+   приводит к верхнему. Поле пакета — icons (см. core/playableHandoff.ts). */
+let METAICON={};
+/* Выкладка от генератора: [{v:имя категории, e:слово}]. null — генератор её не
+   прислал (демо-контент, старый пакет), тогда состав считается на месте
+   по START_COUNTS, а порядок тасуется. См. комментарий в applyDeal. */
+let DEAL=null;
+/* Очередь линий от генератора: {ИМЯ КАТЕГОРИИ -> сборов до открытия} или null.
+   Крупный уровень (больше 12 категорий) не показывает часть категорий сразу:
+   пока сборов меньше порога, досыпка ПРОПУСКАЕТ пузыри такой линии и берёт из
+   очереди следующий подходящий. Считает генератор (planGates в
+   tool/level-tool/web/src/core/deal.ts), прототип ИСПОЛНЯЕТ — иначе поле на
+   16 категориях встречает игрока обрывками всех линий разом, и пачка в 4 шара
+   расходится по четырём разным категориям, не закрывая ни одной. */
+let GATES=null;
+/* Распилы от пакета: {категория::СЛОВО -> [КУСОК,КУСОК]} или null. */
+let CHUNKS=null;
+/* Модификатор от пакета: {type:'ice'|'hidden'|'chain', frozen/hidden:[{word,
+   category,layers}], chain_need} или null. Правило то же, что у выкладки и
+   распилов: если модификатор задан пакетом, прототип его ИСПОЛНЯЕТ (морозит
+   ровно указанные слова, ставит цепь с указанным счётчиком), а эвристику
+   `?mod=` не применяет. Лимит пакета бонус за блокиратор уже содержит. */
+let PACK_MOD=null;
+function applyContent(){ FULL={}; TARGETS.forEach(t=>FULL[t.v]=t.ex.length); CATS_TOTAL=TARGETS.length; }
+applyContent();
+
+/* ===== уровень из JSON (?level=путь-к-файлу) — схема в levels/SCHEMA.md =====
+   имена категорий скрыты до сборки (как в референсе): пузыри показывают слова,
+   имя категории появляется только на финальном оранжевом пузыре. */
+function applyLevel(L){
+  const levelId=Number(L.level_id)||1;
+  FRUIT_FAMILY=FRUIT_FAMILIES[Math.max(0,levelId-2)%FRUIT_FAMILIES.length];
+  TARGETS=L.categories.map(c=>({v:c.name.toUpperCase(),ex:c.words.map(w=>w.toUpperCase())}));
+  const M=TARGETS.length,total=M*4;
+  /* ЦЕПОЧКИ (правило референса): слово = имя другой категории уровня -> мета-слово.
+     Оно не спавнится: игрок собирает ту категорию, и четвёрка ПРЕВРАЩАЕТСЯ
+     в этот шар-слово родителя. */
+  const byName={}; TARGETS.forEach((t,ti)=>byName[t.v]=ti);
+  TARGETS.forEach(p=>{ p.meta=p.meta||null; });
+  TARGETS.forEach(p=>p.ex.forEach(w=>{
+    const ci=byName[w];
+    if(ci!==undefined&&TARGETS[ci]!==p) TARGETS[ci].meta={parent:p.v,word:w};
+  }));
+  METAW=new Set(TARGETS.filter(t=>t.meta).map(t=>t.meta.word));
+  METAICON={};
+  (L.icons||[]).forEach(i=>{ if(i&&i.word&&i.icon) METAICON[String(i.word).toUpperCase()]=i.icon; });
+  /* board может не приехать вовсе: у старых пакетов его нет. Обращение к
+     L.board.move_limit на таком пакете когда-то падало, ошибка гасилась общим
+     catch, и вместо своего уровня показывался зашитый демо-контент. Теперь
+     подменять нечем: сбой загрузки честно говорит «играть нечего» (noLevel). */
+  const board=L.board||{};
+  /* Безлимит — только по конфигу выше. Если лимита в пакете нет, он считается
+     по формуле: молчаливое ∞ снимало бы с уровня половину механики. */
+  NO_LIMIT=isUnlimited(L.level_id);
+  MOVES_START=NO_LIMIT?total*3
+    :(board.move_limit!=null?board.move_limit:computeMoveLimit(M,0));
+  const capacity=board.board_capacity||BOARD_CAPACITY;
+  FIELD_TARGET=Math.min(board.start_bubbles||capacity,capacity,total);
+  CHUNKS=applyChunks(L);
+  DEAL=applyDeal(L);
+  GATES=DEAL?DEAL.gates:null;
+  PACK_MOD=applyPackModifier(L);
+  if(DEAL){
+    /* поле меряется в ПУЗЫРЯХ: распиленное слово занимает два места */
+    FIELD_TARGET=expandChunks(DEAL.start,CHUNKS).list.length;
+  }else{
+    /* старт: первой полную четвёрку получает категория без мета-слов,
+       остальным раздаём почти поровну (не выше числа спавнящихся слов) */
+    const spawnable=TARGETS.map(t=>t.ex.filter(w=>!METAW.has(w)).length);
+    const order=[...TARGETS.keys()];
+    const ff=spawnable.findIndex(n=>n===4);
+    if(ff>0){order.splice(ff,1);order.unshift(ff);}
+    START_COUNTS=new Array(M).fill(0);
+    if(ff>=0) START_COUNTS[order[0]]=4;
+    let left=FIELD_TARGET-(ff>=0?4:0), i=(ff>=0?1:0);
+    let guard=10*M;
+    while(left>0&&guard-->0){
+      const ci=order[i%M];
+      if(START_COUNTS[ci]<Math.min(4,spawnable[ci])){START_COUNTS[ci]++;left--;}
+      i++;
+    }
+  }
+  applyContent();
+  document.getElementById('lvl').textContent='ORIGINAL · v30 · LVL '+levelId;
+  preloadFruitFamily(FRUIT_FAMILY);
+}
+
+const fruitImageCache=new Map();
+function preloadFruitFamily(family){
+  for(let stage=1;stage<=5;stage++){
+    const src=`assets-fruit-v29/${family}_${String(stage).padStart(2,'0')}.png`;
+    if(fruitImageCache.has(src)) continue;
+    const img=new Image(); img.decoding='async'; img.src=src;
+    fruitImageCache.set(src,img);
+  }
+}
+
+/* ===== выкладка от генератора ==============================================
+   Что лежит на поле на старте и в каком порядке приходит досыпка — считает
+   генератор (tool/level-tool/web/src/core/deal.ts) и присылает вместе с уровнем.
+   Прототип её ИСПОЛНЯЕТ. Своей случайности здесь больше нет: раньше слова
+   тасовались через Math.random при каждом заходе, и один и тот же уровень у двух
+   проверяющих выглядел по-разному. Наигровка руками в таких условиях ничего не
+   доказывает — непонятно, уровень тяжёлый или выкладка не повезла.
+
+   Проверяем состав перед тем, как принять: выкладка обязана раздать каждое
+   спавнящееся слово ровно один раз. Не сошлось — считаем сами и говорим об этом
+   в консоль, потому что молча сыграть в другой уровень хуже, чем сыграть в свой
+   со случайной выкладкой. */
+function applyDeal(L){
+  const d=L.deal;
+  if(!d||!Array.isArray(d.start)||!Array.isArray(d.queue)) return null;
+  const byId={}; (L.categories||[]).forEach(c=>byId[c.id]=c.name.toUpperCase());
+  const need={};
+  TARGETS.forEach(t=>t.ex.forEach(w=>{ if(!METAW.has(w)) need[t.v+'::'+w]=(need[t.v+'::'+w]||0)+1; }));
+  const start=[],queue=[];
+  let bad=null;
+  [[d.start,start],[d.queue,queue]].forEach(([src,dst])=>src.forEach(b=>{
+    const v=byId[b.category];
+    const e=String(b.word||'').toUpperCase();
+    if(v===undefined){ bad=bad||('нет категории '+b.category); return; }
+    const key=v+'::'+e;
+    if(!need[key]){ bad=bad||('лишний пузырь '+key); return; }
+    need[key]--;
+    dst.push({v:v,e:e});
+  }));
+  const missing=Object.keys(need).filter(k=>need[k]>0);
+  if(missing.length) bad=bad||('не роздано: '+missing.slice(0,3).join(', '));
+  if(bad){
+    console.warn('[playable] выкладка уровня не сошлась ('+bad+') — раскладываю сам');
+    return null;
+  }
+  /* Очередь линий: непонятая запись пропускается с warn. Сыграть уровень без
+     одного гейта честнее, чем не сыграть вовсе, — но молчать нельзя: без гейта
+     линия выйдет на поле раньше, чем её проверял симулятор. */
+  const gates={};
+  (d.gates||[]).forEach(g=>{
+    const v=byId[g&&g.category];
+    const n=Math.floor(Number(g&&g.after_collected));
+    if(v===undefined||!(n>0)){ console.warn('[playable] гейт не понят, пропускаю:',g); return; }
+    gates[v]=n;
+  });
+  return {start:start,queue:queue,gates:Object.keys(gates).length?gates:null};
+}
+/* Распилы, заданные пакетом: {категория::СЛОВО -> [КУСОК, КУСОК]}.
+   Если они есть, прототип их ИСПОЛНЯЕТ и своей эвристикой (splitHalves)
+   не пользуется: пакет с распилами воспроизводит записанный уровень, а
+   эвристика выбрала бы другие слова и другие точки распила. Формат —
+   tool/level-tool/web/src/core/playableHandoff.ts */
+/* Карта распилов: `КАТЕГОРИЯ::СЛОВО` → части и НОМЕР ПАРЫ.
+
+   Номер пары обязан быть уникальным на весь уровень, и берётся он здесь —
+   из позиции распила в списке пакета. Раньше номера выдавал expandChunks,
+   считая от единицы в КАЖДОМ своём вызове, а вызывают его дважды: на стартовое
+   поле и на очередь. Половинки старта получали 1,2,3 и половинки очереди тоже
+   1,2,3 — то есть у `dol|phin` со старта и у `choco|late` из очереди совпадал
+   номер пары. Склейка проверяла только номер и сторону, поэтому `dol`
+   склеивался с `late`: получался пузырь категории OCEAN ANIMALS со словом
+   CHOCOLATE, слово `dolphin` из уровня исчезало, а `phin` и `choco` оставались
+   на поле сиротами, которым не с чем слиться никогда. Отсюда и «уровень не
+   доигрывается, остался один шар». */
+function applyChunks(L){
+  if(!Array.isArray(L.chunks)||!L.chunks.length) return null;
+  const byId={}; (L.categories||[]).forEach(c=>byId[c.id]=c.name.toUpperCase());
+  const map={}; let id=0;
+  for(const ch of L.chunks){
+    const v=byId[ch.category], e=String(ch.word||'').toUpperCase();
+    const p=ch.pieces||[];
+    if(v===undefined||p.length!==2){
+      console.warn('[playable] распил не понят, пропускаю:',ch); continue;
+    }
+    map[v+'::'+e]={pair:++id,parts:[String(p[0]).toUpperCase(),String(p[1]).toUpperCase()]};
+  }
+  return Object.keys(map).length?map:null;
+}
+/* Модификатор от пакета. Слова приводятся к верхнему регистру, категория — id
+   из списка уровня. Непонятые записи пропускаются с warn: сыграть уровень без
+   блокиратора честнее, чем не сыграть вовсе. */
+function applyPackModifier(L){
+  const m=L.modifier;
+  if(!m||!m.type) return null;
+  if(m.type==='chain') return {type:'chain',need:Math.max(1,(m.chain_need|0)||2)};
+  const byId={}; (L.categories||[]).forEach(c=>byId[c.id]=c.name.toUpperCase());
+  const src=m.type==='ice'?m.frozen:m.hidden;
+  if(!Array.isArray(src)||!src.length){
+    console.warn('[playable] модификатор без списка слов, пропускаю:',m); return null;
+  }
+  const list=[];
+  for(const b of src){
+    const v=byId[b.category];
+    if(v===undefined){ console.warn('[playable] модификатор: нет категории',b); continue; }
+    list.push({v:v,e:String(b.word||'').toUpperCase(),layers:Math.max(1,(b.layers|0)||2)});
+  }
+  return list.length?{type:m.type,list:list}:null;
+}
+/* Заморозить/закрыть ровно те пузыри старта, что указал пакет. */
+function applyPackBlockers(pm){
+  for(const it of pm.list){
+    const b=bubbles.find(x=>!x.half&&x.val===it.v&&x.exs.length===1
+      &&x.exs[0]===it.e&&x.ice<=0&&x.hid<=0);
+    if(!b){ console.warn('[playable] модификатор: слова нет на старте',it); continue; }
+    if(pm.type==='ice') b.ice=it.layers; else b.hid=it.layers;
+    paint(b); place(b);
+  }
+}
+/* Своя ли это пара половинок. Правило ОДНО на прототип: им проверяет и склейка
+   (canMerge), и поиск легального хода (legalMove). Две копии правила здесь уже
+   стоили нам непроходимого уровня — расходясь, они дают либо склейку, которую
+   поиск хода не видит, либо ход, который склейка отвергает; во втором случае
+   страховка от тупика не срабатывает, потому что ход формально есть.
+
+   Признаков четыре, а не один номер пары: номер, разные стороны, одно и то же
+   целое слово, одна и та же категория. Одного номера хватало ровно до того дня,
+   когда номера двух разных слов совпали (см. applyChunks) — склейка молча собрала
+   `dol`+`late`, пузырь получил категорию первого и слово второго, и уровень стал
+   непроходимым без единого сообщения. */
+function samePair(a,b){
+  return !!(a.half&&b.half
+    &&a.half.pair===b.half.pair
+    &&a.half.side!==b.half.side
+    &&a.half.whole===b.half.whole
+    &&a.val===b.val);
+}
+/* Разворачивает список выкладки: распиленное слово становится двумя пузырями.
+   Номер пары НЕ выдаётся здесь: он лежит в карте распилов и один на весь
+   уровень — см. applyChunks про то, чем кончалась нумерация по месту. */
+function expandChunks(list,map){
+  if(!map) return {list:list,pairs:0};
+  const out=[]; const seen=new Set();
+  for(const it of list){
+    const ch=map[it.v+'::'+it.e];
+    if(!ch){ out.push(it); continue; }
+    seen.add(ch.pair);
+    out.push({v:it.v,e:ch.parts[0],half:{pair:ch.pair,whole:it.e,side:0}},
+             {v:it.v,e:ch.parts[1],half:{pair:ch.pair,whole:it.e,side:1}});
+  }
+  return {list:out,pairs:seen.size};
+}
+const W=390,H=600;
+/* сколько собранная категория стоит на поле с открытым именем перед уничтожением */
+const NAME_HOLD=1000;
+const PRAISE=['Cool!','Great!','Splendid!','Awesome!','Nice!'];
+
+const board=document.getElementById('board');
+const chainEl=document.getElementById('chain');
+const ghostEl=document.getElementById('ghost');
+
+/* ===== модификаторы: ?mod=halves|ice|hidden|chain (GDD §7) ==================
+   Один модификатор на партию, уровень пересобирается с ним: половинки добавляют
+   склейки в лимит ходов, лёд и «?» дают по ходу форы, цепь делит поле.
+   Выбираются селектором на странице отчёта, рядом с выбором уровня. */
+const MOD=new URLSearchParams(location.search).get('mod')||'none';
+/* пузырь в руке: поле замирает целиком, чтобы структура не пересобиралась
+   и освободившееся место не занималось досыпкой до финального решения */
+let held=false;
+let chainY=null,chainNeed=0,chainDown=true,halfPairs=0,MOVES_MAX=48;
+
+let bubbles=[],queue=[],moves=0,done=0,over=false,praiseI=0,pendingPops=0;
+let boosts={plus:3,hint:3,mag:3};
+let uid=0;
+
+function rFor(n){return Math.min(38+(n-1)*12,72);}
+
+function makeBubble(val,ex,x,y,opt){
+  const o=opt||{};
+  const b={id:uid++,val,exs:[ex],x,y,px:x,py:y-1.2,r:rFor(1),
+           half:o.half||null,ice:0,hid:0,zone:0,
+           dragging:false,popping:false,named:false,el:document.createElement('div')};
+  b.el.className='bub t1';
+  b.el.addEventListener('pointerdown',e=>grab(e,b));
+  board.appendChild(b.el);
+  paint(b); place(b);
+  bubbles.push(b);
+  return b;
+}
+function paint(b){
+  const n=b.exs.length;
+  b.r=b.half?32:rFor(n);
+  let cls='bub t'+Math.min(n,4);
+  if(b.half) cls+=' half';
+  if(b.ice>0) cls+=' ice';
+  if(b.hid>0) cls+=' hid';
+  if(b.el.classList.contains('hintGlow')) cls+=' hintGlow';
+  b.el.className=cls;
+  const stage=b.half?1:Math.min(n+1,5);
+  b.el.style.setProperty('background-image',`url('assets-fruit-v29/${FRUIT_FAMILY}_${String(stage).padStart(2,'0')}.png')`,'important');
+  let html;
+  if(b.hid>0){
+    html='<div class="ln" style="font-size:26px">?</div>';           /* слово закрыто */
+  }else if(b.half){
+    /* Половинка — кусок как есть, без указателя стороны.
+       Раньше рисовалась точка («AU\u00b7», «\u00b7GUST»), и это была подсказка, которая
+       съедала механику: если сторона видна, порядок склейки известен заранее,
+       и догадываться остаётся не о чем.
+       Оригинал так и делает: на записи уровня 12 (reference/LVL11-17.MP4,
+       137-я секунда) половинки подписаны голыми кусками — PHIN, RIDA, TE,
+       CASM, DOL, LON, — а отличаются они цветом пузыря, не текстом. У нас ту
+       же роль играет пунктирная рамка: «это половинка» видно, «с какой
+       стороны» — нет. */
+    const t=b.exs[0];
+    const fs=Math.min(14,Math.floor((b.r*2-12)/(0.62*t.length)));
+    html='<div class="ln" style="font-size:'+fs+'px">'+t+'</div>';
+  }else if(n>=(FULL[b.val]||4)){
+    /* полная категория = оранжевый пузырь с ИМЕНЕМ категории (до этого имя скрыто) */
+    const fs=Math.min(17,Math.floor((b.r*2-16)/(0.62*b.val.length)));
+    html='<div class="ln" style="font-size:'+fs+'px">'+b.val+'</div>';
+  }else{
+    /* одиночка = слово; склеенный шар = ВСЕ собранные слова стопкой (как в референсе).
+       Мета-слово с картинкой рисуется значком вместо текста. В подсчёт размера
+       шрифта оно входит короткой строкой: иначе длинное имя категории
+       («ICE CREAM») жало бы соседние слова, хотя на экране от него осталась
+       одна эмодзи. Значок крупнее текста — он и должен читаться первым. */
+    const maxLen=Math.max(...b.exs.map(e=>METAICON[e]?2:e.length));
+    const base=n===1?15:14;
+    const fs=Math.min(base,Math.floor((b.r*2-14)/(0.62*maxLen)),Math.floor((b.r*2-18)/(1.3*n)));
+    html=b.exs.map(e=>METAICON[e]
+      ?'<div class="ln icon" style="font-size:'+Math.round(fs*(n===1?2.6:1.5))+'px">'+METAICON[e]+'</div>'
+      :'<div class="ln" style="font-size:'+fs+'px">'+e+'</div>').join('');
+  }
+  if(b.ice>0) html+='<div class="cnt">\u2744 '+b.ice+'</div>';
+  else if(b.hid>0) html+='<div class="cnt">'+b.hid+'</div>';
+  b.el.innerHTML=html;
+  b.el.style.width=b.el.style.height=b.r*2+'px';
+}
+function place(b){
+  b.el.style.left=(b.x-b.r)+'px';
+  b.el.style.top=(b.y-b.r)+'px';
+}
+
+/* ===== модификаторы: подготовка уровня =====================================
+   Половинки — акцент, а не фон: немного слов, только часть категорий, не больше
+   одного распила в категории. Фрагмент не имеет права быть словом уровня, иначе
+   игрок честно потащит половинку в категорию как слово. Полного словаря
+   у прототипа нет, поэтому распил вида SHR|IMP такая проверка не поймает —
+   ограничение известное. */
+function splitHalves(list){
+  const words=new Set(); TARGETS.forEach(t=>t.ex.forEach(w=>words.add(w)));
+  const usedCats=new Set(); let pairs=0,pid=0;
+  for(let i=0;i<list.length&&pairs<3;i++){
+    const it=list[i];
+    if(it.half||usedCats.has(it.v)) continue;
+    const w=it.e;
+    if(w.length<6||!/^[A-Za-zА-Яа-яЁё]+$/.test(w)) continue;
+    const mid=Math.floor(w.length/2);
+    let parts=null;
+    for(const at of [mid,mid-1,mid+1]){
+      if(at<2||w.length-at<2) continue;
+      const a=w.slice(0,at),b=w.slice(at);
+      if(words.has(a)||words.has(b)) continue;
+      parts=[a,b]; break;
+    }
+    if(!parts) continue;
+    words.add(parts[0]); words.add(parts[1]);
+    usedCats.add(it.v); pid++;
+    list.splice(i,1,{v:it.v,e:parts[0],half:{pair:pid,whole:w,side:0}},
+                    {v:it.v,e:parts[1],half:{pair:pid,whole:w,side:1}});
+    i++; pairs++;
+  }
+  return pairs;
+}
+/* Лёд и «?»: по одному пузырю на категорию, максимум два на уровень, счётчик 2-3.
+   Снимаются успешными мерджами на поле — ошибка слой не снимает. */
+function setBlockers(kind){
+  const usedCats=new Set(); let n=0;
+  for(const b of bubbles){
+    if(n>=2) break;
+    if(b.half||usedCats.has(b.val)) continue;
+    usedCats.add(b.val);
+    if(kind==='ice') b.ice=2+n; else b.hid=2+n;
+    paint(b); n++;
+  }
+  return n;
+}
+/* Цепь: линия ставится так, чтобы под ней осталась примерно треть кучи — цепь
+   отделяет именно нижнюю часть шаров. Мердж через неё запрещён, и она же
+   физическая преграда: свою зону пузыри не покидают, пока цепь висит.
+   Снимается сбором категорий, счётчик показан на самой цепи. */
+function setChain(need){
+  const ys=bubbles.map(b=>b.y).sort((a,b)=>a-b);
+  if(ys.length<4) return;
+  const cut=Math.max(1,Math.floor(ys.length*0.66));
+  chainY=Math.round((ys[cut-1]+ys[cut])/2);
+  chainNeed=need||2; chainDown=false;
+  bubbles.forEach(b=>{ b.zone=b.y>chainY?1:0; });
+  chainEl.hidden=false; chainEl.style.opacity='1'; chainEl.style.top=chainY+'px';
+}
+function updChain(){
+  if(chainY==null) return;
+  chainEl.querySelector('.cn').textContent=chainDown
+    ? 'цепь снята' : Math.min(done,chainNeed)+'/'+chainNeed+' категорий';
+}
+function breakChain(msg){
+  if(chainDown) return;
+  chainDown=true;
+  chainEl.style.opacity='0';
+  setTimeout(()=>{ if(chainDown) chainEl.hidden=true; },400);
+  updChain();
+  toastText(msg||'ЦЕПЬ ЛОПНУЛА',true);
+}
+/* Страховка от запертой раскладки: лёд тает только от мерджей, цепь снимается
+   только сбором категорий. Если легального мерджа не осталось и досыпки уже
+   не будет, препятствие снимается само — молча показывать неразрешимое поле
+   хуже, чем признать ограничение вслух. */
+function legalMove(){
+  const act=bubbles.filter(b=>!inert(b)&&b.ice<=0&&b.hid<=0);
+  for(let i=0;i<act.length;i++)for(let j=i+1;j<act.length;j++){
+    const a=act[i],c=act[j];
+    if(!chainDown&&a.zone!==c.zone) continue;
+    if(a.half||c.half){
+      if(samePair(a,c)) return true;
+      continue;
+    }
+    if(a.val===c.val&&a.exs.length+c.exs.length<=(FULL[a.val]||4)) return true;
+  }
+  return false;
+}
+/* Идёт ли серия страховочных досыпок. Нужен для двух вещей: тост показать один
+   раз на серию, а не на каждый шар, и посчитать серию одним событием. Снимается
+   любым удачным мерджем — тупик кончился. */
+let rescueRun=false;
+function rescueIfStuck(){
+  if(over||pendingPops>0||pendingSpawn>0) return;        /* пачка ещё в пути */
+  if(legalMove()){ rescueRun=false; return; }
+  if(!chainDown){ breakChain('ЦЕПЬ СНЯТА: ХОДА НЕ БЫЛО'); return; }
+  const blocked=bubbles.filter(b=>b.ice>0||b.hid>0);
+  if(blocked.length){
+    blocked.forEach(b=>{ b.ice=0; b.hid=0; paint(b); place(b); });
+    toastText('ЛЁД РАСТАЯЛ САМ',true);
+    return;
+  }
+  /* Пар на поле не осталось, а очередь есть: досыпка приходит вне ритма, иначе
+     игрок стоял бы с ходами в руках и без единого легального мерджа.
+
+     Пачка ПОЛНАЯ, четыре шара (решение владельца продукта 03.08). Здесь ходов
+     физически нет, и задача предохранителя — вернуть поле в играбельное
+     состояние, а не намекнуть. Один шар с этим справляется плохо: чтобы он дал
+     ход, он обязан совпасть с чем-то из того немногого, что осталось на поле.
+     Четвёрка попадает почти всегда с первого раза.
+
+     Перепроверка после приземления остаётся: если и четвёрка хода не дала,
+     придёт следующая. Иначе повторно страховку никто не позовёт — rescueIfStuck
+     висит на мердже и на сборе категории, а в тупике ни того, ни другого нет.
+     Серия дотягивается до первого легального мерджа или до пустой очереди, тост
+     показывается один раз на серию. */
+  if(queue.length){
+    spawnBatch(4);
+    if(!rescueRun){ toastText('ДОСЫПКА ВНЕ РИТМА',true); rescueRun=true; }
+  }
+}
+
+/* ===== инициализация уровня ===== */
+function init(){
+  bubbles.forEach(b=>b.el.remove()); bubbles=[];
+  board.querySelectorAll('.part,.conf').forEach(e=>e.remove());
+  done=0; over=false; pendingPops=0; pendingSpawn=0; held=false; drag=null; clearMarks();
+  chainY=null; chainNeed=0; chainDown=true; halfPairs=0; missStreak=0; rescueRun=false;
+  gateShown={};
+  chainEl.hidden=true; chainEl.classList.remove('hit');
+  boosts={plus:3,hint:3,mag:3};
+  let start=[]; queue=[];
+  if(DEAL){
+    /* выкладка от генератора: копии, потому что партию можно перезапустить,
+       а исходные массивы обязаны пережить перезапуск нетронутыми */
+    start=DEAL.start.map(it=>({v:it.v,e:it.e}));
+    queue=DEAL.queue.map(it=>({v:it.v,e:it.e}));
+  }else{
+    TARGETS.forEach((t,ti)=>{
+      const ex=t.ex.filter(e=>!METAW.has(e)); /* мета-слова не кладём ни на поле, ни в очередь */
+      for(let i=ex.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ex[i],ex[j]]=[ex[j],ex[i]];}
+      const k=ti<START_COUNTS.length?START_COUNTS[ti]:0;
+      ex.forEach((e,i)=>(i<k?start:queue).push({v:t.v,e}));
+    });
+    for(let i=start.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[start[i],start[j]]=[start[j],start[i]];}
+    for(let i=queue.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[queue[i],queue[j]]=[queue[j],queue[i]];}
+  }
+  /* Распилы пакета сильнее модификатора: пакет воспроизводит записанный уровень,
+     а `?mod=halves` — эвристика прототипа. Держать оба значило бы пилить дважды. */
+  if(CHUNKS){
+    const ex=expandChunks(start,CHUNKS); start=ex.list;
+    const eq=expandChunks(queue,CHUNKS); queue=eq.list;
+    console.log('[playable] распилы от пакета:',ex.pairs,'на старте,',eq.pairs,'в очереди');
+  }else if(MOD==='halves') halfPairs=splitHalves(start);
+  /* КООРДИНАТЫ пока свои: в выкладку они ещё не входят (следующий шаг), поэтому
+     раскладка по полю остаётся случайной, а вот СОСТАВ поля и порядок досыпки —
+     ровно те, что посчитал генератор. */
+  start.forEach((it,i)=>
+    makeBubble(it.v,it.e, 46+Math.random()*(W-92), H-66-Math.floor(i/5)*80-Math.random()*30,
+               it.half?{half:it.half}:null));
+  for(let k=0;k<400;k++) physStep(1/60,true);
+  /* запас ходов: склейка половинок тратит ход (слагаемое chunks в формуле лимита),
+     блокирующий модификатор получает один ход форы */
+  /* Склейка половинки тратит ход. У распилов ОТ ПАКЕТА это уже учтено в его
+     move_limit (формула 3*M + chunks), поэтому добавлять нечего; у эвристики
+     прототипа лимита на склейки никто не закладывал — там форы столько же,
+     сколько распилов. */
+  let bonus=CHUNKS?0:halfPairs;
+  if(PACK_MOD){
+    /* Модификатор задан пакетом: исполняем его, эвристику ?mod= не трогаем.
+       Бонус за блокиратор в move_limit пакета уже сидит — не добавляем. */
+    if(PACK_MOD.type==='chain'){ setChain(PACK_MOD.need); for(let k=0;k<400;k++) physStep(1/60,true); }
+    else applyPackBlockers(PACK_MOD);
+  }else{
+    if(MOD==='ice'&&setBlockers('ice')) bonus+=1;
+    if(MOD==='hidden'&&setBlockers('hid')) bonus+=1;
+    if(MOD==='chain'){ setChain(); bonus+=1; for(let k=0;k<400;k++) physStep(1/60,true); }
+  }
+  MOVES_MAX=MOVES_START+bonus; moves=MOVES_MAX;
+  bubbles.forEach(place);
+  updHud(); updBoosts(); updChain();
+  document.getElementById('ov').classList.remove('show');
+}
+
+/* ===== HUD ===== */
+function updHud(){
+  document.getElementById('movesNum').textContent=NO_LIMIT?'∞':moves;
+  document.getElementById('ring').style.strokeDashoffset=NO_LIMIT?0:219.9*(1-Math.max(0,moves)/MOVES_MAX);
+  document.getElementById('pillTxt').textContent=done+'/'+CATS_TOTAL;
+  document.getElementById('pillFill').style.width=(done/CATS_TOTAL*100)+'%';
+}
+function updBoosts(){
+  [['nPlus','bPlus','plus'],['nHint','bHint','hint'],['nMag','bMag','mag']].forEach(([n,btn,k])=>{
+    document.getElementById(n).textContent=boosts[k];
+    document.getElementById(btn).classList.toggle('off',boosts[k]<=0);
+  });
+}
+
+/* ===== физика (Verlet: упор гасит скорость сам, куча лежит спокойно) ===== */
+function physStep(dt,settle){
+  if(held) return;   /* шар в руке: куча не шевелится, его место остаётся пустым */
+  const g=0.4, damp=0.9; /* терминальная скорость ~240px/с — новый набор долетает за ~2с */
+  for(const b of bubbles){
+    if(b.dragging||b.popping) continue;
+    b.fx=b.x; b.fy=b.y;
+    b.wasSup=b.supported; b.supported=false;
+    let vx=(b.x-b.px)*damp, vy=(b.y-b.py)*damp;
+    if(Math.abs(vx)<0.04) vx=0;
+    if(Math.abs(vy)<0.04) vy=0;
+    /* лежащий на опоре неподвижный пузырь гравитация не дёргает,
+       иначе куча вечно микро-проседает и дрожит */
+    if(!(b.wasSup&&vx===0&&vy===0)) vy+=g;
+    b.px=b.x; b.py=b.y; b.x+=vx; b.y+=vy;
+  }
+  for(let it=0;it<4;it++){
+    for(let i=0;i<bubbles.length;i++)for(let j=i+1;j<bubbles.length;j++){
+      const a=bubbles[i],c=bubbles[j];
+      if(a.popping||c.popping||a.dragging||c.dragging) continue; /* поднятый пузырь парит над полем */
+      let dx=c.x-a.x, dy=c.y-a.y, d=Math.hypot(dx,dy)||0.01, min=(a.r+c.r)*0.96;
+      if(d<min){
+        if(dy>0.5*d) a.supported=true;      /* сосед снизу — опора */
+        else if(dy<-0.5*d) c.supported=true;
+        /* мягкое расталкивание: четверть перекрытия на пузырь за итерацию.
+           Резкий толчок всего перекрытия сразу выглядел прыжком,
+           а мёртвая зона в полпикселя оставляла постоянное наслоение */
+        const push=(min-d)*0.25, nx=dx/d, ny=dy/d;
+        a.x-=nx*push; a.y-=ny*push;
+        c.x+=nx*push; c.y+=ny*push;
+      }
+    }
+    for(const b of bubbles){
+      if(b.dragging||b.popping) continue;
+      if(b.x<b.r) b.x=b.r;
+      if(b.x>W-b.r) b.x=W-b.r;
+      if(b.y>H-b.r-4){b.y=H-b.r-4;b.supported=true;}
+      if(b.y<-90) b.y=-90;
+      /* цепь — физическая преграда: верхние лежат на ней, нижние заперты под ней */
+      if(!chainDown&&chainY!=null){
+        if(b.zone===0&&b.y>chainY-b.r-4){b.y=chainY-b.r-4;b.supported=true;}
+        if(b.zone===1&&b.y<chainY+b.r+4){b.y=chainY+b.r+4;}
+      }
+    }
+  }
+  /* трение покоя: опора снизу и почти нет движения → гасим только СКОРОСТЬ.
+     Позицию не откатываем: откат отменял расталкивание и консервировал наслоения. */
+  for(const b of bubbles){
+    if(b.dragging||b.popping) continue;
+    if(b.supported&&Math.hypot(b.x-b.fx,b.y-b.fy)<0.35){ b.px=b.x; b.py=b.y; }
+  }
+  if(!settle) bubbles.forEach(place);
+}
+function still(b){ b.px=b.x; b.py=b.y; } /* обнулить скорость после ручного перемещения */
+/* Два разных «не трогай меня». popping — шар вне физики: летит по своей анимации
+   (возврат, магнит, схлопывание), поэтому куча его не видит. named — собранная
+   категория, которая ещё секунду висит с именем: во взаимодействиях её нет,
+   но телом она остаётся, иначе соседи проваливаются сквозь неё на глазах игрока.
+   Всё, что не физика (мердж, драг, бустеры), спрашивает про оба состояния. */
+function inert(b){ return b.popping||b.named; }
+
+/* ===== досыпка как в референсе: рывком после сбора категории ================
+   Числа ФИКСИРОВАННЫЕ, и это правило (решение владельца продукта 03.08):
+
+     категория улетела с поля      4 шара
+     категория стала мета-словом   3 шара (одно место поле уже получило)
+     склеены две половинки         1 шар
+     страховки (тупик, MISS)       4 шара
+
+   Арифметика сама себя уравновешивает: сколько мест освободилось, столько и
+   приходит. Обычный мердж досыпку не вызывает — поле пустеет намеренно.
+
+   Почему НЕ «добери поле до нормы», как было со 02.08 по 03.08. Такая досыпка
+   платила по всем накопленным долгам разом: каждая склеенная по пути пара тихо
+   освобождала место, и следующий сбор категории приносил не 4 шара, а 5, 8, 12 —
+   на наигровке это читается как поломка. Хуже того, поле возвращалось к
+   стартовому объёму независимо от того, сколько игрок успел склеить, и давление
+   пустеющего поля исчезало.
+
+   Настоящая причина, по которой добор до нормы понадобился, — не досыпка, а
+   СТАРТ: ровная раздача выкладывала 12 категорий по два слова, собрать было
+   нечего, и уровень вставал. Лечится это в генераторе (`autoScheme` в
+   core/deal.ts): на старте есть четвёрка и тройки, а пачка в 4 шара закрывает
+   сразу две тройки. */
+let pendingSpawn=0,lastSpawn=0,pendingBatchCounts={};
+/* Штатные волны имеют фиксированный размер: 4 после категории, 3 после meta,
+   1 после половинки и 4 для страховки. Ограничиваем только остатком очереди;
+   вместимость поля здесь не должна превращать заявленную четвёрку в 1–2 шара. */
+function spawnBatch(n){
+  if(pendingSpawn===0) pendingBatchCounts={};
+  pendingSpawn=Math.min(pendingSpawn+n,queue.length);
+}
+/* Счётчик подряд идущих промахов. Планка — MISS_RESCUE в конфиге выше. */
+let missStreak=0;
+/* Кого из очереди выпускать на поле: первый шар ОТКРЫТОЙ линии.
+   Гейт УСТУПАЕТ НЕОБХОДИМОСТИ: если открытых линий в очереди не осталось,
+   спавнится та, которой до открытия ближе всех. Поле важнее расписания — шар,
+   не пришедший вовсе, оставил бы игрока перед мёртвым полем, а это хуже, чем
+   линия, открывшаяся на сбор раньше срока. Тот же порядок и в симуляторе
+   (nextIndex в tool/level-tool/web/src/core/playSim.ts), поэтому наигровка
+   руками и вердикт приёмки говорят об одном и том же уровне. */
+/* Отложенные линии, о выходе которых игрока уже предупредили. */
+let gateShown={};
+function nextQueueIndex(){
+  const used=typeof pendingBatchCounts==='undefined'?{}:pendingBatchCounts;
+  const open=(it)=>!GATES||GATES[it.v]===undefined||done>=GATES[it.v];
+  for(let i=0;i<queue.length;i++){
+    if(open(queue[i])&&(used[queue[i].v]||0)<2) return i;
+  }
+  /* Крайний хвост может содержать одну оставшуюся линию. Тогда продолжаем
+     выдачу, иначе поле зависнет; обычная пачка сюда не попадает. */
+  for(let i=0;i<queue.length;i++){
+    if(open(queue[i])) return i;
+  }
+  let best=0;
+  for(let i=1;i<queue.length;i++){
+    if((GATES[queue[i].v]||0)<(GATES[queue[best].v]||0)) best=i;
+  }
+  console.warn('[playable] очередь линий: открытых шаров нет, вскрываю гейт '
+    +queue[best].v+' (собрано '+done+' из '+GATES[queue[best].v]+')');
+  return best;
+}
+function trySpawn(ts){
+  if(!queue.length) pendingSpawn=0;
+  if(over||held||pendingSpawn<=0) return;
+  if(ts-lastSpawn<150) return;   /* каскадом: четвёрка читается одним рывком */
+  lastSpawn=ts;
+  pendingSpawn--;
+  const it=queue.splice(nextQueueIndex(),1)[0];
+  pendingBatchCounts[it.v]=(pendingBatchCounts[it.v]||0)+1;
+  /* Открытие отложенной линии видно игроку: на поле приходит категория, которой
+     там не было ни разу. Без подписи это читается как «досыпка принесла мусор» —
+     шар, не сливающийся ни с чем из лежащего. */
+  if(GATES&&GATES[it.v]!==undefined&&!gateShown[it.v]){
+    gateShown[it.v]=1; toastText('НОВАЯ КАТЕГОРИЯ',true);
+  }
+  /* `it.half` передаётся ОБЯЗАТЕЛЬНО — ровно как на старте (см. init).
+     Без него половинка из очереди приезжала обычным пузырём: кусочек `SAR`
+     становился полноправным «словом» категории HUMOR, счётчик слов категории
+     считал его наравне с целыми, склеить его было не с чем (пары у него больше
+     нет), и уровень доигрывался до состояния «остались шары, которые не с чем
+     слить». На уровне 12 оригинала так терялись пять распилов из восьми — все,
+     что приходят досыпкой, а не лежат на старте. */
+  makeBubble(it.v,it.e, 56+Math.random()*(W-112), -44, it.half?{half:it.half}:null);
+  /* Пачка догорела — перепроверяем поле. Единственное место, где это можно
+     сделать: rescueIfStuck висит на мердже и на сборе категории, а в тупике ни
+     того, ни другого не происходит. Без этой строки страховка «один шар»
+     оставляла бы игрока перед мёртвым полем, если шар ни к чему не подошёл. */
+  if(pendingSpawn<=0){ pendingBatchCounts={}; rescueIfStuck(); }
+}
+
+/* ===== драг: путь подсветкой, точка остановки, возврат при ошибке ===== */
+let drag=null,hover=null;
+const passed=new Set();
+function boardXY(e){
+  const r=board.getBoundingClientRect();
+  return [(e.clientX-r.left)/boardScale,(e.clientY-r.top)/boardScale];
+}
+function clearMarks(){
+  if(hover){ hover.el.classList.remove('tgt'); hover=null; }
+  passed.forEach(c=>c.el.classList.remove('pass')); passed.clear();
+  ghostEl.style.display='none';
+}
+function pickTarget(b){
+  let best=null,bd=1e9;
+  for(const c of bubbles){
+    if(c===b||inert(c)) continue;
+    const d=Math.hypot(c.x-b.x,c.y-b.y);
+    if(d<(c.r+b.r)&&d<bd){bd=d;best=c;}
+  }
+  return best;
+}
+/* Можно ли слить. Причина отказа определяет подсветку: слова не связаны —
+   красный (ошибка игрока), лёд и «?» — морозный (препятствие), цепь — красный
+   на цели и на самой цепи, чтобы было видно, что помешала именно она. */
+function canMerge(b,t){
+  if(t.ice>0) return {ok:false,why:'ice'};
+  if(t.hid>0) return {ok:false,why:'hid'};
+  if(!chainDown&&b.zone!==t.zone) return {ok:false,why:'chain'};
+  if(b.half||t.half) return samePair(b,t)?{ok:true}:{ok:false,why:'wrong'};
+  if(b.val!==t.val) return {ok:false,why:'wrong'};
+  if(b.exs.length+t.exs.length>(FULL[b.val]||4)) return {ok:false,why:'wrong'};
+  return {ok:true};
+}
+function flash(el,cls){ el.classList.add(cls); setTimeout(()=>el.classList.remove(cls),360); }
+function grab(e,b){
+  if(over||inert(b)||drag) return;
+  if(b.ice>0||b.hid>0){ flash(b.el,'blk'); return; }   /* заморожен или закрыт: не тащится */
+  e.preventDefault();
+  const [x,y]=boardXY(e);
+  drag={b,ox:b.x-x,oy:b.y-y,sx:b.x,sy:b.y};
+  b.dragging=true; still(b);
+  b.el.classList.add('lift');
+  held=true;                     /* поле замирает до финального решения */
+  ghostEl.style.width=ghostEl.style.height=(b.r*2)+'px';
+  ghostEl.style.left=(b.x-b.r)+'px'; ghostEl.style.top=(b.y-b.r)+'px';
+  ghostEl.style.display='block';
+  /* захват: без него драг рвётся, когда курсор уходит с пузыря */
+  try{ b.el.setPointerCapture&&b.el.setPointerCapture(e.pointerId); }catch(_){}
+}
+window.addEventListener('pointermove',e=>{
+  if(!drag) return;
+  const b=drag.b;
+  const [x,y]=boardXY(e);
+  b.x=Math.max(b.r,Math.min(W-b.r,x+drag.ox));
+  b.y=Math.max(b.r,Math.min(H-b.r,y+drag.oy));
+  place(b);
+  /* след: всё, над чем пронесли шар, остаётся подсвеченным до конца жеста */
+  for(const c of bubbles){
+    if(c===b||inert(c)||passed.has(c)) continue;
+    if(Math.hypot(c.x-b.x,c.y-b.y)<(c.r+b.r)){ passed.add(c); c.el.classList.add('pass'); }
+  }
+  const t=pickTarget(b);
+  if(t!==hover){
+    if(hover) hover.el.classList.remove('tgt');
+    hover=t;
+    if(hover) hover.el.classList.add('tgt');
+  }
+});
+window.addEventListener('pointerup',()=>{
+  if(!drag) return;
+  const b=drag.b, start={x:drag.sx,y:drag.sy}, t=hover;
+  clearMarks();
+  b.dragging=false; still(b); b.el.classList.remove('lift');
+  drag=null; held=false;
+  if(over||!t) return;              /* отпустили в пустоту — шар просто падает в кучу */
+  const v=canMerge(b,t);
+  if(v.ok){ merge(t,b,true); return; }
+  /* Неверное действие: цель подсвечивается красным, шар возвращается на своё
+     место. Логический промах — отпустил на ЧУЖОМ пузыре — тратит ход (GDD §2
+     п.3): цена ошибки и есть давление лимита, на ней держится риск ловушек.
+     Преграда (лёд, «?», цепь) хода не ест: это не неверная догадка о слове,
+     а стена, о которую догадку даже не проверили. Пустота — тоже нет (п.4). */
+  if(v.why==='chain') flash(chainEl,'hit');
+  flash(t.el, v.why==='ice'||v.why==='hid' ? 'blk' : 'err');
+  if(v.why==='wrong'&&!NO_LIMIT){ moves--; updHud(); checkEnd(); }
+  flyBack(b,start);
+  /* MISS_RESCUE неверных попыток подряд — это уже не ловушка, а перебор
+     наугад. Досыпка приходит помощью: новое слово даёт новую зацепку.
+     Счётчик копит только ПОДРЯД идущие промахи, удачный мердж его обнуляет.
+
+     Шар ОДИН (решение владельца продукта 03.08). Здесь ходы на поле ЕСТЬ —
+     игрок их не видит, — то есть поле чинить не надо, и «сколько мест
+     освободилось, столько и приходит» не применяется: не освободилось ни одного.
+     Четвёрка в этом месте работала против игрока: она подсыпала четыре случайных
+     слова в поле, которое его и без того запутало. Один шар добавляет зацепку,
+     не добавляя шума. */
+  missStreak++;
+  if(missStreak>=MISS_RESCUE){
+    missStreak=0;
+    if(queue.length){ spawnBatch(1); toastText('ПОДСКАЗКА: ДОСЫПКА',true); }
+  }
+});
+function flyBack(b,to){
+  b.popping=true;
+  b.el.style.transition='left .28s,top .28s';
+  b.x=to.x;b.y=to.y;place(b);
+  setTimeout(()=>{b.el.style.transition='';b.popping=false;still(b);},290);
+}
+
+/* ===== склейка ===== */
+function merge(a,b,costMove){
+  const gluedHalves=!!(a.half&&b.half);
+  if(gluedHalves){
+    /* две части одного слова дают обычный пузырь-слово (GDD §7): счётчик слов
+       категории от склейки половинок не растёт, зато тратится ход */
+    a.half=null; a.exs=[b.half.whole];
+  }else{
+    a.exs=a.exs.concat(b.exs);
+  }
+  bubbles=bubbles.filter(x=>x!==b); b.el.remove();
+  paint(a); place(a);
+  a.el.classList.remove('merged'); void a.el.offsetWidth; a.el.classList.add('merged');
+  if(costMove){ moves--; updHud(); }
+  missStreak=0;                 /* ход получился — счётчик безыдейного перебора обнуляется */
+  rescueRun=false;              /* и серия страховочных досыпок тоже: тупик кончился */
+  /* успешный мердж снимает слой льда и приближает раскрытие «?» на всём поле */
+  bubbles.forEach(x=>{
+    if(x.ice>0){ x.ice--; paint(x); place(x); }
+    else if(x.hid>0){ x.hid--; paint(x); place(x); }
+  });
+  if(a.exs.length>=FULL[a.val]){
+    /* Имя категории до этого момента было скрыто, и появляется оно ровно на один
+       кадр перед уничтожением. Поэтому собранный шар секунду держится на поле
+       с подсветкой: игрок должен успеть прочитать, что за категорию он собрал,
+       иначе главный ответ уровня проходит мимо него. */
+    pendingPops++;
+    a.named=true;
+    a.el.classList.add('named');
+    setTimeout(()=>popGroup(a),NAME_HOLD);
+  }else if(gluedHalves){
+    /* Склейка половинок — отдельный повод для досыпки (GDD §2 п.6). Два пузыря
+       стали одним, освободилось РОВНО одно место — приходит один шар. На уровне
+       с восемью распилами это восемь шаров за партию, и без них поле садится
+       на треть. */
+    spawnBatch(1);
+    rescueIfStuck();
+  }else{
+    /* Обычный мердж досыпку НЕ вызывает: иначе поле само себя чинит после
+       каждого движения и уровень перестаёт быть задачей на планирование.
+       Пустеющее поле — это давление, оно задумано. Страховка от тупика ниже. */
+    rescueIfStuck();
+  }
+  checkEnd();
+}
+function popGroup(a){
+  const cd=TARGETS.find(t=>t.v===a.val);
+  a.named=false;                /* показ имени кончился */
+  a.el.classList.remove('named');
+  if(cd&&cd.meta){ metaTransform(a,cd.meta); return; }
+  a.popping=true;               /* только теперь шар исчезает и выходит из физики */
+  a.el.classList.add('popping');
+  particles(a.x,a.y,a.r);
+  toast();
+  setTimeout(()=>{
+    bubbles=bubbles.filter(x=>x!==a); a.el.remove();
+    done++; pendingPops--;
+    spawnBatch(4);            /* четвёрка ушла с поля — четвёрка и приходит */
+    updHud(); afterCategory();
+    checkEnd();
+  },300);
+}
+/* цепочка: собранная четвёрка не улетает, а ПРЕВРАЩАЕТСЯ в шар-слово родителя */
+function metaTransform(a,meta){
+  particles(a.x,a.y,a.r);
+  toast();
+  a.val=meta.parent; a.exs=[meta.word];
+  paint(a); place(a); still(a);
+  a.el.classList.remove('merged'); void a.el.offsetWidth; a.el.classList.add('merged');
+  a.popping=false;
+  done++; pendingPops--;
+  spawnBatch(3);              /* один шар поле уже получило: имя категории */
+  updHud(); afterCategory();
+  checkEnd();
+}
+/* собранная категория двигает счётчик цепи */
+function afterCategory(){
+  updChain();
+  if(!chainDown&&done>=chainNeed) breakChain();
+  rescueIfStuck();
+}
+function particles(x,y,r){
+  for(let i=0;i<9;i++){
+    const p=document.createElement('div');p.className='part';
+    p.style.left=(x-5)+'px';p.style.top=(y-5)+'px';
+    board.appendChild(p);
+    const a=Math.PI*2*i/9, d=r+22+Math.random()*26;
+    requestAnimationFrame(()=>{
+      p.style.transform=`translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px) scale(.3)`;
+      p.style.opacity='0';
+    });
+    setTimeout(()=>p.remove(),750);
+  }
+}
+function toast(){ toastText(PRAISE[praiseI++%PRAISE.length]); }
+function toastText(msg,small){
+  const t=document.getElementById('toast');
+  t.style.fontSize=small?'22px':'';
+  t.textContent=msg;
+  t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
+}
+
+/* ===== победа / поражение ===== */
+function checkEnd(){
+  if(over) return;
+  if(done>=CATS_TOTAL){
+    over=true;
+    setTimeout(()=>{confetti();showCard('Уровень пройден! 🎉','Все '+CATS_TOTAL+' наборов собраны. Осталось ходов: '+moves);},1000);
+    return;
+  }
+  /* на безлимитном уровне ходы кончиться не могут по определению: счётчик там
+     показывает ∞, и проигрыш по ходам противоречил бы тому, что видит игрок */
+  if(!NO_LIMIT&&moves<=0&&pendingPops===0&&done<CATS_TOTAL){
+    const canWin=done+pendingPops>=CATS_TOTAL;
+    if(!canWin){ over=true; showCard('Ходы кончились 😢','Собрано '+done+' из '+CATS_TOTAL+' наборов.'); }
+  }
+}
+function showCard(ttl,msg){
+  document.getElementById('cardTtl').textContent=ttl;
+  document.getElementById('cardMsg').textContent=msg;
+  document.getElementById('ov').classList.add('show');
+}
+function confetti(){
+  const cols=['#ff5d8f','#ffd94a','#4fc463','#4fa8ff','#c07aff'];
+  for(let i=0;i<22;i++){
+    const c=document.createElement('div');c.className='conf';
+    c.style.background=cols[i%cols.length];
+    c.style.left=(W/2-4)+'px';c.style.top=(H*0.3)+'px';
+    c.style.transform='rotate('+(i*37)+'deg)';
+    board.appendChild(c);
+    const a=Math.PI*2*i/22, d=90+Math.random()*130;
+    requestAnimationFrame(()=>{
+      c.style.transform=`translate(${Math.cos(a)*d}px,${Math.sin(a)*d+120}px) rotate(${300+i*40}deg)`;
+      c.style.opacity='0';
+    });
+    setTimeout(()=>c.remove(),1200);
+  }
+}
+
+/* ===== бустеры ===== */
+document.getElementById('bPlus').addEventListener('click',()=>{
+  if(over||boosts.plus<=0) return;
+  if(!queue.length) return;
+  boosts.plus--;
+  spawnBatch(4);
+  toastText('ДОСЫПКА +4',true);
+  updBoosts();
+});
+document.getElementById('bHint').addEventListener('click',()=>{
+  if(over||boosts.hint<=0) return;
+  const active=bubbles.filter(b=>!inert(b)&&!b.half&&b.ice<=0&&b.hid<=0);
+  let best=null, bestScore=-Infinity;
+  for(let i=0;i<active.length;i++) for(let j=i+1;j<active.length;j++){
+    const a=active[i],b=active[j];
+    if(!canMerge(a,b).ok) continue;
+    /* Сначала показываем слово, которое дополняет уже начатую категорию;
+       если такого нет — обычную пару слов одной категории. */
+    const lengths=[a.exs.length,b.exs.length].sort((x,y)=>y-x);
+    /* Завершение начатой категории важнее любой обычной пары. Раньше бонус
+       за большой пузырь был всего 100: связка 3 слова + plum могла набрать
+       столько же, сколько обычная пара 2 + 2, и победитель выбирался только
+       по расстоянию. На таких уровнях лупа подсвечивала не plum, хотя ход был
+       очевиден. */
+    const completesPartial=lengths[0]>=2&&lengths[1]===1;
+    const score=(completesPartial?1000:lengths[0]>=2?100:0)
+      +(lengths[0]+lengths[1])*10
+      -(Math.hypot(a.x-b.x,a.y-b.y)/1000);
+    if(score>bestScore){ bestScore=score; best=[a,b]; }
+  }
+  if(!best) return;
+  boosts.hint--; updBoosts();
+  best.forEach(b=>b.el.classList.add('hintGlow'));
+  setTimeout(()=>bubbles.forEach(b=>b.el.classList.remove('hintGlow')),4000);
+});
+document.getElementById('bMag').addEventListener('click',()=>{
+  if(over||boosts.mag<=0) return;
+  /* ТЗ (GDD §5): магнит стягивает и склеивает ВСЕ подходящие пузыри одной
+     категории — самой массовой на поле — и не тратит ход.
+     Магнит подчиняется тем же правилам, что игрок: лёд, «?», цепь и половинки
+     он не обходит, иначе бустер «решал» бы модификатор за игрока. */
+  const cand=bubbles.filter(b=>!inert(b)&&!b.dragging&&b.ice<=0&&b.hid<=0);
+  let pick=null;
+  const seen=new Set();
+  for(const a of cand){
+    if(a.half||seen.has(a.val)) continue;
+    seen.add(a.val);
+    const group=cand.filter(b=>!b.half&&b.val===a.val);
+    /* якорь — самый заполненный шар категории: к нему стягивается остальное */
+    const anchor=group.reduce((x,y)=>y.exs.length>x.exs.length?y:x);
+    let acc=anchor.exs.length;
+    const movers=[];
+    for(const m of group){
+      if(m===anchor||!canMerge(m,anchor).ok) continue;    /* цепь и лёд отсекаются здесь */
+      if(acc+m.exs.length>(FULL[m.val]||4)) continue;     /* сверх размера категории не тянем */
+      acc+=m.exs.length; movers.push(m);
+    }
+    if(!movers.length) continue;
+    /* «самая массовая» = та, у которой магнит стянет больше всего пузырей */
+    if(!pick||movers.length>pick.movers.length) pick={anchor,movers};
+  }
+  /* половинки категорией не считаются: сметать их пачкой нечего, поэтому они
+     остаются запасным вариантом — одна пара, если категорий магниту не досталось */
+  if(!pick){
+    for(const a of cand) for(const m of cand){
+      if(a===m||!canMerge(m,a).ok) continue;
+      if(!pick||a.exs.length>pick.anchor.exs.length) pick={anchor:a,movers:[m]};
+    }
+  }
+  if(!pick) return;
+  boosts.mag--; updBoosts();
+  const {anchor,movers}=pick;
+  movers.forEach(m=>{
+    m.popping=true;                                       /* в полёте физика его не трогает */
+    m.el.style.transition='left .38s ease-in,top .38s ease-in';
+    m.x=anchor.x; m.y=anchor.y; place(m);
+  });
+  setTimeout(()=>{
+    for(const m of movers){
+      m.el.style.transition=''; m.popping=false; still(m);
+      if(bubbles.includes(anchor)&&bubbles.includes(m)&&!inert(anchor)&&canMerge(m,anchor).ok)
+        merge(anchor,m,false);                            /* false — бустер хода не стоит */
+    }
+  },400);
+});
+document.getElementById('gear').addEventListener('click',init);
+document.getElementById('cardBtn').addEventListener('click',init);
+
+/* ===== главный цикл (физика фикс-шагом 1/60с, независимо от FPS) ===== */
+let prev=0;
+function loop(ts){
+  const dt=(ts-prev)/1000; prev=ts;
+  if(!over){
+    const steps=Math.max(1,Math.min(10,Math.round(dt*60)));
+    for(let i=0;i<steps;i++) physStep(1/60,false);
+    trySpawn(ts);
+  }
+  requestAnimationFrame(loop);
+}
+/* Играть нечего: уровень не передали или он не загрузился.
+
+   Молча показать что-нибудь другое здесь нельзя — на этом и горели: сбой
+   загрузки подменялся зашитым демо-контентом, экран выглядел рабочим, и
+   проверяющий играл не в тот уровень. Поэтому вслух и с причиной. */
+function noLevel(reason){
+  board.innerHTML='';
+  /* HUD и бустеры тоже гасим. Оставленные, они показывали бы числа
+     несуществующего уровня — «42 MOVES», «LVL 1», «0/12», три заряда, — то есть
+     ровно ту ложь, ради устранения которой демо-контент и убран. */
+  const hud=document.getElementById('hud');
+  const boosters=document.getElementById('boosters');
+  if(hud) hud.style.visibility='hidden';
+  if(boosters) boosters.style.visibility='hidden';
+  const box=document.createElement('div');
+  box.style.cssText='position:absolute;inset:0;display:flex;flex-direction:column;'
+    +'align-items:center;justify-content:center;gap:10px;padding:0 34px;text-align:center;'
+    +'color:#eaf6ff;font:600 15px/1.45 system-ui,-apple-system,sans-serif;text-shadow:0 1px 3px rgba(0,0,0,.5)';
+  const t=document.createElement('div');
+  t.textContent='Уровень не передан';
+  t.style.cssText='font-size:19px';
+  const s=document.createElement('div');
+  s.style.cssText='opacity:.78;font-weight:400;font-size:13px';
+  s.textContent=reason||'Выберите уровень в списке над прототипом.';
+  const h=document.createElement('div');
+  h.style.cssText='opacity:.55;font-weight:400;font-size:12px;margin-top:6px';
+  h.textContent='Своего контента у прототипа нет: он играет только то, '
+    +'что пришло в ?level=, ?pack= или ?gen=.';
+  box.append(t,s,h);
+  board.appendChild(box);
+  console.warn('[playable] играть нечего:', reason||'уровень не передан');
+}
+
+/* ===== старт: уровень приходит из ?level=, ?pack= или ?gen= ===== */
+(async function boot(){
+  const params=new URLSearchParams(location.search);
+  const q=params.get('level');
+  /* ?gen=N — уровень, отданный генератором уровней (пункт 05 сайта). Лежит не
+     файлом, а в localStorage: инструмент и прототип на одном origin, поэтому
+     между «собрал» и «сыграл» не нужен ни сервер, ни деплой.
+     Ключ и формат — tool/level-tool/web/src/core/playableHandoff.ts */
+  const gen=params.get('gen');
+  /* ?pack=<id>&n=<номер> — выложенный пакет пайплайна. Лежит файлом в
+     playable/packs/, каталог перечислен в packs/pipeline.json. Отличие от ?gen=
+     в том, что там пакет живёт в localStorage одного браузера: у любого, кто
+     открыл ссылку впервые, играть было нечего. Здесь пакет приезжает с
+     сервером, поэтому ссылкой можно поделиться.
+     `?pack=latest` берёт самую свежую выкладку из манифеста. */
+  const packId=params.get('pack');
+  if(packId){
+    try{
+      const index=await (await fetch('packs/pipeline.json')).json();
+      const list=index.packs||[];
+      if(!list.length) throw new Error('манифест packs/pipeline.json пуст: пакет ещё не выложен');
+      /* Манифест отсортирован свежими вперёд, поэтому latest — первый. */
+      const entry=(packId==='latest')?list[0]:list.find(p=>p.pack_id===packId);
+      if(!entry) throw new Error('в манифесте нет пакета '+packId);
+      const pack=await (await fetch('packs/'+entry.file)).json();
+      const n=Number(params.get('n')||0);
+      const lvl=(pack.levels||[])[n];
+      if(!lvl) throw new Error('в пакете '+entry.pack_id+' нет уровня '+n);
+      applyLevel(lvl);
+      console.log('level loaded from pack:',entry.pack_id,'#'+n,'из',pack.levels.length);
+    }catch(e){ return noLevel('Пакет «'+packId+'» не загрузился: '+e.message); }
+  }
+  else if(gen!==null){
+    try{
+      const pack=JSON.parse(localStorage.getItem('bubble-level-tool.generated-pack.v2')||'null');
+      const lvl=pack&&pack.levels&&pack.levels[Number(gen)];
+      if(!lvl) throw new Error('в хранилище нет уровня '+gen);
+      applyLevel(lvl);
+      console.log('level loaded from generator:',pack.label,lvl.title||lvl.level_id);
+    }catch(e){ return noLevel('Уровень из генератора не загрузился: '+e.message); }
+  }
+  else if(q){
+    try{ applyLevel(await (await fetch(q)).json()); console.log('level loaded:',q); }
+    catch(e){ return noLevel('Файл «'+q+'» не загрузился: '+e.message); }
+  }
+  else return noLevel();
+  init();
+  requestAnimationFrame(fit);
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

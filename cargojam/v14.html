@@ -1,0 +1,886 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Cargo Jam — v14 Coaster</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    height:100dvh;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;user-select:none;touch-action:none;
+    background:radial-gradient(120% 120% at 50% 0%,#222838,#10131c 80%);}
+
+  #phone{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;
+         background:
+           repeating-linear-gradient(90deg,#00000007 0 3px,#ffffff09 3px 6px),
+           linear-gradient(180deg,#c6d98f 0%,#bdd383 40%,#f2e7c9 40%,#ecdfba 100%);}
+  @media (max-aspect-ratio:1/1){ #phone{width:100vw;height:100dvh;border-radius:0;} }
+  @media (min-aspect-ratio:1/1){
+    #phone{height:96dvh;aspect-ratio:9/16;width:auto;
+           border-radius:32px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 8px #0c0e15;}
+  }
+
+  #hud{width:100%;padding:10px 14px;z-index:6;display:flex;align-items:center;gap:10px;}
+  .hbtn{width:44px;height:42px;border:none;border-radius:14px;background:#f4ead0;color:#6b4f2a;
+    font-size:19px;box-shadow:inset 0 0 0 3px #fffef7,inset 0 0 0 5px #d9c9a3,0 4px 8px #6b4f2a30;
+    cursor:pointer;flex:0 0 auto;}
+  .hbtn:active{transform:translateY(2px);}
+  #lvlname{flex:0 0 auto;background:#f4ead0;border-radius:16px;padding:9px 22px;text-align:center;
+    font-weight:800;font-size:18px;color:#6b4f2a;letter-spacing:.4px;
+    box-shadow:inset 0 0 0 3px #fffef7,inset 0 0 0 5px #d9c9a3,0 4px 8px #6b4f2a30;}
+  #hud{justify-content:space-between;}
+  #prog{flex:0 0 auto;background:#f4ead0;border-radius:14px;padding:9px 14px;font-weight:800;
+    color:#6b4f2a;font-size:14px;box-shadow:inset 0 0 0 3px #fffef7,inset 0 0 0 5px #d9c9a3,0 4px 8px #6b4f2a30;
+    min-width:64px;text-align:center;}
+
+  #stage{flex:1;width:100%;position:relative;z-index:2;min-height:0;}
+  #board{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);transform-origin:center;
+         width:520px;height:846px;}
+
+  /* --- верх: широкая дорожка с толпой (реф: группы фигурок цветными блоками, 3 в ряд) --- */
+  #trackzone{position:absolute;left:0;top:0;width:520px;height:300px;}
+  #tracksvg{position:absolute;inset:0;overflow:visible;}
+  .balloon{position:absolute;width:0;height:0;pointer-events:none;}
+  .mini{position:absolute;left:0;top:0;width:40px;height:54px;margin:-30px 0 0 -20px;transform-origin:50% 56%;}
+  .mini .pers{animation:waddle var(--wt,.5s) ease-in-out infinite;animation-delay:var(--ph,0s);transform-origin:50% 90%;}
+  @keyframes waddle{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-3px) rotate(4deg)}}
+  .pers{position:absolute;left:0;bottom:0;width:40px;height:auto;display:block;pointer-events:none;user-select:none;-webkit-user-drag:none;}
+  .balloon.wait .pers{animation-play-state:paused;}
+  .balloon.wait{opacity:.45;transition:opacity .5s;}
+  .balloon{transition:filter .45s,opacity .45s;}
+  .balloon.pop .pers{animation:bpop .3s both;animation-delay:calc(var(--i,0)*.045s);transform-origin:50% 60%;}
+  @keyframes bpop{35%{transform:scale(1.4);opacity:1}100%{transform:scale(.05);opacity:0}}
+  #shead{position:absolute;width:140px;height:134px;margin:-98px 0 0 -72px;pointer-events:none;z-index:60;filter:drop-shadow(0 4px 5px #00000030);}
+  #chick{position:absolute;z-index:59;font-size:34px;margin:-14px 0 0 -13px;filter:drop-shadow(0 2px 2px #00000040);}
+  .proj{position:absolute;width:26px;height:44px;z-index:70;pointer-events:none;margin:-40px 0 0 -13px;}
+  .proj .pers{position:absolute;left:0;bottom:0;width:26px;}
+
+  /* --- слоты --- */
+  #orders{position:absolute;left:0;top:302px;width:520px;height:92px;display:flex;gap:10px;
+    align-items:center;justify-content:center;}
+  /* док/станция: площадка + транспорт с посадочными местами */
+  .ord{width:104px;height:92px;position:relative;overflow:visible;}
+  .ord .dock{position:absolute;left:8px;right:8px;top:14px;bottom:8px;border-radius:14px;}
+  .ord .disp{position:absolute;left:0;right:0;top:38px;text-align:center;font:800 11px/1 sans-serif;color:#fff;
+    text-shadow:0 1px 2px #00000070;letter-spacing:.4px;z-index:3;}
+  .ord.locked{cursor:pointer;}
+  .ord.pend{opacity:.7;}
+  .ord.need .dock{animation:needb .35s;}
+  @keyframes needb{50%{filter:brightness(1.3) drop-shadow(0 0 8px #e2574c)}}
+  /* транспорт (в поле, в доке и в отъезде): спрайт + места */
+  .veh{position:absolute;left:50%;top:50%;pointer-events:none;}
+  .veh .vimg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;-webkit-user-drag:none;
+    filter:drop-shadow(0 2px 2px #00000040);}
+  .veh .seat{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:#fffdf4;
+    box-shadow:inset 0 0 0 2px #00000030;}
+  .veh .seat .pers{position:absolute;left:50%;bottom:-2px;width:14px;transform:translateX(-50%);}
+  .veh .seat.full{background:none;box-shadow:none;}
+  .veh .arr{position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;display:flex;align-items:center;justify-content:center;}
+  .veh .arr svg{width:100%;height:100%;filter:drop-shadow(0 1.5px 0 #00000055);}
+  .ord .veh{margin-top:-6px;}
+  .ord.open .veh{animation:vbob 1.4s ease-in-out infinite;}
+  @keyframes vbob{0%,100%{margin-top:-6px}50%{margin-top:-9px}}
+  /* отъезд по дорожке (поток / рельсы) */
+  #exitsvg{position:absolute;left:0;top:0;width:520px;height:846px;overflow:visible;pointer-events:none;z-index:8;}
+  .ride{position:absolute;left:0;top:0;width:0;height:0;z-index:80;pointer-events:none;}
+  .ord .dock{background:
+      repeating-linear-gradient(90deg,transparent 0 10px,#6b4f2a 10px 14px),
+      linear-gradient(180deg,transparent 0 22px,#3a3a44 22px 26px,transparent 26px 44px,#3a3a44 44px 48px,transparent 48px),
+      linear-gradient(180deg,#d9c9a3,#c6b28a);
+    box-shadow:inset 0 0 0 4px #fffef7,0 4px 8px #6b4f2a40;}
+  .ord.locked .dock{background:linear-gradient(180deg,#e9c86c,#c99a2e);}
+  .ord.empty .dock{opacity:.8;}
+  #adov{position:absolute;inset:0;z-index:19;display:none;align-items:center;justify-content:center;
+    background:#000000cc;}
+  #adov.show{display:flex;}
+  #adov .adcard{background:#1b1b24;border-radius:20px;padding:34px 40px;text-align:center;color:#fff;}
+  #adov .adbar{width:180px;height:8px;border-radius:4px;background:#ffffff30;margin-top:14px;overflow:hidden;}
+  #adov .adfill{height:100%;width:0;background:#7ba33a;transition:width 1.4s linear;}
+
+  /* --- гекс-поле --- */
+  #yard{position:absolute;left:0;top:398px;width:520px;height:448px;}
+  #tray{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:504px;height:440px;
+    border-radius:30px;background:
+      repeating-linear-gradient(90deg,#00000005 0 3px,#ffffff08 3px 6px),#8cbf67;
+    box-shadow:inset 0 0 0 5px #fffef7,inset 0 0 0 10px #d9c9a3,0 8px 18px #6b4f2a26;}
+  #hexes{position:absolute;left:50%;top:50%;}
+  .cellbg{position:absolute;background:#9c9a94 !important;
+    filter:drop-shadow(0 1px 0 #55534e);}
+  .cellbg::after{content:"";position:absolute;inset:12%;
+    clip-path:polygon(25% 2%,75% 2%,100% 50%,75% 98%,25% 98%,0 50%);
+    background:#b3b1aa;}
+  .htile{position:absolute;cursor:pointer;transition:transform .22s ease,opacity .22s;}
+  .htile .plate{position:absolute;inset:0;
+    clip-path:polygon(25% 2%,75% 2%,100% 50%,75% 98%,25% 98%,0 50%);
+    box-shadow:inset 0 3px 0 #ffffff55;}
+  .htile .plate::before{content:"";position:absolute;inset:0;
+    background:repeating-linear-gradient(90deg,#ffffff14 0 2px,#00000010 2px 4px);}
+  .htile .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-weight:900;color:#2f4156;text-shadow:0 1px 0 #ffffffaa;pointer-events:none;}
+  .htile.deny{animation:hdeny .3s;}
+  @keyframes hdeny{0%,100%{margin-left:0}30%{margin-left:-4px}70%{margin-left:4px}}
+
+  /* --- оверлеи --- */
+  .ov{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
+    background:#4a3b1bb0;opacity:0;pointer-events:none;transition:opacity .3s;}
+  .ov.show{opacity:1;pointer-events:auto;}
+  .card{background:#fffdf4;border-radius:26px;padding:30px 34px;text-align:center;
+    box-shadow:0 20px 50px #00000066;transform:scale(.8);transition:transform .3s;max-width:82%;}
+  .ov.show .card{transform:scale(1);}
+  .card h2{margin:0 0 6px;font-size:26px;color:#6b4f2a;}
+  .card p{margin:0 0 18px;color:#a08a5f;font-weight:600;}
+  .cbtn{border:none;border-radius:16px;padding:14px 30px;font-size:17px;font-weight:800;cursor:pointer;
+    background:linear-gradient(180deg,#a3c65a,#7ba33a);color:#fff;
+    box-shadow:0 4px 0 #5c7c28,0 8px 18px #7ba33a55;margin:0 5px;}
+  .cbtn.alt{background:linear-gradient(180deg,#f7fafc,#e8edf2);color:#4a6a7a;box-shadow:0 4px 0 #c2cdd4;}
+  .cbtn:active{transform:translateY(2px);}
+
+  #home{position:absolute;inset:0;z-index:15;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:8px;background:linear-gradient(180deg,#c6d98f,#ecdfba);}
+  #home.hide{display:none;}
+  #home h1{margin:0;font-size:40px;color:#5c4522;text-shadow:0 3px 0 #ffffffaa;}
+  #home .tag{color:#7d7346;font-weight:700;margin-bottom:20px;text-align:center;padding:0 30px;}
+  .lvlbtn{width:230px;border:none;border-radius:18px;font-size:18px;font-weight:800;
+    cursor:pointer;background:#f4ead0;color:#6b4f2a;
+    box-shadow:inset 0 0 0 3px #fffef7,inset 0 0 0 5px #d9c9a3,0 5px 10px #6b4f2a2a;
+    display:flex;align-items:center;justify-content:space-between;padding:15px 22px;margin:5px 0;}
+  .lvlbtn:disabled{opacity:.45;cursor:default;}
+  .lvlbtn:not(:disabled):active{transform:translateY(2px);}
+  .conf{position:absolute;width:10px;height:4px;border-radius:2px;z-index:25;pointer-events:none;}
+</style>
+</head>
+<body>
+<div id="phone">
+  <div id="home">
+    <div style="font-size:66px;line-height:1;margin-bottom:6px;">🎢</div>
+    <h1>Cargo Jam</h1>
+    <div class="tag">v14: АМЕРИКАНСКИЕ ГОРКИ — плитки = вагонетки с местами (размер растёт с местами),<br>люди садятся на станции и уезжают по рельсам горки; логика v11</div>
+    <div id="lvlbtns"></div>
+  </div>
+
+  <div id="hud">
+    <button class="hbtn" id="btnHome">🏠</button>
+    <div id="lvlname">Level 1</div>
+    <div id="prog">0%</div>
+    <button class="hbtn" id="btnRestart">↺</button>
+  </div>
+  <div id="stage"><div id="board">
+    <div id="trackzone"><svg id="tracksvg"></svg></div>
+    <div id="orders"></div>
+    <div id="yard"><div id="tray"></div><div id="hexes"></div></div>
+    <svg id="exitsvg" viewBox="0 0 520 846"></svg>
+  </div></div>
+
+  <div id="adov"><div class="adcard"><div style="font-size:34px">📺</div><div style="font-weight:800;margin-top:6px">Реклама</div><div class="adbar"><div class="adfill" id="adfill"></div></div></div></div>
+  <div class="ov" id="ovWin"><div class="card">
+    <h2>Все прокатились! 🎢</h2><p id="winTxt">Уровень пройден</p>
+    <button class="cbtn" id="btnNext">Дальше</button>
+  </div></div>
+  <div class="ov" id="ovLose"><div class="card">
+    <h2 id="loseTitle">Очередь дошла до входа 🎢</h2><p id="loseTxt">Вагонетки не успели всех увезти</p>
+    <button class="cbtn alt" id="btnLoseHome">🏠</button>
+    <button class="cbtn" id="btnRetry">Ещё раз</button>
+  </div></div>
+</div>
+
+<script>
+/* ================= Cargo Jam v14 — Coaster (визуал поверх логики v11/v6) =================
+   На каждой плитке-стрелке заряд 2-7 (мерж складывает заряды в одну плитку).
+   Тап по плитке со свободным лучом: плитка летит в свободный слот (любой цвет,
+   без выбора) и оттуда автоматически отстреливает шары СВОЕГО цвета в видимой
+   зоне змеи (снаряд + лопанье, змея сжимается, лёгкий откат головы).
+   Заряды == шары точно по построению: слот всегда опустеет.
+   Большой заряд надолго блокирует слот — в этом риск мержей.
+   3 слота + 4-й за rewarded. Проигрыш: голова доползла или пат стрелок.
+============================================================ */
+const DIRS=[[0,-1],[1,-1],[1,0],[0,1],[-1,1],[-1,0]]; // N NE SE S SW NW (axial flat-top)
+const COLORS=['#d95d4e','#4a7fd0','#63ab52','#e0ac2f','#9165c8','#e08a41'];
+const BAL_GAP=40, PUSH=2, SHOT_IV=0.27, BELT=50, MINI=0.66; // шары на верхней линии-превью неактивны (полупрозрачны)
+const LEVELS=[ // budget: с/шар; run: плиток в секции; num: заряд плитки; chain: доля стен
+  // изначальный левел-дизайн (v5): плитка = 1 человек, секции = раны 4-8; бюджеты v5 с/чел
+  {mask:'R2',    dirs:[0,1,3,4],       budget:2.1,  run:[4,5], chain:0.25, num:[1,1]},
+  {mask:'flower',dirs:[0,1,3,4],       budget:1.75, run:[4,6], chain:0.45, num:[1,1]},
+  {mask:'R3trim',dirs:[0,1,2,3,4],     budget:1.1,  run:[5,7], chain:0.75, num:[1,1]},
+  {mask:'R3',    dirs:[0,1,2,3,4],     budget:0.95, run:[5,7], chain:0.8,  num:[1,1]},
+  {mask:'R3rim', dirs:[0,1,2,3,4,5],   budget:0.85, run:[6,8], chain:0.85, num:[1,1]},
+];
+const S=34; // радиус гекса
+function hexXY(q,r){ return {x:1.5*S*q, y:Math.sqrt(3)*S*(r+q/2)}; }
+function maskCells(kind){
+  const inR=(q,r,R)=>Math.max(Math.abs(q),Math.abs(r),Math.abs(-q-r))<=R;
+  const cells=[];
+  for(let q=-4;q<=4;q++)for(let r=-4;r<=4;r++){
+    const R3=inR(q,r,3), R2=inR(q,r,2);
+    const corner3=R3&&!R2&&(Math.abs(q)===3||Math.abs(r)===3||Math.abs(q+r)===3)&&
+      ((Math.abs(q)===3&&Math.abs(r)===3)||(Math.abs(q)===3&&Math.abs(q+r)===3)||(Math.abs(r)===3&&Math.abs(q+r)===3));
+    if(kind==='R2'&&R2) cells.push([q,r]);
+    if(kind==='flower'&&(R2||corner3)) cells.push([q,r]);
+    if(kind==='R3trim'&&R3&&!corner3) cells.push([q,r]);
+    if(kind==='R3'&&R3) cells.push([q,r]);
+  }
+  if(kind==='R3rim'){
+    const base=maskCells('R3');
+    const extra=[[0,-4],[4,-4],[4,0],[0,4],[-4,4],[-4,0]];
+    return base.concat(extra);
+  }
+  return cells;
+}
+
+let cur=0, over=false, genOK=false;
+let cells=[], byKey=new Map(), sections=[], chain=[];
+let trackPts=[], trackLen=0, headD=0, speed=0, totalBal=0, popped=0;
+let loopTimer=null, lastT=0, busyFly=0, epoch=0;
+function stopLoop(){ if(loopTimer){ clearInterval(loopTimer); loopTimer=null; } }
+function startLoop(){ stopLoop(); lastT=performance.now(); loopTimer=setInterval(()=>tick(performance.now()),16); }
+let unlocked=+(localStorage.getItem('cargojam_v14')||1);
+const key=(q,r)=>q+','+r;
+function rng(seed){ let s=seed>>>0; return ()=>((s=Math.imul(s^s>>>15,s|1)^s+Math.imul(s^s>>>7,s|61))>>>0)/4294967296; }
+
+/* ---------- трек ---------- */
+let previewLen=0;
+function buildTrack(){
+  const pts=[];
+  const seg=(a,b,n)=>{for(let i=0;i<=n;i++)pts.push([a[0]+(b[0]-a[0])*i/n,a[1]+(b[1]-a[1])*i/n]);};
+  const arc=(cx,cy,r,a0,a1,n)=>{for(let i=1;i<n;i++){const a=a0+(a1-a0)*i/n;pts.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);}};
+  // линия-превью: над полем, прячется за элементами HUD; полностью неактивна
+  seg([520,-4],[62,-4],44); arc(62,29,33,-Math.PI/2,-Math.PI*1.5,16); // y=-4: головы фигурок не срезаются краем
+  const previewIdx=pts.length;
+  // основной маршрут
+  seg([62,62],[440,62],38); arc(440,107,45,-Math.PI/2,Math.PI/2,16);
+  seg([440,152],[80,152],40); arc(80,197,45,-Math.PI/2,-Math.PI*1.5,16);
+  seg([80,242],[255,242],18);
+  trackPts=pts; trackLen=0; previewLen=0;
+  for(let i=1;i<pts.length;i++){
+    trackLen+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);
+    if(i===previewIdx-1) previewLen=trackLen;
+  }
+  const svg=document.getElementById('tracksvg');
+  const dPrev='M'+pts.slice(0,previewIdx).map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L ');
+  const dMain='M'+pts.slice(previewIdx-1).map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L ');
+  svg.setAttribute('viewBox','0 0 520 300');
+  const belt=(d,op)=>`<g opacity="${op}"><path d="${d}" fill="none" stroke="#c9b98f" stroke-width="${BELT+8}" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="${d}" fill="none" stroke="#efe6cc" stroke-width="${BELT}" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="${d}" fill="none" stroke="#e4d9b8" stroke-width="1.5" stroke-dasharray="6 9" opacity=".8"/></g>`;
+  svg.innerHTML=belt(dPrev,0.45)+`<g style="filter:drop-shadow(0 4px 0 #a9b96f)">${belt(dMain,1)}</g>`;
+}
+function posAt(d){
+  d=Math.max(0,Math.min(d,trackLen-0.01));
+  let acc=0;
+  for(let i=1;i<trackPts.length;i++){
+    const L=Math.hypot(trackPts[i][0]-trackPts[i-1][0],trackPts[i][1]-trackPts[i-1][1]);
+    if(acc+L>=d){
+      const t=(d-acc)/L;
+      return {x:trackPts[i-1][0]+(trackPts[i][0]-trackPts[i-1][0])*t,
+              y:trackPts[i-1][1]+(trackPts[i][1]-trackPts[i-1][1])*t,
+              dx:(trackPts[i][0]-trackPts[i-1][0])/L, dy:(trackPts[i][1]-trackPts[i-1][1])/L};
+    }
+    acc+=L;
+  }
+  return {x:trackPts.at(-1)[0],y:trackPts.at(-1)[1],dx:1,dy:0};
+}
+
+/* ---------- генерация: peel => секции; каждой плитке заряд num ---------- */
+function generate(levelIdx){
+  const L=LEVELS[levelIdx];
+  genOK=false;
+  for(let seed=1;seed<=40;seed++){
+    const rand=rng(levelIdx*7919+seed*104729);
+    const list=maskCells(L.mask).map(([q,r])=>({q,r,dir:-1,n:1}));
+    const km=new Map(list.map(c=>[key(c.q,c.r),c]));
+    const rayClear=(c,d,aliveSet)=>{
+      let q=c.q+DIRS[d][0], r=c.r+DIRS[d][1];
+      while(km.has(key(q,r))){
+        const o=km.get(key(q,r));
+        if(aliveSet.has(o)) return false;
+        q+=DIRS[d][0]; r+=DIRS[d][1];
+      }
+      return true;
+    };
+    const alive=new Set(list);
+    const seq=[];
+    const dirUse={}; L.dirs.forEach(d=>dirUse[d]=0);
+    let runDir=-1, runLen=0, runTarget=0, prevRunDir=-1, ok=true;
+    let runCells=[];
+    const lineId=(c,d)=>{const [dq,dr]=DIRS[d]; return c.q*dr-c.r*dq;};
+    while(alive.size){
+      let placed=false;
+      if(runDir>=0 && runLen<runTarget){
+        const cont=[...alive].filter(c=>rayClear(c,runDir,alive));
+        if(cont.length){
+          let pool=cont;
+          const lines=new Set(runCells.map(rc=>lineId(rc,runDir)));
+          const aligned=cont.filter(c=>lines.has(lineId(c,runDir)));
+          if(aligned.length && rand()<L.chain) pool=aligned;
+          const c=pool[(rand()*pool.length)|0];
+          c.dir=runDir; alive.delete(c); seq.push(c); runCells.push(c); runLen++; placed=true;
+        }
+      }
+      if(!placed){
+        if(runDir>=0){ prevRunDir=runDir; }
+        const options=[];
+        for(const d of L.dirs){
+          if(d===prevRunDir) continue;
+          const cands=[...alive].filter(c=>rayClear(c,d,alive));
+          if(cands.length) options.push({d,cands});
+        }
+        let pool=options;
+        if(!pool.length){
+          for(const d of L.dirs){
+            const cands=[...alive].filter(c=>rayClear(c,d,alive));
+            if(cands.length) pool.push({d,cands});
+          }
+        }
+        if(!pool.length){ ok=false; break; }
+        pool.sort((a,b)=>dirUse[a.d]-dirUse[b.d]);
+        const minUse=dirUse[pool[0].d];
+        const least=pool.filter(p=>dirUse[p.d]===minUse);
+        const o=least[(rand()*least.length)|0];
+        runDir=o.d; runLen=0; runTarget=L.run[0]+((rand()*(L.run[1]-L.run[0]+1))|0);
+        dirUse[runDir]=(dirUse[runDir]||0)+runTarget;
+        const c=o.cands[(rand()*o.cands.length)|0];
+        c.dir=runDir; alive.delete(c); seq.push(c); runCells=[c]; runLen++;
+      }
+    }
+    if(!ok) continue;
+    // заряд каждой плитки; секции = раны, длина = сумма зарядов
+    for(const c of seq) c.n=L.num[0]+((rand()*(L.num[1]-L.num[0]+1))|0);
+    const secs=[];
+    let prev=-2;
+    for(const c of seq){
+      if(secs.length && prev===c.dir) secs.at(-1).len+=c.n;
+      else secs.push({dir:c.dir,len:c.n});
+      prev=c.dir;
+    }
+    for(let i=secs.length-2;i>=0;i--)
+      if(secs[i].dir===secs[i+1].dir){ secs[i].len+=secs[i+1].len; secs.splice(i+1,1); }
+    cells=list; byKey=km; sections=secs;
+    genOK=true;
+    return true;
+  }
+  console.error('generation failed',levelIdx);
+  return false;
+}
+
+/* ---------- построение сцены ---------- */
+const board=document.getElementById('board'), hexEl=document.getElementById('hexes'),
+      ordersEl=document.getElementById('orders'), tz=document.getElementById('trackzone');
+
+function build(){
+  const L=LEVELS[cur];
+  chain=[];
+  sections.forEach((s,si)=>{for(let i=0;i<s.len;i++)chain.push({dir:s.dir,sec:si,el:null,entered:false,seen:false,targeted:false,ph:Math.random()*6});});
+  totalBal=chain.length; popped=0;
+  tz.querySelectorAll('.balloon,#shead,#chick').forEach(e=>e.remove());
+  board.querySelectorAll('.proj').forEach(e=>e.remove());
+  const chick=document.createElement('div'); chick.id='chick'; chick.textContent='🎢';
+  const cp=posAt(trackLen-2); chick.style.left=(cp.x+36)+'px'; chick.style.top=cp.y+'px';
+  tz.appendChild(chick);
+  // группа: 2 колонки вдоль пути × 3 ряда поперёк ленты, с лёгким джиттером (как толпа на рефе)
+  chain.forEach(b=>{
+    b.grp=[]; b.tk=null;
+    for(let i=0;i<6;i++){
+      const along=(i%2? 11:-11)+(Math.random()*6-3), across=((i>>1)-1)*16+(Math.random()*4-2);
+      b.grp.push({a:along,c:across});
+    }
+  });
+  headD=previewLen+(trackLen-previewLen)*0.42; // старт на основной линии; хвост тянется по превью
+  speed=(trackLen-headD-20)/(totalBal*L.budget);
+  adUnlocked=false;
+  document.getElementById('adov').classList.remove('show');
+  initSlots(); renderSlots(); drawExitLane();
+  // гекс-поле
+  hexEl.innerHTML='';
+  let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
+  cells.forEach(c=>{const p=hexXY(c.q,c.r);minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);
+    minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y);});
+  const cx=(minX+maxX)/2, cy=(minY+maxY)/2;
+  const HW=2*S*0.98, HH=Math.sqrt(3)*S*0.98;
+  cells.forEach(c=>{
+    const p=hexXY(c.q,c.r);
+    c.x=p.x-cx; c.y=p.y-cy; c.dead=false;
+    const bg=document.createElement('div');
+    bg.className='cellbg';
+    bg.style.cssText=`left:${c.x-HW/2}px;top:${c.y-HH/2}px;width:${HW}px;height:${HH}px;
+      clip-path:polygon(25% 2%,75% 2%,100% 50%,75% 98%,25% 98%,0 50%);background:#8a8883;`;
+    hexEl.appendChild(bg);
+    const el=document.createElement('div');
+    el.className='htile';
+    el.style.cssText=`left:${c.x-HW/2}px;top:${c.y-HH/2}px;width:${HW}px;height:${HH}px;z-index:2;font-size:${HW}px;`;
+    el.innerHTML=tileHTML(c);
+    el.addEventListener('pointerdown',()=>tap(c));
+    hexEl.appendChild(el); c.el=el;
+  });
+  updateHud();
+  requestAnimationFrame(fit);
+  startLoop();
+}
+/* транспорт: размер растёт с числом мест (стопка мержа = вместимость) */
+function vehSize(n){ return 30+6*Math.max(1,Math.min(6,n)); }
+function seatPos(n,i,sz){
+  n=Math.max(1,Math.min(6,n));
+  if(THEME==='aqua'){ // по кольцу круга
+    const a=-Math.PI/2+2*Math.PI*i/n, r=sz*0.34; // места на кольце, стрелка в дырке
+    return {x:Math.cos(a)*r, y:Math.sin(a)*r};
+  }
+  // вагонетка: места в 1-2 колонки вдоль кабины
+  const cols=n>3?2:1, rows=Math.ceil(n/cols), col=i%cols, row=Math.floor(i/cols);
+  const step=Math.min(13,(sz*0.55)/rows);
+  return {x:(col-(cols-1)/2)*11, y:(row-(rows-1)/2)*step+sz*0.06};
+}
+function vehHTML(color,n,filled=0,arrow=true){
+  const sz=vehSize(n), ang=60*color;
+  const seats=[]; const cnt=Math.max(1,Math.min(6,n));
+  for(let i=0;i<cnt;i++){ const p=seatPos(cnt,i,sz);
+    seats.push(`<div class="seat${i<filled?' full':''}" style="left:${(sz/2+p.x).toFixed(1)}px;top:${(sz/2+p.y).toFixed(1)}px">${i<filled?persHTML(color):''}</div>`); }
+  const arr=arrow?`<div class="arr" style="transform:rotate(${ROTATE?0:ang}deg)"><svg viewBox="0 0 24 24"><path d="M12 1.5 L22.5 13 L17.2 13 L17.2 22.5 L6.8 22.5 L6.8 13 L1.5 13 Z" fill="#fff"/></svg></div>`:'';
+  return `<div class="veh" style="width:${sz}px;height:${sz}px;margin:-${sz/2}px 0 0 -${sz/2}px;transform:rotate(${ROTATE?ang:0}deg)">
+    <img class="vimg" src="assets/rides/${THEME==='aqua'?'tube':'car'}_${CROWD[color]}.png" draggable="false">${seats.join('')}${arr}</div>`;
+}
+function tileHTML(c){ return vehHTML(c.dir,c.n,0,true); }
+function makeGroupEl(b){
+  const el=document.createElement('div'); el.className='balloon';
+  el.innerHTML=b.grp.map((g,i)=>`<div class="mini" style="--i:${i}">${persHTML(b.dir,`--wt:${(0.42+Math.random()*0.14).toFixed(2)}s;--ph:-${(Math.random()*0.6).toFixed(2)}s`)}</div>`).join('');
+  b.minis=[...el.children];
+  return el;
+}
+function layGroup(b,p){
+  // смещения фигурок пересчитываем только когда меняется направление пути (на дугах)
+  const tk=Math.round(p.dx*12)+','+Math.round(p.dy*12);
+  if(b.tk===tk) return; b.tk=tk;
+  const nx=-p.dy, ny=p.dx;
+  b.grp.forEach((g,i)=>{
+    const ox=p.dx*g.a+nx*g.c, oy=p.dy*g.a+ny*g.c;
+    const m=b.minis[i];
+    m.style.transform=`translate(${ox.toFixed(1)}px,${oy.toFixed(1)}px) scale(${MINI})`;
+    m.style.zIndex=Math.round(oy)+40; // ниже на экране — поверх
+  });
+}
+const THEME='coaster', ROTATE=true; // транспорт: cars
+const CROWD=['red','blue','green','yellow','purple','orange']; // спрайты assets/crowd2/*.png (ChatGPT по скрину Bus Traffic Fever)
+function persHTML(color,extra=''){
+  return `<img class="pers" src="assets/crowd2/${CROWD[color]}.png" draggable="false" style="${extra}">`;
+}
+function shade(hex,p){
+  const n=parseInt(hex.slice(1),16);
+  const f=v=>Math.max(0,Math.min(255,v+Math.round(255*p/100)));
+  return '#'+[f(n>>16&255),f(n>>8&255),f(n&255)].map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+
+/* ---------- СЛОТЫ-ПУШКИ: плитка занимает слот и отстреливает шары ---------- */
+let slots=[], adUnlocked=false;
+function chipBg(color){ return `radial-gradient(circle at 34% 28%, ${shade(COLORS[color],22)} 0%, ${COLORS[color]} 55%, ${shade(COLORS[color],-16)} 100%)`; }
+function initSlots(){ slots=[0,1,2,3].map(i=>({i,color:-1,charges:0,inFlight:0,pending:false,cool:0,el:null})); }
+function freeSlotFor(){ return slots.find(s=>s.color<0&&!s.pending&&(s.i!==3||adUnlocked))||null; }
+function renderSlots(){
+  ordersEl.innerHTML='';
+  slots.forEach(sl=>{
+    const el=document.createElement('div');
+    if(sl.i===3&&!adUnlocked){
+      el.className='ord locked';
+      el.innerHTML='<div class="dock"></div><div class="disp">📺 +ПУТЬ</div>';
+      el.addEventListener('pointerdown',showAd);
+    } else if(sl.color<0&&!sl.pending){
+      el.className='ord empty';
+      el.innerHTML='<div class="dock"></div><div class="disp">СТАНЦИЯ</div>';
+    } else {
+      el.className='ord'+(sl.pending?' pend':'');
+      const landed=sl.pending?0:Math.max(0,(sl.cap||sl.charges)-sl.charges-sl.inFlight);
+      el.innerHTML='<div class="dock"></div>'+(sl.pending?'<div class="disp">…</div>':vehHTML(sl.color,sl.cap||sl.charges,landed,false));
+      if(!sl.pending) el.classList.add('open');
+    }
+    ordersEl.appendChild(el); sl.el=el;
+  });
+}
+function updateSlotCnt(sl){ /* места заполняются по прилёту пассажира: seatLanded() */ }
+function seatLanded(sl){
+  if(!sl.el) return;
+  const seats=sl.el.querySelectorAll('.seat');
+  const landed=Math.max(0,(sl.cap||0)-sl.charges-sl.inFlight);
+  seats.forEach((st,i)=>{ if(i<landed&&!st.classList.contains('full')){ st.classList.add('full'); st.innerHTML=persHTML(sl.color);
+    st.animate([{transform:'scale(1.6)'},{transform:'scale(1)'}],{duration:180}); } });
+}
+/* отъезд: клон транспорта с пассажирами едет по дорожке (поток / рельсы) и уезжает за экран */
+function exitPath(x,y){
+  return `M ${x} ${y-8} Q ${x} 285 ${x+34} 285 L 476 285 Q 505 285 505 314 L 505 380 C 528 430 482 470 505 520 C 528 570 482 610 505 660 L 505 900`;
+}
+function drawExitLane(){
+  const svg=document.getElementById('exitsvg');
+  const d='M 60 285 L 476 285 Q 505 285 505 314 L 505 380 C 528 430 482 470 505 520 C 528 570 482 610 505 660 L 505 900';
+  if(THEME==='aqua'){
+    svg.innerHTML=`<path d="${d}" fill="none" stroke="#2f8fb5" stroke-width="34" stroke-linecap="round" opacity=".9"/>
+      <path d="${d}" fill="none" stroke="#7fd4ee" stroke-width="26" stroke-linecap="round"/>
+      <path d="${d}" fill="none" stroke="#ffffffb0" stroke-width="3" stroke-dasharray="10 16" stroke-linecap="round" class="flow"/>`;
+  } else {
+    svg.innerHTML=`<path d="${d}" fill="none" stroke="#6b4f2a" stroke-width="30" stroke-dasharray="4 12" stroke-linecap="butt" opacity=".9"/>
+      <path d="${d}" fill="none" stroke="#3a3a44" stroke-width="20" stroke-linecap="round"/>
+      <path d="${d}" fill="none" stroke="#d9c9a3" stroke-width="10" stroke-linecap="round"/>`;
+  }
+}
+function depart(sl){
+  const veh=sl.el&&sl.el.querySelector('.veh'); if(!veh) return;
+  const c=slotCenter(sl);
+  const ride=document.createElement('div'); ride.className='ride';
+  ride.appendChild(veh.cloneNode(true));
+  const inner=ride.firstChild; inner.style.transform=ROTATE?'rotate(0deg)':inner.style.transform;
+  ride.style.offsetPath=`path('${exitPath(c.x,c.y-6)}')`;
+  ride.style.offsetRotate=ROTATE?'auto 90deg':'0deg';
+  board.appendChild(ride);
+  const anim=ride.animate([{offsetDistance:'0%'},{offsetDistance:'100%'}],{duration:2600,easing:'cubic-bezier(.45,0,.85,.6)'});
+  if(THEME==='aqua') inner.animate([{transform:'rotate(0deg)'},{transform:'rotate(360deg)'}],{duration:2600,iterations:1,easing:'ease-in'});
+  anim.onfinish=()=>ride.remove();
+}
+function slotCenter(sl){
+  if(!sl.el||!sl.el.isConnected) return {x:260,y:343};
+  return {x:sl.el.offsetLeft+sl.el.offsetWidth/2, y:302+sl.el.offsetTop+sl.el.offsetHeight/2};
+}
+function flashSlots(){
+  slots.forEach(sl=>{ if(sl.el){ sl.el.classList.remove('need'); void sl.el.offsetWidth; sl.el.classList.add('need'); } });
+}
+function showAd(){
+  if(over||adUnlocked) return;
+  const ov=document.getElementById('adov'), fill=document.getElementById('adfill');
+  ov.classList.add('show'); fill.style.width='0';
+  requestAnimationFrame(()=>{ fill.style.width='100%'; });
+  const ep=epoch;
+  setTimeout(()=>{ if(ep!==epoch) return;
+    ov.classList.remove('show'); adUnlocked=true; renderSlots();
+  },1500);
+}
+function updateHud(){
+  document.getElementById('lvlname').textContent='Level '+(cur+1);
+  document.getElementById('prog').textContent=Math.round(popped/Math.max(1,totalBal)*100)+'%';
+}
+
+/* ---------- цикл: змея плывёт, слоты стреляют ---------- */
+function tick(now){
+  if(over) return;
+  const dt=Math.min(0.12,(now-lastT)/1000); lastT=now;
+  headD+=speed*dt;
+  for(const sl of slots){
+    if(sl.color>=0&&!sl.pending&&sl.charges>0){
+      sl.cool-=dt;
+      if(sl.cool<=0){
+        const b=chain.find(x=>x.entered&&!x.targeted&&x.dir===sl.color);
+        if(b){ b.targeted=true; sl.cool=SHOT_IV; fireProj(sl,b); }
+      }
+    }
+  }
+  layChain(now/1000,dt);
+  if(headD>=trackLen-16){ over=true; stopLoop(); lose('Очередь дошла до входа 🎢','Вагонетки не успели всех увезти'); }
+}
+function layChain(t,dt){
+  const hp=posAt(headD);
+  const head=document.getElementById('shead');
+  if(head){ head.style.left=hp.x+'px'; head.style.top=(hp.y-6)+'px';
+    head.style.transform=`scaleX(${hp.dx>=0?-1:1})`; } // только зеркало, никаких переворотов
+  let d=headD-46;
+  chain.forEach(b=>{
+    if(b.dcur===undefined) b.dcur=d;
+    b.dcur+=(d-b.dcur)*Math.min(1,dt*7); // плавное сжатие после лопанья
+    b.seen = b.seen || d>4;                    // виден (на линии-превью, полупрозрачен)
+    b.entered = b.entered || d>previewLen+4;   // активен: перешёл на основной маршрут
+    if(!b.seen){ d-=BAL_GAP; return; }
+    if(!b.el){ b.el=makeGroupEl(b); tz.appendChild(b.el); } // DOM только для видимых групп
+    b.el.classList.toggle('wait',!b.entered);
+    const p=posAt(b.dcur);
+    b.el.style.left=p.x+'px';
+    b.el.style.top=(p.y+Math.sin(t*2.2+b.ph)*2)+'px';
+    layGroup(b,p);
+    d-=BAL_GAP;
+  });
+}
+
+/* ---------- выстрелы и лопанье ---------- */
+function fireProj(sl,b){
+  sl.inFlight++; sl.charges--;
+  updateSlotCnt(sl);
+  if(sl.el){
+    const chip=sl.el.querySelector('.chip');
+    if(chip) chip.animate([{transform:'scale(1)'},{transform:'scale(1.25)'},{transform:'scale(1)'}],{duration:150});
+  }
+  const sc=slotCenter(sl);
+  const tp=posAt(Math.max(6,b.dcur!==undefined?b.dcur:headD-46));
+  const proj=document.createElement('div');
+  proj.className='proj';
+  proj.style.cssText=`left:${tp.x}px;top:${tp.y}px;`;
+  proj.innerHTML=persHTML(sl.color);
+  board.appendChild(proj);
+  const ep=epoch, color=sl.color;
+  popBalloon(b,color); // логика мгновенно: человек покинул очередь
+  proj.animate([{transform:'translate(0,0) scale(1)'},{transform:`translate(${sc.x-tp.x}px,${sc.y-tp.y}px) scale(.7)`}],
+    {duration:260,easing:'cubic-bezier(.3,0,.7,1)'}).onfinish=()=>{
+    proj.remove();
+    if(ep!==epoch) return;
+    sl.inFlight--;
+    seatLanded(sl); // визуал: пассажир сел на место
+    if(sl.charges<=0&&sl.inFlight<=0&&sl.color>=0){ depart(sl); sl.color=-1; renderSlots(); }
+  };
+}
+function burst(x,y,color){
+  for(let i=0;i<10;i++){
+    const p=document.createElement('div');
+    p.style.cssText=`position:absolute;left:${x}px;top:${y}px;width:7px;height:7px;border-radius:50%;background:${color};z-index:57;pointer-events:none;margin:-3px 0 0 -3px;`;
+    tz.appendChild(p);
+    const a=6.28*i/10+Math.random()*0.6, R=30+Math.random()*30;
+    p.animate([{transform:'translate(0,0)',opacity:1},
+      {transform:`translate(${Math.cos(a)*R}px,${Math.sin(a)*R}px) scale(.3)`,opacity:0}],
+      {duration:340,easing:'cubic-bezier(.2,.7,.5,1)'}).onfinish=()=>p.remove();
+  }
+}
+function popBalloon(b,color){
+  const idx=chain.indexOf(b);
+  if(idx>=0) chain.splice(idx,1);
+  popped++;
+  headD=Math.max(60,headD-PUSH);
+  if(b.el){
+    const p=posAt(b.dcur!==undefined?b.dcur:headD);
+    b.el.classList.add('pop');
+    burst(p.x,p.y,COLORS[color]);
+    const el=b.el; b.el=null;
+    setTimeout(()=>el.remove(),600);
+  }
+  updateHud();
+  if(popped>=totalBal&&!over){
+    over=true; stopLoop();
+    const ep=epoch;
+    setTimeout(()=>{ if(ep===epoch) win(); },1000);
+  }
+}
+
+/* ---------- механика hexa arrows with merge ---------- */
+function scanRay(c){
+  let q=c.q, r=c.r;
+  let first=null;
+  const sames=[];
+  while(true){
+    q+=DIRS[c.dir][0]; r+=DIRS[c.dir][1];
+    if(!byKey.has(key(q,r))) break;
+    const o=byKey.get(key(q,r));
+    if(o.dead) continue;
+    if(!first){
+      first=o;
+      if(o.dir!==c.dir) return {type:'block'};
+      sames.push(o);
+    } else {
+      if(o.dir===c.dir) sames.push(o);
+      else break;
+    }
+  }
+  if(!first) return {type:'edge'};
+  return {type:'merge', chain:sames, land:sames[sames.length-1]};
+}
+function tap(c){
+  if(over||c.dead||busyFly>0) return;
+  const res=scanRay(c);
+  if(res.type==='edge'){
+    const sl=freeSlotFor();
+    if(!sl){ denyTile(c); flashSlots(); return; }
+    flyToSlot(c,sl);
+  } else if(res.type==='merge'){
+    doMerge(c,res.chain,res.land);
+  } else denyTile(c);
+}
+function denyTile(c){ c.el.classList.add('deny'); setTimeout(()=>c.el&&c.el.classList.remove('deny'),320); }
+function flyToSlot(c,sl){
+  c.dead=true; busyFly++;
+  sl.pending=true; sl.color=c.dir; renderSlots();
+  const tx=260+c.x, ty=622+c.y;
+  const p=slotCenter(sl);
+  c.el.style.transition='transform .45s cubic-bezier(.45,-.15,.6,1),opacity .45s';
+  c.el.style.zIndex=9;
+  c.el.style.transform=`translate(${p.x-tx}px,${p.y-ty}px) scale(.42)`;
+  const n=c.n, ep=epoch;
+  setTimeout(()=>{
+    if(ep!==epoch) return;
+    if(c.el){c.el.remove();c.el=null;}
+    busyFly--;
+    sl.pending=false; sl.charges=n; sl.cap=n; sl.cool=0; // cap — только для отрисовки мест
+    renderSlots();
+    if(sl.el){ sl.el.animate([{transform:'scale(.85)'},{transform:'scale(1.08)'},{transform:'scale(1)'}],{duration:220}); }
+    checkEndOrStuck();
+  },450);
+}
+function doMerge(src,chainTiles,land){
+  busyFly++;
+  const mids=chainTiles.slice(0,-1);
+  const dx=land.x-src.x, dy=land.y-src.y;
+  src.el.style.transition='transform .28s ease-in';
+  src.el.style.transform=`translate(${dx}px,${dy}px)`;
+  src.el.style.zIndex=5;
+  const ep=epoch;
+  setTimeout(()=>{
+    if(ep!==epoch) return;
+    mids.forEach(m=>{ if(m.el){ m.el.style.transition='transform .15s,opacity .15s'; m.el.style.transform='scale(.4)'; m.el.style.opacity='0'; } });
+  },120);
+  setTimeout(()=>{
+    if(ep!==epoch) return;
+    let sum=src.n;
+    mids.forEach(m=>{ sum+=m.n; m.dead=true; if(m.el){m.el.remove();m.el=null;} });
+    src.dead=true; if(src.el){src.el.remove();src.el=null;}
+    land.n+=sum;
+    land.el.innerHTML=tileHTML(land);
+    land.el.style.transform='scale(1.12)';
+    setTimeout(()=>{ if(land.el) land.el.style.transform=''; },140);
+    busyFly--;
+    checkEndOrStuck();
+  },300);
+}
+function anyMove(){
+  for(const c of cells){
+    if(c.dead) continue;
+    const res=scanRay(c);
+    if(res.type!=='block') return true; // edge (слот освободится сам) или merge
+  }
+  return false;
+}
+function checkEndOrStuck(){
+  if(over||busyFly>0) return;
+  if(cells.every(c=>c.dead)) return; // финал придёт из popBalloon
+  if(!anyMove()){
+    over=true; stopLoop();
+    lose('Пат на поле 🎈','Все стрелки заперты');
+  }
+}
+
+/* ---------- win/lose/экраны ---------- */
+function win(){
+  unlocked=Math.max(unlocked,Math.min(cur+2,LEVELS.length));
+  localStorage.setItem('cargojam_v14',unlocked);
+  document.getElementById('winTxt').textContent='Level '+(cur+1)+' пройден';
+  document.getElementById('btnNext').textContent=(cur+1<LEVELS.length)?'Дальше':'🏠 Домой';
+  document.getElementById('ovWin').classList.add('show');
+  confetti();
+  window.__game.state='won';
+}
+function lose(title,txt){
+  document.getElementById('loseTitle').textContent=title;
+  document.getElementById('loseTxt').textContent=txt;
+  document.getElementById('ovLose').classList.add('show');
+  window.__game.state='lost';
+}
+function confetti(){
+  const phone=document.getElementById('phone');
+  for(let i=0;i<26;i++){
+    const c=document.createElement('div'); c.className='conf';
+    c.style.background=COLORS[i%COLORS.length];
+    c.style.left=(20+Math.random()*60)+'%'; c.style.top='-10px';
+    phone.appendChild(c);
+    const a=c.animate([{transform:'translateY(0) rotate(0)',opacity:1},
+      {transform:`translateY(${phone.clientHeight*.8}px) rotate(${360+Math.random()*360}deg)`,opacity:0}],
+      {duration:1400+Math.random()*800,easing:'cubic-bezier(.3,.6,.6,1)',delay:Math.random()*300});
+    a.onfinish=()=>c.remove();
+  }
+}
+function startLevel(i){
+  epoch++; cur=i; over=false; busyFly=0;
+  document.getElementById('ovWin').classList.remove('show');
+  document.getElementById('ovLose').classList.remove('show');
+  document.getElementById('home').classList.add('hide');
+  generate(i); buildTrack(); build();
+  window.__game.state='playing';
+}
+function showHome(){
+  stopLoop();
+  document.getElementById('home').classList.remove('hide');
+  document.getElementById('ovWin').classList.remove('show');
+  document.getElementById('ovLose').classList.remove('show');
+  const wrap=document.getElementById('lvlbtns'); wrap.innerHTML='';
+  for(let i=0;i<LEVELS.length;i++){
+    const b=document.createElement('button');
+    b.className='lvlbtn'; b.disabled=false;
+    b.innerHTML=`<span>Level ${i+1}</span><span>🎢</span>`;
+    b.addEventListener('pointerdown',()=>startLevel(i));
+    wrap.appendChild(b);
+  }
+  window.__game.state='home';
+}
+document.getElementById('btnRestart').addEventListener('pointerdown',()=>startLevel(cur));
+document.getElementById('btnRetry').addEventListener('pointerdown',()=>startLevel(cur));
+document.getElementById('btnHome').addEventListener('pointerdown',showHome);
+document.getElementById('btnLoseHome').addEventListener('pointerdown',showHome);
+document.getElementById('btnNext').addEventListener('pointerdown',()=>{
+  if(cur+1<LEVELS.length) startLevel(cur+1); else showHome();
+});
+
+/* ---------- fit ---------- */
+function fit(){
+  const stage=document.getElementById('stage');
+  const sw=stage.clientWidth-10, sh=stage.clientHeight-8;
+  const s=Math.max(.3,Math.min(sw/520, sh/846, 1.3));
+  board.style.transform=`translate(-50%,-50%) scale(${s})`;
+}
+window.addEventListener('resize',fit);
+
+/* ---------- API для PLAY-бота ---------- */
+window.__game={
+  state:'home',
+  get genOK(){return genOK;},
+  startLevel, showHome,
+  timeInfo(){ return {headD,trackLen,speed,left:(trackLen-16-headD)/speed}; },
+  debug(){ return {over,busyFly,popped,totalBal,
+    slots:slots.map(sl=>sl.color>=0?sl.color+':'+sl.charges+(sl.pending?'p':''):(sl.i===3&&!adUnlocked?'AD':'-')),
+    tilesLeft:cells.filter(c=>!c.dead).length, anyMove:anyMove()}; },
+  unlockAd(){ adUnlocked=true; renderSlots(); },
+  snap(){
+    const remain={}; chain.forEach(b=>{remain[b.dir]=(remain[b.dir]||0)+1;});
+    const win=chain.filter(b=>b.entered&&!b.targeted).map(b=>b.dir);
+    const front=chain.slice(0,18).map(b=>b.dir+(b.entered?'':'~')+(b.targeted?'*':''));
+    const exits={}; cells.forEach(c=>{if(!c.dead&&scanRay(c).type==='edge') exits[c.dir]=(exits[c.dir]||0)+(''+c.n+',');});
+    return {headD:Math.round(headD), popped, win:win.join(''), front:front.join(' '),
+      remain, exits, slots:slots.map(sl=>sl.color>=0?sl.color+':'+sl.charges:'-')};
+  },
+  noMerge:false,
+  botStep(){
+    if(window.__game.state!=='playing'||busyFly>0) return;
+    const free=freeSlotFor();
+    const exits=cells.filter(c=>!c.dead&&scanRay(c).type==='edge');
+    // потребность цвета в ближней очереди минус заряды, уже стоящие в слотах
+    const q=chain.filter(b=>!b.targeted);
+    const K=Math.min(q.length,26);
+    const need={}; q.slice(0,K).forEach(b=>{need[b.dir]=(need[b.dir]||0)+1;});
+    slots.forEach(sl=>{ if(sl.color>=0) need[sl.color]=(need[sl.color]||0)-sl.charges; });
+    const rank=col=>{const i=q.findIndex(b=>b.dir===col); return i<0?1e9:i;};
+    if(free&&exits.length){
+      // 1) точная посадка: максимальный заряд, не превышающий потребность цвета
+      const fit=exits.filter(c=>(need[c.dir]||0)>=c.n);
+      if(fit.length){
+        fit.sort((a,b)=>(b.n-a.n)||(rank(a.dir)-rank(b.dir)));
+        tap(fit[0]); return;
+      }
+    }
+    // 2) копим мержи (собираем крупные под большие секции)
+    if(!window.__game.noMerge){
+      let best=null,bl=0;
+      for(const c of cells){
+        if(c.dead) continue;
+        const r=scanRay(c);
+        if(r.type==='merge'&&r.chain.length>bl){ best=c; bl=r.chain.length; }
+      }
+      if(best){ tap(best); return; }
+    }
+    // 3) посадки нет и мержей нет — минимальный перелёт по нужному цвету
+    if(free&&exits.length){
+      const needed=exits.filter(c=>(need[c.dir]||0)>0);
+      const pool=needed.length?needed:exits;
+      pool.sort((a,b)=>(a.n-(need[a.dir]||0))-(b.n-(need[b.dir]||0))||(rank(a.dir)-rank(b.dir)));
+      tap(pool[0]);
+    }
+  },
+  autoplay(intervalMs=700){
+    return new Promise(res=>{
+      const t=setInterval(()=>{
+        if(window.__game.state!=='playing'){ clearInterval(t); res(window.__game.state); return; }
+        window.__game.botStep();
+      },intervalMs);
+      setTimeout(()=>{ clearInterval(t); res('timeout:'+window.__game.state); },480000);
+    });
+  }
+};
+
+showHome();
+requestAnimationFrame(fit);
+</script>
+</body>
+</html>

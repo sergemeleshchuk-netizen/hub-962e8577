@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Arrows + Words — v5</title>
+<style>
+  :root{
+    --ink:#1b1b2e; --accent:#6b6be0; --accent2:#9b5cf6;
+    --bg1:#eef0ff; --bg2:#dfe3ff; --good:#34c759; --bad:#ff4d5e; --warn:#ff8a3d;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:radial-gradient(120% 120% at 50% 0%, var(--bg1), var(--bg2));
+    color:var(--ink); display:flex; justify-content:center; align-items:flex-start;
+    min-height:100%; padding:14px;
+  }
+  #app{width:100%; max-width:480px; display:flex; flex-direction:column; gap:10px;}
+  .topbar{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+  .level-label{font-weight:700; font-size:18px; color:#3a3a55;}
+  .hearts{display:flex; gap:4px; font-size:22px; min-width:90px; justify-content:flex-end;}
+  .heart{filter:drop-shadow(0 1px 1px rgba(0,0,0,.15)); transition:transform .2s, opacity .2s;}
+  .heart.lost{opacity:.22; transform:scale(.8);}
+  .timer{height:12px; border-radius:8px; background:#ffffff80; overflow:hidden; box-shadow:inset 0 1px 3px #0001;}
+  #timerbar{height:100%; width:100%; border-radius:8px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2)); transition:width .1s linear;}
+  #timerbar.low{background:linear-gradient(90deg,#ff8a3d,var(--bad));}
+
+  /* ---- словесный слой (СВЕРХУ) ---- */
+  #wordZone{display:flex; flex-direction:column; align-items:center; gap:8px;}
+  #wordProg{display:flex; gap:6px; flex-wrap:wrap; justify-content:center;}
+  .wtag{font-size:12px; font-weight:800; letter-spacing:.5px; padding:3px 9px; border-radius:999px;
+    background:#ffffff; color:#a9adcd; box-shadow:0 1px 4px #0000000d;}
+  .wtag.now{background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#fff;}
+  .wtag.done{background:#eafff0; color:var(--good);}
+  #wordBar{display:flex; gap:6px; padding:8px 12px; border-radius:16px;
+    background:linear-gradient(#fbfcff,#eef1ff); box-shadow:inset 0 1px 0 #fff, 0 4px 14px #6b6be022;}
+  .cell{width:46px; height:56px; border-radius:10px; background:#fff; border:2px solid #e6e8f7;
+    border-bottom-width:4px; display:flex; align-items:center; justify-content:center;
+    font-size:30px; font-weight:900; transition:transform .12s; }
+  .cell.on{transform:translateY(-2px); box-shadow:0 4px 10px #0000000f;}
+
+  #trayWrap{display:flex; flex-direction:column; align-items:center; gap:3px;}
+  #tray{display:flex; gap:10px;}
+  .tile{width:44px; height:52px; border-radius:10px; background:#fff;
+    border:2px solid #e6e8f7; border-bottom-width:4px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px; font-weight:900; color:#c2c6e6; transition:all .12s;}
+  .tile.has{box-shadow:0 3px 8px #0000000f;}
+  .tile:not(.has){background:#eef0fa; border-style:dashed; border-bottom-style:solid;}
+  .tile.warn{box-shadow:0 0 0 3px #ff8a3d33;}
+  .tile.over{box-shadow:0 0 0 3px #ff4d5e55; animation:buzz .3s;}
+  @keyframes buzz{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+  .tray-cap{font-size:11px; color:#9a9ab5;}
+
+  #board-wrap{background:#fff; border-radius:22px; padding:10px;
+    box-shadow:0 10px 30px #5b5bd133, 0 2px 6px #0000000d;}
+  svg#board{display:block; margin:0 auto; max-width:100%; max-height:58vh; height:auto; touch-action:manipulation;}
+  .arrow .stroke{fill:none; stroke:var(--ink); stroke-linecap:round; stroke-linejoin:round; transition:stroke .15s;}
+  .arrow .head{fill:var(--ink); transition:fill .15s;}
+  .arrow .hit{fill:none; stroke:transparent; stroke-linecap:round; stroke-linejoin:round;
+    cursor:pointer; pointer-events:stroke;}
+  .arrow .stroke, .arrow .head, .arrow .badge, .arrow .blabel{pointer-events:none;}
+  .arrow .badge{fill:#fff; stroke-width:3;}
+  .arrow .blabel{font-weight:900; text-anchor:middle; dominant-baseline:central;}
+  .arrow.blocked .stroke{stroke:var(--bad);}
+  .arrow.blocked .head{fill:var(--bad);}
+  .arrow.removed{pointer-events:none;}
+
+  footer{display:flex; gap:10px; justify-content:center;}
+  button{font:inherit; font-weight:700; border:none; border-radius:14px; padding:11px 16px;
+    cursor:pointer; transition:transform .08s, box-shadow .15s, background .15s;}
+  button:active{transform:translateY(1px) scale(.99);}
+  .btn-ghost{background:#ffffff; color:#4a4a6a; box-shadow:0 2px 8px #0000000f;}
+  .btn-primary{background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#fff;
+    box-shadow:0 6px 18px #6b6be055;}
+  .overlay{position:fixed; inset:0; background:#1b1b2e88; backdrop-filter:blur(4px);
+    display:flex; align-items:center; justify-content:center; z-index:50; transition:opacity .2s;}
+  .overlay.hidden{opacity:0; pointer-events:none;}
+  .card{background:#fff; border-radius:24px; padding:28px 26px; width:86%; max-width:360px;
+    text-align:center; box-shadow:0 20px 60px #00000033; animation:pop .25s ease;}
+  @keyframes pop{from{transform:scale(.85);opacity:0;}to{transform:scale(1);opacity:1;}}
+  .card h2{margin:0 0 6px; font-size:26px;}
+  .card p{margin:0 0 18px; color:#6a6a85; font-size:16px; line-height:1.4;}
+  .card .emoji{font-size:50px; margin-bottom:6px;}
+  #confetti{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:60;}
+  .hint{text-align:center; color:#8a8aa5; font-size:13px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <button id="btnHome" class="btn-ghost">⟲ Reset</button>
+    <div class="level-label">Level <span id="lvlNum">1</span>/<span id="lvlTot">1</span></div>
+    <div class="hearts" id="hearts"></div>
+  </div>
+  <div class="timer"><div id="timerbar"></div></div>
+
+  <div id="wordZone">
+    <div id="wordBar"></div>
+    <div id="trayWrap">
+      <div id="tray"></div>
+      <div class="tray-cap">tray buffer · overflow = game over</div>
+    </div>
+  </div>
+
+  <div id="board-wrap"><svg id="board" xmlns="http://www.w3.org/2000/svg"></svg></div>
+
+  <div class="hint">Tap an arrow — letters that fit the word go straight in; others pile up in the tray.</div>
+  <footer><button id="btnReset" class="btn-ghost">↻ Restart level</button></footer>
+</div>
+
+<div id="overlay" class="overlay hidden">
+  <div class="card">
+    <div class="emoji" id="ovEmoji"></div>
+    <h2 id="ovTitle"></h2>
+    <p id="ovText"></p>
+    <button id="ovBtn" class="btn-primary"></button>
+  </div>
+</div>
+<canvas id="confetti"></canvas>
+
+<script src="words_v5.js"></script>
+<script>
+const LEVELS = Words.WORD_LEVELS;
+
+const CELL=100, M=70, SW=18, AH=34, AW=20;
+const SVGNS="http://www.w3.org/2000/svg";
+const board=document.getElementById('board');
+const heartsEl=document.getElementById('hearts');
+const timerbar=document.getElementById('timerbar');
+const overlay=document.getElementById('overlay');
+
+let state=null;
+let timer={raf:null, end:0, paused:true};
+
+function node(c,r){ return [M+c*CELL, M+r*CELL]; }
+function sign(x){ return x>0?1:x<0?-1:0; }
+
+function buildArrows(level){
+  return level.arrows.map((arr,i)=>{
+    const cells=arr.path.map(p=>[p[0],p[1]]);
+    const h=cells[cells.length-1], p=cells[cells.length-2];
+    const dir=[sign(h[0]-p[0]), sign(h[1]-p[1])];
+    return {id:i, cells, head:h, dir, letter:arr.letter, removed:false, el:null};
+  });
+}
+
+function letterMid(cells){
+  let best=null, i=0;
+  while(i<cells.length-1){
+    const dx=sign(cells[i+1][0]-cells[i][0]), dy=sign(cells[i+1][1]-cells[i][1]);
+    let j=i;
+    while(j+1<cells.length && sign(cells[j+1][0]-cells[j][0])===dx
+                          && sign(cells[j+1][1]-cells[j][1])===dy) j++;
+    const len=j-i;
+    if(!best || len>best.len) best={len, a:cells[i], b:cells[j]};
+    i=j;
+  }
+  return [(best.a[0]+best.b[0])/2, (best.a[1]+best.b[1])/2];
+}
+
+function presentCellSet(except){
+  const s=new Set();
+  for(const a of state.arrows){
+    if(a.removed || a===except) continue;
+    for(const c of a.cells) s.add(c[0]+","+c[1]);
+  }
+  return s;
+}
+function isRemovable(a){
+  const cols=state.level.cols, rows=state.level.rows;
+  const others=presentCellSet(a);
+  let cx=a.head[0]+a.dir[0], cy=a.head[1]+a.dir[1];
+  while(cx>=0 && cx<=cols && cy>=0 && cy<=rows){
+    if(others.has(cx+","+cy)) return false;
+    cx+=a.dir[0]; cy+=a.dir[1];
+  }
+  return true;
+}
+
+function drawArrow(a){
+  const pts=a.cells.map(c=>node(c[0],c[1]));
+  const last=pts[pts.length-1];
+  const base=[last[0]-a.dir[0]*AH, last[1]-a.dir[1]*AH];
+  const shaft=pts.slice(0,-1).concat([base]);
+  const px=-a.dir[1], py=a.dir[0];
+  const tri=[last,[base[0]+px*AW,base[1]+py*AW],[base[0]-px*AW,base[1]-py*AW]];
+  const fullPts=pts.map(p=>p.join(',')).join(' ');
+  const col=Words.colorOf(a.letter);
+
+  const g=document.createElementNS(SVGNS,'g');
+  g.setAttribute('class','arrow'); g.dataset.id=a.id;
+
+  const stroke=document.createElementNS(SVGNS,'polyline');
+  stroke.setAttribute('class','stroke');
+  stroke.setAttribute('points', shaft.map(p=>p.join(',')).join(' '));
+  stroke.setAttribute('stroke-width', SW);
+
+  const head=document.createElementNS(SVGNS,'polygon');
+  head.setAttribute('class','head');
+  head.setAttribute('points', tri.map(p=>p.join(',')).join(' '));
+
+  const mid=letterMid(a.cells), mp=node(mid[0],mid[1]);
+  const badge=document.createElementNS(SVGNS,'circle');
+  badge.setAttribute('class','badge');
+  badge.setAttribute('cx',mp[0]); badge.setAttribute('cy',mp[1]); badge.setAttribute('r',27);
+  badge.setAttribute('stroke',col);
+  const lbl=document.createElementNS(SVGNS,'text');
+  lbl.setAttribute('class','blabel');
+  lbl.setAttribute('x',mp[0]); lbl.setAttribute('y',mp[1]+1);
+  lbl.setAttribute('font-size','31'); lbl.setAttribute('fill',col);
+  lbl.textContent=a.letter;
+
+  const hit=document.createElementNS(SVGNS,'polyline');
+  hit.setAttribute('class','hit');
+  hit.setAttribute('points', fullPts);
+  hit.setAttribute('stroke-width', CELL*0.7);
+
+  g.appendChild(stroke); g.appendChild(head); g.appendChild(badge); g.appendChild(lbl); g.appendChild(hit);
+  g.addEventListener('click', ()=>onTap(a));
+  a.el=g;
+  return g;
+}
+
+function renderBoard(){
+  const lv=state.level;
+  const W=M*2+lv.cols*CELL, H=M*2+lv.rows*CELL;
+  board.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  board.innerHTML='';
+  for(const a of state.arrows) board.appendChild(drawArrow(a));
+}
+function renderHearts(){
+  heartsEl.innerHTML='';
+  for(let i=0;i<3;i++){
+    const s=document.createElement('span');
+    s.className='heart'+(i<state.lives?'':' lost'); s.textContent='❤️';
+    heartsEl.appendChild(s);
+  }
+}
+function animateOut(a, done){
+  const lv=state.level;
+  const D=(Math.max(lv.cols,lv.rows)+3)*CELL;
+  const tx=a.dir[0]*D, ty=a.dir[1]*D, dur=360, t0=performance.now();
+  a.el.classList.add('removed');
+  function step(now){
+    let k=Math.min(1,(now-t0)/dur); const e=k*k;
+    a.el.setAttribute('transform',`translate(${tx*e} ${ty*e})`);
+    a.el.style.opacity=(1-k).toFixed(3);
+    if(k<1) requestAnimationFrame(step); else { a.el.remove(); done&&done(); }
+  }
+  requestAnimationFrame(step);
+}
+function shake(a){
+  const t0=performance.now(), dur=320; a.el.classList.add('blocked');
+  function step(now){
+    let k=(now-t0)/dur;
+    if(k>=1){ a.el.setAttribute('transform',''); a.el.classList.remove('blocked'); return; }
+    a.el.setAttribute('transform',`translate(${Math.sin(k*Math.PI*6)*8*(1-k)} 0)`);
+    requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function onTap(a){
+  if(state.busy || a.removed || timer.paused) return;
+  if(isRemovable(a)){
+    a.removed=true; state.busy=true;
+    animateOut(a, ()=>{ state.busy=false; Words.collect(a.letter); });
+  } else {
+    shake(a); state.lives--; renderHearts();
+    if(state.lives<=0) failLevel('Out of lives','Too many wrong taps.');
+  }
+}
+
+function startTimer(seconds){
+  timer.paused=false; timer.end=performance.now()+seconds*1000;
+  cancelAnimationFrame(timer.raf);
+  function tick(now){
+    if(timer.paused) return;
+    const remain=Math.max(0, timer.end-now);
+    const frac=remain/(state.level.time*1000);
+    timerbar.style.width=(frac*100)+'%';
+    timerbar.classList.toggle('low', frac<0.33);
+    if(remain<=0){ timer.paused=true; failLevel("Time's up",'Run out before finishing the words.'); return; }
+    timer.raf=requestAnimationFrame(tick);
+  }
+  timer.raf=requestAnimationFrame(tick);
+}
+function stopTimer(){ timer.paused=true; cancelAnimationFrame(timer.raf); }
+
+function loadLevel(idx){
+  hideOverlay();
+  state={idx, level:LEVELS[idx], lives:LEVELS[idx].lives, arrows:null, busy:false};
+  state.arrows=buildArrows(state.level);
+  window.state=state;
+  document.getElementById('lvlNum').textContent=idx+1;
+  timerbar.style.width='100%'; timerbar.classList.remove('low');
+  renderBoard(); renderHearts();
+  Words.init(state.level, {
+    onOverflow:()=>failLevel('Tray overflow','Buffer is full and the word can’t be finished.'),
+    onAllDone:()=>winLevel()
+  });
+  startTimer(state.level.time);
+}
+
+function winLevel(){
+  if(timer.paused) return;
+  stopTimer(); confettiBurst();
+  const last = state.idx>=LEVELS.length-1;
+  if(last) showOverlay('🏆','All words solved!','You filled every word — level cleared.','Play again',()=>loadLevel(0));
+  else showOverlay('🎉','Words solved!','','Next ▶',()=>loadLevel(state.idx+1));
+}
+function failLevel(title,text){
+  if(timer.paused && title!=="Time's up") return;
+  stopTimer(); showOverlay('💥',title,text,'Retry',()=>loadLevel(state.idx));
+}
+
+function showOverlay(emoji,title,text,btn,cb){
+  document.getElementById('ovEmoji').textContent=emoji;
+  document.getElementById('ovTitle').textContent=title;
+  document.getElementById('ovText').textContent=text;
+  const b=document.getElementById('ovBtn'); b.textContent=btn; b.onclick=cb;
+  overlay.classList.remove('hidden');
+}
+function hideOverlay(){ overlay.classList.add('hidden'); }
+
+document.getElementById('btnReset').onclick=()=>loadLevel(state.idx);
+document.getElementById('btnHome').onclick=()=>loadLevel(0);
+
+const cc=document.getElementById('confetti'), ctx=cc.getContext('2d');
+let confParts=[], confRaf=null;
+function resizeCC(){ cc.width=innerWidth; cc.height=innerHeight; }
+addEventListener('resize',resizeCC); resizeCC();
+function confettiBurst(){
+  const colors=['#6b6be0','#9b5cf6','#34c759','#ff4d5e','#ffcc00','#ff8a3d'];
+  for(let i=0;i<160;i++){
+    confParts.push({x:innerWidth/2,y:innerHeight*0.30,
+      vx:(Math.random()-0.5)*14, vy:Math.random()*-14-4,
+      g:0.35+Math.random()*0.2, s:6+Math.random()*7,
+      c:colors[i%colors.length], a:1, rot:Math.random()*6.28, vr:(Math.random()-.5)*.4});
+  }
+  if(!confRaf) confLoop();
+}
+function confLoop(){
+  ctx.clearRect(0,0,cc.width,cc.height);
+  confParts.forEach(p=>{
+    p.vy+=p.g; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr; p.a-=0.006;
+    ctx.save(); ctx.globalAlpha=Math.max(0,p.a); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+    ctx.fillStyle=p.c; ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s*0.6); ctx.restore();
+  });
+  confParts=confParts.filter(p=>p.a>0 && p.y<cc.height+40);
+  if(confParts.length) confRaf=requestAnimationFrame(confLoop);
+  else { ctx.clearRect(0,0,cc.width,cc.height); confRaf=null; }
+}
+
+document.getElementById('lvlTot').textContent=LEVELS.length;
+showOverlay('🔤','Arrows + Words',
+  'Pull arrows to spell the word on top. A fitting letter goes straight into the word; the rest land in the 3-slot tray. Don’t overflow it!',
+  'Play',()=>loadLevel(0));
+</script>
+</body>
+</html>

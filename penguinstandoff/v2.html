@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Goose Standoff — v2</title>
+<style>
+  @font-face{font-family:"FuturaRound";src:url(../arrows-kit/FuturaRound-Bold.ttf) format("truetype");font-weight:700;}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{font-family:"FuturaRound",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    height:100dvh;display:flex;align-items:center;justify-content:center;overflow:hidden;user-select:none;touch-action:none;
+    background:radial-gradient(120% 120% at 50% 0%,#1d2740,#0b0f18 80%);}
+
+  /* ===== Рамка телефона 9:16 (rules.md, раздел 0) ===== */
+  #phone{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;
+    background:#cfe4fb url(../arrows-kit/bg1.jpg) center/cover no-repeat;--u:3.9px;}
+  @media (max-aspect-ratio:1/1){ #phone{width:100vw;height:100dvh;border-radius:0;} }
+  @media (min-aspect-ratio:1/1){ #phone{height:96dvh;aspect-ratio:9/16;width:auto;border-radius:32px;
+    box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 8px #070a12;} }
+
+  /* ===== HUD (кит дизайнера ../arrows-kit/, размеры в долях ширины телефона: --u = 1%) ===== */
+  #hud{width:100%;z-index:3;position:relative;height:calc(var(--u)*24);flex:none;}
+  #gearBtn{position:absolute;left:calc(var(--u)*4.8);top:calc(var(--u)*5.2);width:calc(var(--u)*10.4);height:calc(var(--u)*10.4);
+    border:none;cursor:pointer;background:url(../arrows-kit/gear.png) center/contain no-repeat;padding:0;}
+  #gearBtn:active{transform:translateY(3px) scale(.96);}
+  #lvlWrap{position:absolute;left:50%;top:calc(var(--u)*4.4);transform:translateX(-50%);text-align:center;
+    display:flex;flex-direction:column;align-items:center;}
+  #lvlBadge{width:calc(var(--u)*20);height:calc(var(--u)*5.3);background:url(../arrows-kit/lvl.png) center/100% 100% no-repeat;
+    color:#fff;font-weight:700;font-size:calc(var(--u)*2.9);letter-spacing:.06em;display:flex;align-items:center;
+    justify-content:center;z-index:2;}
+  #roundBanner{margin-top:calc(var(--u)*-0.6);width:calc(var(--u)*41.5);height:calc(var(--u)*11);
+    background:url(../arrows-kit/moves.png) center/100% 100% no-repeat;
+    display:flex;align-items:center;justify-content:center;gap:.3em;color:#353b6f;font-weight:700;font-size:calc(var(--u)*4.1);}
+
+  #stage{flex:1;width:100%;position:relative;z-index:2;min-height:0;}
+  #game,#fx{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;}
+  #fx{z-index:16;pointer-events:none;}
+
+  /* ===== Нижняя панель: подсказка + кнопка ===== */
+  #bar{position:absolute;left:0;right:0;bottom:0;height:calc(var(--u)*25);z-index:6;
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:calc(var(--u)*1.6);
+    padding-top:calc(var(--u)*1.2);pointer-events:none;}
+  #hint{color:#2e3b63;font-weight:700;font-size:calc(var(--u)*3.5);text-align:center;padding:0 calc(var(--u)*6);
+    line-height:1.25;text-shadow:0 2px 0 rgba(255,255,255,.7);min-height:calc(var(--u)*8.4);}
+  #lockBtn{pointer-events:auto;border:none;cursor:pointer;color:#fff;font-weight:900;letter-spacing:1px;
+    font-size:calc(var(--u)*5);padding:calc(var(--u)*3) calc(var(--u)*13);border-radius:calc(var(--u)*4.5);
+    background:linear-gradient(#5fd435,#3fae1e);box-shadow:0 6px 0 #2e8514,0 10px 18px rgba(0,0,0,.25);
+    text-shadow:0 2px 0 rgba(30,90,10,.5);transition:opacity .15s;}
+  #lockBtn:active{transform:translateY(4px);box-shadow:0 2px 0 #2e8514;}
+  #lockBtn.off{opacity:.35;pointer-events:none;}
+  #lockBtn.hide{visibility:hidden;}
+
+  /* ===== Оверлеи ===== */
+  .ov{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
+      flex-direction:column;background:rgba(14,20,40,.66);}
+  .hidden{display:none !important;}
+  .card{position:relative;width:78%;max-width:360px;background:#f2f7ff;border:6px solid #2f7fd6;
+    border-radius:28px;padding:64px 22px 26px;display:flex;flex-direction:column;align-items:center;
+    box-shadow:0 24px 60px rgba(0,0,0,.45);}
+  .ribbon{position:absolute;top:-26px;left:50%;transform:translateX(-50%);white-space:nowrap;
+    background:linear-gradient(#ff9b2e,#f07713);color:#fff;font-weight:900;font-size:24px;
+    letter-spacing:1px;padding:12px 30px;border-radius:14px;
+    text-shadow:0 3px 0 rgba(160,70,0,.55);box-shadow:0 6px 0 #c85c08,0 10px 18px rgba(0,0,0,.3);}
+  .ribbon.red{background:linear-gradient(#ff5964,#e0333f);box-shadow:0 6px 0 #b0222c,0 10px 18px rgba(0,0,0,.3);
+    text-shadow:0 3px 0 rgba(150,20,30,.55);}
+  .cardTxt{color:#2e3b63;font-weight:700;font-size:17px;text-align:center;margin:2px 0 18px;line-height:1.3;}
+  .bigBtn{border:none;cursor:pointer;color:#fff;font-weight:900;font-size:26px;letter-spacing:1px;
+    padding:15px 56px;border-radius:18px;background:linear-gradient(#5fd435,#3fae1e);
+    box-shadow:0 6px 0 #2e8514,0 10px 18px rgba(0,0,0,.25);text-shadow:0 2px 0 rgba(30,90,10,.5);}
+  .bigBtn:active{transform:translateY(4px);box-shadow:0 2px 0 #2e8514;}
+  .bigBtn.blue{background:linear-gradient(#5b8cf0,#3a68d8);box-shadow:0 6px 0 #2749a8,0 10px 18px rgba(0,0,0,.25);}
+  .bigBtn.blue:active{box-shadow:0 2px 0 #2749a8;}
+  #resultIcon,#loseIcon{position:static;width:120px;height:120px;margin:4px 0 10px;display:block;}
+
+  /* ===== Home ===== */
+  #home{background:#cfe4fb url(../arrows-kit/bg1.jpg) center/cover no-repeat;z-index:25;overflow:auto;}
+  #home h1{margin:0 0 4px;font-size:40px;font-weight:900;color:#2f5aa8;letter-spacing:1px;
+    text-shadow:0 3px 0 #fff,0 6px 10px rgba(60,90,150,.25);text-align:center;line-height:1.05;}
+  #home .hint{color:#4a5d86;font-weight:700;font-size:14px;margin:6px 26px 18px;text-align:center;line-height:1.4;}
+  #home .sub{color:#6d7fa6;font-weight:700;margin-bottom:6px;font-size:14px;letter-spacing:1px;}
+  #homeIcon{margin-bottom:14px;}
+  #lvlRow{display:flex;gap:9px;margin:2px 0 20px;flex-wrap:wrap;justify-content:center;padding:0 26px;max-width:340px;}
+  .lvlBtn{width:48px;height:48px;border-radius:14px;border:none;cursor:pointer;font-weight:900;font-size:19px;color:#2f5aa8;
+    background:#fff;box-shadow:0 4px 0 #b9cdea,0 6px 12px rgba(60,90,150,.2);}
+  .lvlBtn.sel{background:linear-gradient(#5b8cf0,#3a68d8);color:#fff;box-shadow:0 4px 0 #2749a8,0 6px 12px rgba(40,70,140,.35);}
+  .lvlBtn:active{transform:translateY(3px);box-shadow:0 1px 0 #b9cdea;}
+  #menuCard{background:#f2f7ff;border:5px solid #2f7fd6;border-radius:24px;padding:26px 30px;
+    display:flex;flex-direction:column;gap:14px;align-items:stretch;box-shadow:0 20px 50px rgba(0,0,0,.4);}
+  #menuCard .bigBtn{font-size:20px;padding:12px 40px;}
+</style>
+</head>
+<body>
+<div id="phone">
+  <div id="hud">
+    <button id="gearBtn" aria-label="menu"></button>
+    <div id="lvlWrap">
+      <div id="lvlBadge">LEVEL 1</div>
+      <div id="roundBanner">ROUND 1 · <b id="aliveNum">4</b> LEFT</div>
+    </div>
+  </div>
+
+  <div id="stage">
+    <canvas id="game"></canvas>
+    <div id="bar">
+      <div id="hint">Tap a tile to hide your goose</div>
+      <button id="lockBtn" class="off">LOCK IN</button>
+    </div>
+  </div>
+  <canvas id="fx"></canvas>
+
+  <div id="winOv" class="ov hidden">
+    <div class="card">
+      <div class="ribbon">LAST GOOSE STANDING</div>
+      <canvas id="resultIcon" width="240" height="240"></canvas>
+      <div class="cardTxt" id="winTxt">You survived 3 rounds</div>
+      <button class="bigBtn" id="nextBtn">NEXT</button>
+    </div>
+  </div>
+
+  <div id="loseOv" class="ov hidden">
+    <div class="card">
+      <div class="ribbon red" id="loseRibbon">YOU GOT SHOT</div>
+      <canvas id="loseIcon" width="240" height="240"></canvas>
+      <div class="cardTxt" id="loseTxt">Another goose had your line</div>
+      <button class="bigBtn blue" id="retryBtn">RETRY</button>
+    </div>
+  </div>
+
+  <div id="menuOv" class="ov hidden">
+    <div id="menuCard">
+      <button class="bigBtn blue" id="mRestart">RESTART</button>
+      <button class="bigBtn" id="mHome" style="background:linear-gradient(#f79e2d,#e0801a);box-shadow:0 6px 0 #b56412;">HOME</button>
+      <button class="bigBtn blue" id="mClose" style="background:#8a8ab0;box-shadow:0 6px 0 #6b6b8f;">CLOSE</button>
+    </div>
+  </div>
+
+  <div id="home" class="ov">
+    <div id="homeIcon"></div>
+    <h1>GOOSE<br>STANDOFF</h1>
+    <div class="hint">Blind duel on ice. Pick a tile and a firing line, nobody sees where you stand.
+      Then every goose is revealed and they fire in turn. The first goose on a shot line is out.
+      Survive the shrinking board and be the last one standing.</div>
+    <div class="sub">CHOOSE A LEVEL</div>
+    <div id="lvlRow"></div>
+    <button class="bigBtn" id="playBtn">PLAY</button>
+  </div>
+</div>
+
+<script src="../proto-kit/proto-kit.js"></script>
+<script>
+'use strict';
+/* ================= Goose Standoff v2 (быв. Penguin Standoff) =================
+   Слепая дуэль на гекс-поле. Раунд: каждый игрок НЕЗАМЕТНО для остальных ставит пингвина
+   на свободную плитку и выбирает одно из 6 направлений выстрела. Потом все раскрываются
+   и стреляют ПО ОЧЕРЕДИ: пуля летит по прямой, первый пингвин на линии выбывает
+   (убитый до своего хода выстрелить уже не успевает). Дальше поле сжимается, и снова вслепую.
+   Побеждает последний выживший.
+   Поля и плитки — уровни Hexa Arrows (формы + спрайты кита ../arrows-kit/).
+
+   v2: персонажи — гуси из арта ChatGPT (art/goose_white.png — игрок, goose_yellow.png —
+   соперники) вместо нарисованных кодом пингвинов; направление выстрела показывает зеркало
+   корпуса и наклон, пуля вылетает из замеренной точки дула. Плитки поля лежат в один
+   уровень: спрайт кита клипуется по верхней грани, 3D-бочок убран, соседи не наезжают. */
+
+const $=id=>document.getElementById(id);
+const stage=$('stage'), cvs=$('game'), ctx=cvs.getContext('2d');
+const fxCvs=$('fx'), fxCtx=fxCvs.getContext('2d');
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ---------- Спрайты кита ---------- */
+const KIT='../arrows-kit/';
+const SPR_NAME=['green','orange','dblue','red','violet','yellow','pink','lime','blue'];
+const SPR={}; SPR_NAME.forEach(n=>{const i=new Image();i.src=KIT+'tile_'+n+'.png';SPR[n]=i;});
+const SHADOW=new Image(); SHADOW.src=KIT+'shadow.png';
+const SPR_W=310, SPR_CX=155, SPR_CY=134.5;
+
+/* ---------- Геометрия гекса (flat-top, как в Hexa Arrows) ---------- */
+const DIRS=[[0,-1],[1,-1],[1,0],[0,1],[-1,1],[-1,0]];   // N, NE, SE, S, SW, NW
+const DIR_NAME=['north','north-east','south-east','south','south-west','north-west'];
+const hexDist=(q,r)=>Math.max(Math.abs(q),Math.abs(r),Math.abs(q+r));
+const key=(q,r)=>q+','+r;
+function hexUnit(q,r){return [1.5*q, Math.sqrt(3)*(r+q/2)];}
+function dirVec(d){const [dq,dr]=DIRS[d];const [x,y]=hexUnit(dq,dr);const l=Math.hypot(x,y);return [x/l,y/l];}
+
+/* ---------- Формы уровней = уровни Hexa Arrows ---------- */
+function hexRegion(R){const out=[];for(let q=-R;q<=R;q++)for(let r=-R;r<=R;r++)
+  if(hexDist(q,r)<=R)out.push([q,r]);return out;}
+const CORNERS3=[[3,0],[0,3],[-3,0],[0,-3],[3,-3],[-3,3]];
+const RIM4=[[4,-2],[2,2],[-2,4],[-4,2],[-2,-2],[2,-4]];
+function triangle(n){const b=[],o=(n-1)/3|0;
+  for(let q=0;q<n;q++)for(let r=0;r<n-q;r++)b.push([q-o,r-o]);return b;}
+function ring(a,b){return hexRegion(a).filter(([q,r])=>hexDist(q,r)>b);}
+function rectShape(cols,rows){const b=[],q0=-((cols-1)/2|0);
+  for(let i=0;i<cols;i++){const q=q0+i;for(let j=0;j<rows;j++)b.push([q,j-(rows>>1)-Math.floor(q/2)]);}
+  return b;}
+function starShape(){const b=hexRegion(2);
+  for(const [dq,dr] of DIRS)for(let k=3;k<=4;k++)b.push([dq*k,dr*k]);return b;}
+
+const LEVELS=[
+  {mask:()=>hexRegion(2),                  foes:2, name:'Hex 19'},
+  {mask:()=>hexRegion(2).concat(CORNERS3), foes:3, name:'Flower 25'},
+  {mask:()=>hexRegion(3).filter(c=>!CORNERS3.some(k=>k[0]===c[0]&&k[1]===c[1])),
+                                           foes:3, name:'Round 31'},
+  {mask:()=>hexRegion(3),                  foes:4, name:'Hex 37'},
+  {mask:()=>hexRegion(3).concat(RIM4),     foes:4, name:'Gear 43'},
+  {mask:()=>triangle(7),                   foes:4, name:'Triangle 28'},
+  {mask:()=>ring(3,1),                     foes:4, name:'Ring 30'},
+  {mask:()=>rectShape(9,4),                foes:5, name:'Bar 36'},
+  {mask:()=>starShape(),                   foes:5, name:'Star 31'},
+  {mask:()=>hexRegion(4),                  foes:5, name:'Giant Hex 61'},
+];
+
+/* ---------- Команды: белый гусь — игрок, жёлтые — соперники ----------
+   Соперники выглядят одинаково, различаются номером очереди выстрела; цвет остаётся
+   только у линии огня и бейджа, чтобы взглядом проследить, кто куда целится. */
+const TEAM=[
+  {hex:'#2f7fd6', dk:'#1a5fa8', tag:'YOU'},
+  {hex:'#f0891a', dk:'#b35f06', tag:'Goose'},
+  {hex:'#f0891a', dk:'#b35f06', tag:'Goose'},
+  {hex:'#f0891a', dk:'#b35f06', tag:'Goose'},
+  {hex:'#f0891a', dk:'#b35f06', tag:'Goose'},
+  {hex:'#f0891a', dk:'#b35f06', tag:'Goose'},
+];
+
+/* ---------- Состояние ---------- */
+let level=1, roundNo=1;
+let cells=[], cellSet=new Set(), tileCol=new Map(), hullR=0, fading=[];
+let pengs=[], order=[], bullets=[], parts=[], flash=[];
+let phase='place';           // place | reveal | shoot | over
+let playing=false, busy=false;
+let W=0,H=0,DPR=1,S=34,cx=0,cy=0,BOT=0;
+let roundsSurvived=0;
+const rnd=Math.random;
+const byId=id=>pengs.find(p=>p.id===id);
+const me=()=>pengs[0];
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));
+  [arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+
+/* ---------- Построение уровня ---------- */
+function buildLevel(n){
+  level=n; roundNo=1; roundsSurvived=0;
+  const cfg=LEVELS[n-1];
+  cells=cfg.mask().map(c=>[c[0],c[1]]);
+  refreshCells();
+  // цвета плиток — разноцветные, как на первом уровне Hexa Arrows
+  const rg=mulberry32(1000+n*77); tileCol=new Map();
+  for(const [q,r] of cells){
+    let best=0,bestPen=99;
+    for(let t=0;t<9;t++){
+      const c=Math.floor(rg()*6);
+      let pen=0;
+      for(const d of DIRS){const nb=tileCol.get(key(q+d[0],r+d[1])); if(nb===c)pen++;}
+      if(pen<bestPen){bestPen=pen;best=c;if(!pen)break;}
+    }
+    tileCol.set(key(q,r),best);
+  }
+  pengs=[];
+  for(let i=0;i<=cfg.foes;i++){
+    pengs.push({id:i,isPlayer:i===0,team:TEAM[i],q:null,r:null,dir:null,
+      alive:true,placed:false,revealT:0,fire:0,dead:-1,killer:null,ord:0});
+  }
+  bullets=[];parts=[];flash=[];fading=[];
+  playing=true;busy=false;
+  $('lvlBadge').textContent='LEVEL '+n;
+  $('winOv').classList.add('hidden');$('loseOv').classList.add('hidden');$('menuOv').classList.add('hidden');
+  startPlacement();
+  layout();
+}
+function refreshCells(){
+  cellSet=new Set(cells.map(c=>key(c[0],c[1])));
+  hullR=cells.reduce((m,[q,r])=>Math.max(m,hexDist(q,r)),0)+1;
+}
+function startPlacement(){
+  phase='place';busy=false;
+  for(const p of pengs){if(p.alive){p.placed=false;p.q=p.r=null;p.dir=null;p.revealT=0;p.ord=0;}}
+  updateHud();setHint('Round '+roundNo+' · tap a tile to hide your goose');
+  $('lockBtn').classList.remove('hide');$('lockBtn').classList.add('off');
+  layout();
+}
+function updateHud(){
+  const alive=pengs.filter(p=>p.alive).length;
+  $('roundBanner').innerHTML='ROUND '+roundNo+' · <b id="aliveNum">'+alive+'</b> LEFT';
+}
+function setHint(t){$('hint').textContent=t;}
+
+/* ---------- Лучи и попадания ---------- */
+function rayCells(q,r,dir){
+  const out=[];let cq=q,cr=r;
+  for(let i=0;i<30;i++){
+    cq+=DIRS[dir][0];cr+=DIRS[dir][1];
+    if(hexDist(cq,cr)>hullR)break;
+    out.push([cq,cr]);
+  }
+  return out;
+}
+/* первый живой пингвин на линии; пуля останавливается на нём (остальные позади прикрыты) */
+function firstTarget(p){
+  for(const [q,r] of rayCells(p.q,p.r,p.dir)){
+    if(!cellSet.has(key(q,r)))continue;
+    const v=pengs.find(t=>t.alive&&t.placed&&t.q===q&&t.r===r);
+    if(v&&v!==p)return v;
+  }
+  return null;
+}
+function rayEnd(p){
+  const rc=rayCells(p.q,p.r,p.dir);
+  let last=[p.q,p.r];
+  for(const c of rc){if(cellSet.has(key(c[0],c[1])))last=c;}
+  return last;
+}
+
+/* ---------- Боты: ставятся вслепую, позиции игрока не знают ---------- */
+function botPlace(taken){
+  const free=cells.filter(c=>!taken.has(key(c[0],c[1])));
+  if(!free.length)return null;
+  const edge=free.filter(([q,r])=>DIRS.some(d=>!cellSet.has(key(q+d[0],r+d[1]))));
+  const pool=(edge.length&&rnd()<0.55)?edge:free;
+  return pool[Math.floor(rnd()*pool.length)];
+}
+function botAim(q,r){
+  const w=[];
+  for(let d=0;d<6;d++){
+    const n=rayCells(q,r,d).filter(c=>cellSet.has(key(c[0],c[1]))).length;
+    w.push(Math.pow(n+0.3,1.8));
+  }
+  let t=w.reduce((a,b)=>a+b,0),x=rnd()*t;
+  for(let d=0;d<6;d++){x-=w[d];if(x<=0)return d;}
+  return 0;
+}
+
+/* ---------- Раскладка: поле целиком внутри #stage (rules 0.1, п.5) ---------- */
+const PAD_X=1.15, PAD_TOP=2.30, PAD_BOT=1.05;   // запас в единицах S: пингвин выше плитки
+function fieldBox(){
+  let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+  for(const [q,r] of cells){const [x,y]=hexUnit(q,r);
+    x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}
+  if(x0>x1){x0=x1=y0=y1=0;}
+  return {x0,x1,y0,y1};
+}
+function layout(){
+  const rect=stage.getBoundingClientRect();
+  DPR=Math.min(2,window.devicePixelRatio||1);
+  W=rect.width;H=rect.height;
+  cvs.width=Math.round(W*DPR);cvs.height=Math.round(H*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  const phone=$('phone').getBoundingClientRect();
+  $('phone').style.setProperty('--u',(phone.width/100)+'px');
+  fxCvs.width=Math.round(phone.width*DPR);fxCvs.height=Math.round(phone.height*DPR);
+  fxCtx.setTransform(DPR,0,0,DPR,0,0);
+  BOT=$('bar').getBoundingClientRect().height;
+  const b=fieldBox(), availH=Math.max(60,H-BOT);
+  S=Math.min((W-16)/((b.x1-b.x0)+2*PAD_X), (availH-16)/((b.y1-b.y0)+PAD_TOP+PAD_BOT));
+  cx=W/2-S*(b.x0+b.x1)/2;
+  cy=availH/2-S*((b.y0-PAD_TOP)+(b.y1+PAD_BOT))/2;
+}
+function hexCenter(q,r){const [x,y]=hexUnit(q,r);return [cx+x*S, cy+y*S];}
+function boardBounds(){
+  const b=fieldBox(), sr=stage.getBoundingClientRect(), pr=$('phone').getBoundingClientRect();
+  const ox=sr.left-pr.left, oy=sr.top-pr.top;
+  return {left:ox+cx+(b.x0-PAD_X)*S, right:ox+cx+(b.x1+PAD_X)*S,
+          top:oy+cy+(b.y0-PAD_TOP)*S, bottom:oy+cy+(b.y1+PAD_BOT)*S};
+}
+window.addEventListener('resize',()=>{layout();});
+
+/* ---------- Рисование: плитки кита, плоско и в один уровень ----------
+   Спрайт кита нарисован «с бочком» (3D-грань снизу) — из-за неё соседние плитки
+   наезжали друг на друга. Клипуем спрайт по верхней грани: остаётся плоский гекс
+   ровно в клетке, между плитками честный зазор. */
+const FLAT_COL=['#5fc23a','#ff9a2b','#2f86e0','#f0483a','#a55cf5','#ffc219'];
+function hexPath(c,x,y,s){
+  c.beginPath();
+  for(let i=0;i<6;i++){const a=Math.PI/3*i;
+    const px=x+Math.cos(a)*s,py=y+Math.sin(a)*s;i?c.lineTo(px,py):c.moveTo(px,py);}
+  c.closePath();
+}
+function drawTile(x,y,s,ci,alpha){
+  const img=SPR[SPR_NAME[ci]];
+  ctx.save();
+  if(alpha!=null)ctx.globalAlpha=alpha;
+  hexPath(ctx,x,y,s);
+  ctx.save();ctx.clip();
+  if(img&&img.complete&&img.naturalWidth){
+    const k=2*s/SPR_W;
+    ctx.drawImage(img,x-SPR_CX*k,y-SPR_CY*k,img.naturalWidth*k,img.naturalHeight*k);
+  }else{ctx.fillStyle=FLAT_COL[ci];ctx.fill();}
+  ctx.restore();
+  ctx.lineWidth=Math.max(1,s*0.035);ctx.strokeStyle='rgba(255,255,255,.35)';ctx.stroke();
+  ctx.restore();
+}
+
+/* ---------- Рисование: гуси (арт ChatGPT из art/) ----------
+   Белый гусь — игрок, жёлтые — соперники. Спрайт смотрит вправо, ствол в кадре,
+   поэтому направление выстрела показываем зеркалом (влево/вправо) и наклоном
+   корпуса (вверх/вниз), а точку вылета пули берём из замеренного положения дула. */
+const GOOSE={white:new Image(),yellow:new Image()};
+GOOSE.white.src='art/goose_white.png'; GOOSE.yellow.src='art/goose_yellow.png';
+const G_MZ=[0.9842,0.3296];     // дуло пистолета в долях габаритов спрайта
+const G_FOOT=0.455;             // центр лап по ширине спрайта
+const G_H=2.30;                 // высота гуся в единицах S
+const G_PIV=0.06;               // ось наклона у лап: лапы стоят на плитке, наклоняется корпус
+const G_TILT=0.38;              // максимальный наклон, рад (~22°)
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);
+  c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();c.fill();}
+function gooseGeom(s,dir,isPlayer){
+  const img=isPlayer?GOOSE.white:GOOSE.yellow;
+  const ratio=(img.naturalWidth&&img.naturalHeight)?img.naturalWidth/img.naturalHeight:0.70;
+  const H0=s*G_H, Wd=H0*ratio;
+  const [vx,vy]=dirVec(dir==null?3:dir);
+  const flip=vx<-0.02?-1:1;
+  const tilt=Math.max(-G_TILT,Math.min(G_TILT,Math.atan2(vy,Math.max(0.0001,Math.abs(vx)))*0.30));
+  return {img,H0,Wd,flip,tilt,piv:H0*G_PIV};
+}
+/* мировая точка дула — от неё летит пуля и вспыхивает выстрел */
+function gooseMuzzle(x,y,s,dir,isPlayer){
+  const g=gooseGeom(s,dir,isPlayer);
+  const lx=(G_MZ[0]-G_FOOT)*g.Wd, ly=(G_MZ[1]-1)*g.H0+g.piv;
+  const cs=Math.cos(g.tilt), sn=Math.sin(g.tilt);
+  return [x+g.flip*(lx*cs-ly*sn), y-g.piv+(lx*sn+ly*cs)];
+}
+function drawGoose(c,x,y,s,isPlayer,dir,opt){
+  opt=opt||{};
+  const g=gooseGeom(s,dir,isPlayer);
+  if(!g.img.complete||!g.img.naturalWidth)return;
+  c.save();
+  if(opt.alpha!=null)c.globalAlpha=opt.alpha;
+  c.translate(x,y+(opt.dy||0));
+  if(opt.sc&&opt.sc!==1)c.scale(opt.sc,opt.sc);
+  if(!opt.noShadow){
+    c.fillStyle='rgba(28,48,92,.22)';
+    c.beginPath();c.ellipse(0,-s*0.02,s*0.52,s*0.19,0,0,7);c.fill();
+  }
+  c.translate(0,-g.piv);
+  if(opt.rot)c.rotate(opt.rot);
+  c.scale(g.flip,1);
+  c.rotate(g.tilt);
+  c.translate(0,g.piv);
+  c.drawImage(g.img,-G_FOOT*g.Wd,-g.H0,g.Wd,g.H0);
+  c.restore();
+  if(opt.muzzle){
+    const [mx,my]=gooseMuzzle(x,y+(opt.dy||0),s,dir,isPlayer);
+    const R=s*(0.20+0.30*opt.muzzle);
+    const mg=c.createRadialGradient(mx,my,0,mx,my,R);
+    mg.addColorStop(0,'rgba(255,255,225,'+opt.muzzle+')');
+    mg.addColorStop(.45,'rgba(255,196,60,'+(opt.muzzle*0.85)+')');
+    mg.addColorStop(1,'rgba(255,150,30,0)');
+    c.save();c.fillStyle=mg;c.beginPath();c.arc(mx,my,R,0,7);c.fill();c.restore();
+  }
+}
+
+/* ---------- Рисование: луч прицела, стрелки выбора, бейджи ---------- */
+function drawRay(p,alpha,dash){
+  const [x0,y0]=hexCenter(p.q,p.r);
+  const [ex,ey]=hexCenter(...rayEnd(p));
+  const [vx,vy]=dirVec(p.dir);
+  ctx.save();ctx.globalAlpha=alpha;
+  ctx.strokeStyle=p.team.hex;ctx.lineWidth=Math.max(2,S*0.09);ctx.lineCap='round';
+  if(dash)ctx.setLineDash([S*0.22,S*0.28]);
+  ctx.beginPath();ctx.moveTo(x0+vx*S*0.75,y0-S*0.55+vy*S*0.3);ctx.lineTo(ex+vx*S*0.5,ey+vy*S*0.5);ctx.stroke();
+  ctx.setLineDash([]);
+  /* наконечник */
+  const hx=ex+vx*S*0.5, hy=ey+vy*S*0.5, a=Math.atan2(vy,vx);
+  ctx.translate(hx,hy);ctx.rotate(a);ctx.fillStyle=p.team.hex;
+  ctx.beginPath();ctx.moveTo(S*0.30,0);ctx.lineTo(-S*0.12,-S*0.22);ctx.lineTo(-S*0.12,S*0.22);ctx.closePath();ctx.fill();
+  ctx.restore();
+}
+function chevronPos(d){
+  const p=me(),[vx,vy]=dirVec(d),[x,y]=hexCenter(p.q,p.r);
+  return [x+vx*S*1.85, y-S*0.55+vy*S*1.85];
+}
+function drawChevrons(t){
+  const p=me();if(!p.placed)return;
+  for(let d=0;d<6;d++){
+    const [x,y]=chevronPos(d), on=p.dir===d, [vx,vy]=dirVec(d);
+    const pulse=on?1:0.86+0.06*Math.sin(t*4+d);
+    ctx.save();ctx.translate(x,y);ctx.scale(pulse,pulse);
+    ctx.fillStyle=on?'rgba(255,196,30,.95)':'rgba(24,38,68,.62)';
+    ctx.shadowColor='rgba(15,30,60,.45)';ctx.shadowBlur=S*0.22;ctx.shadowOffsetY=S*0.05;
+    ctx.beginPath();ctx.arc(0,0,S*0.40,0,7);ctx.fill();
+    ctx.shadowColor='transparent';
+    ctx.rotate(Math.atan2(vy,vx));
+    ctx.fillStyle=on?'#3b2a00':'#fdfefe';
+    ctx.beginPath();ctx.moveTo(S*0.26,0);ctx.lineTo(-S*0.12,-S*0.21);ctx.lineTo(-S*0.02,0);ctx.lineTo(-S*0.12,S*0.21);
+    ctx.closePath();ctx.fill();ctx.restore();
+  }
+}
+function drawBadge(p){
+  if(!p.ord)return;
+  const [x,y]=hexCenter(p.q,p.r), R=Math.max(8,S*0.30);
+  const by=y-S*2.75;
+  ctx.save();
+  ctx.fillStyle='rgba(255,255,255,.95)';ctx.beginPath();ctx.arc(x,by,R,0,7);ctx.fill();
+  ctx.lineWidth=Math.max(2,R*0.22);ctx.strokeStyle=p.team.hex;ctx.stroke();
+  ctx.fillStyle='#22304e';ctx.font='900 '+(R*1.15)+'px FuturaRound, sans-serif';
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(p.ord,x,by+R*0.06);
+  ctx.restore();
+}
+function drawYouMark(p){
+  const [x,y]=hexCenter(p.q,p.r);
+  ctx.save();
+  ctx.strokeStyle='rgba(58,169,247,.95)';ctx.lineWidth=Math.max(2,S*0.10);
+  ctx.beginPath();ctx.ellipse(x,y+S*0.18,S*0.62,S*0.30,0,0,7);ctx.stroke();
+  const w=S*0.62,h=S*0.30,by=y+S*0.60;
+  ctx.fillStyle='rgba(58,169,247,.95)';
+  rr(ctx,x-w/2,by-h/2,w,h,h/2);
+  ctx.fillStyle='#fff';ctx.font='900 '+(h*0.72)+'px FuturaRound, sans-serif';
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('YOU',x,by+h*0.04);
+  ctx.restore();
+}
+
+/* ---------- Эффекты ---------- */
+function spawnFeathers(x,y,col){
+  for(let i=0;i<16;i++){
+    const a=rnd()*Math.PI*2, sp=S*(1.2+rnd()*2.6);
+    parts.push({x,y:y-S*0.8,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-S*1.6,t:0,life:0.75+rnd()*0.4,
+      col:i%2===0?col:'#fdfefe',rot:rnd()*6,vr:(rnd()-0.5)*9,sz:S*(0.10+rnd()*0.12)});
+  }
+}
+function drawParts(dt){
+  for(let i=parts.length-1;i>=0;i--){
+    const p=parts[i];p.t+=dt;
+    if(p.t>=p.life){parts.splice(i,1);continue;}
+    p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=S*7*dt;p.vx*=0.98;p.rot+=p.vr*dt;
+    ctx.save();ctx.globalAlpha=Math.max(0,1-p.t/p.life);ctx.translate(p.x,p.y);ctx.rotate(p.rot);
+    ctx.fillStyle=p.col;ctx.beginPath();ctx.ellipse(0,0,p.sz,p.sz*0.55,0,0,7);ctx.fill();ctx.restore();
+  }
+}
+function drawBullets(dt){
+  for(let i=bullets.length-1;i>=0;i--){
+    const b=bullets[i];b.t+=dt;
+    const k=Math.min(1,b.t/b.dur);
+    const x=b.x0+(b.x1-b.x0)*k, y=b.y0+(b.y1-b.y0)*k;
+    const tx=b.x0+(b.x1-b.x0)*Math.max(0,k-0.16), ty=b.y0+(b.y1-b.y0)*Math.max(0,k-0.16);
+    ctx.save();
+    ctx.strokeStyle=b.col;ctx.globalAlpha=.55;ctx.lineWidth=Math.max(2,S*0.10);ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(x,y);ctx.stroke();
+    ctx.globalAlpha=1;ctx.fillStyle='#fff8d6';
+    ctx.beginPath();ctx.arc(x,y,Math.max(2.5,S*0.12),0,7);ctx.fill();
+    ctx.restore();
+    if(b.t>=b.dur)bullets.splice(i,1);
+  }
+}
+
+/* ---------- Главный рендер ---------- */
+let tAcc=0;
+function draw(dt){
+  tAcc+=dt;
+  ctx.clearRect(0,0,W,H);
+  for(const [q,r] of cells){const [x,y]=hexCenter(q,r);drawTile(x,y,S*0.94,tileCol.get(key(q,r))||0);}
+  for(const f of fading){f.t+=dt;const [x,y]=hexCenter(f.q,f.r);const k=Math.min(1,f.t/0.6);
+    drawTile(x,y+k*S*0.7,S*0.94*(1-0.3*k),f.col,Math.max(0,1-k));}
+
+  const p0=me();
+  if(phase==='place'&&p0.placed){
+    const [x,y]=hexCenter(p0.q,p0.r);
+    ctx.save();ctx.globalAlpha=.45+.2*Math.sin(tAcc*4);
+    ctx.strokeStyle='#fff';ctx.lineWidth=Math.max(2,S*0.12);
+    ctx.beginPath();for(let i=0;i<6;i++){const a=Math.PI/3*i;
+      const px=x+Math.cos(a)*S*0.9,py=y+Math.sin(a)*S*0.9;i?ctx.lineTo(px,py):ctx.moveTo(px,py);}
+    ctx.closePath();ctx.stroke();ctx.restore();
+    if(p0.dir!=null)drawRay(p0,.55,true);
+  }
+
+  if(phase==='place')drawChevrons(tAcc);
+  /* мёртвые — падение с перьями */
+  const zsort=a=>a.slice().sort((u,v)=>hexCenter(u.q,u.r)[1]-hexCenter(v.q,v.r)[1]);
+  for(const p of zsort(pengs.filter(x=>x.placed&&x.q!=null))){
+    if(p.alive||p.dead<0)continue;
+    p.dead+=dt;
+    const k=p.dead/0.8;if(k>=1)continue;
+    const [x,y]=hexCenter(p.q,p.r);
+    drawGoose(ctx,x,y,S,p.isPlayer,p.dir,{rot:k*1.5,dy:-Math.sin(k*Math.PI)*S*0.5+k*k*S*0.6,
+      alpha:Math.max(0,1-k*1.1),sc:1-k*0.1,noShadow:true});
+  }
+  /* живые */
+  for(const p of zsort(pengs.filter(x=>x.placed&&x.q!=null))){
+    if(!p.alive)continue;
+    if(!p.isPlayer&&phase==='place')continue;
+    if(p.revealT<1)p.revealT=Math.min(1,p.revealT+dt*2.6);
+    const [x,y]=hexCenter(p.q,p.r);
+    const k=p.isPlayer?1:p.revealT;
+    if(phase!=='place')drawRay(p,0.42*k,true);
+    if(p.isPlayer)drawYouMark(p);
+    if(p.fire>0)p.fire=Math.max(0,p.fire-dt*3.2);
+    drawGoose(ctx,x,y,S,p.isPlayer,p.dir,{alpha:k,sc:0.75+0.25*k,muzzle:p.fire>0?p.fire:0});
+    if(phase!=='place')drawBadge(p);
+  }
+  drawBullets(dt);
+  drawParts(dt);
+}
+
+/* ---------- Ввод ---------- */
+function cellAt(px,py){
+  let best=null,bd=1e9;
+  for(const [q,r] of cells){const [x,y]=hexCenter(q,r);
+    const d=Math.hypot(px-x,py-y);if(d<bd){bd=d;best=[q,r];}}
+  return bd<=S*0.98?best:null;
+}
+cvs.addEventListener('pointerdown',e=>{
+  if(phase!=='place'||busy||!playing)return;
+  const r=cvs.getBoundingClientRect(), px=e.clientX-r.left, py=e.clientY-r.top;
+  const p=me();
+  if(p.placed){
+    for(let d=0;d<6;d++){const [x,y]=chevronPos(d);
+      if(Math.hypot(px-x,py-y)<=S*0.58){p.dir=d;afterPick();return;}}
+  }
+  const c=cellAt(px,py);
+  if(c){p.q=c[0];p.r=c[1];p.placed=true;afterPick();}
+});
+function afterPick(){
+  const p=me();
+  if(p.placed&&p.dir==null)setHint('Now pick your firing line');
+  else if(p.placed)setHint('Aiming '+DIR_NAME[p.dir]+' · tap to change, then LOCK IN');
+  $('lockBtn').classList.toggle('off',!(p.placed&&p.dir!=null));
+}
+
+/* ---------- Ход раунда ---------- */
+$('lockBtn').onclick=()=>{ if(phase==='place'&&!busy) lockIn(); };
+async function lockIn(){
+  const p=me();
+  if(!p.placed||p.dir==null||busy)return;
+  busy=true;
+  $('lockBtn').classList.add('hide');
+  /* боты ставятся вслепую: позиции друг друга и игрока им неизвестны, заняты — только свободные плитки */
+  const taken=new Set([key(p.q,p.r)]);
+  for(const b of pengs){
+    if(b.isPlayer||!b.alive)continue;
+    const c=botPlace(taken);
+    if(!c){b.alive=false;continue;}
+    taken.add(key(c[0],c[1]));
+    b.q=c[0];b.r=c[1];b.dir=botAim(c[0],c[1]);b.placed=true;b.revealT=0;
+  }
+  await shootout();
+}
+async function shootout(){
+  phase='reveal';
+  setHint('Everyone is revealed — they fire in this order');
+  order=shuffle(pengs.filter(x=>x.alive&&x.placed).map(x=>x.id));
+  order.forEach((id,i)=>{byId(id).ord=i+1;});
+  await sleep(1150);
+  phase='shoot';
+  for(const id of order){
+    const p=byId(id);
+    if(!p.alive)continue;
+    setHint((p.isPlayer?'You fire':'Goose #'+p.ord+' fires')+' '+DIR_NAME[p.dir]);
+    const target=firstTarget(p);
+    p.fire=1;
+    const [x0,y0]=hexCenter(p.q,p.r);
+    const [vx,vy]=dirVec(p.dir);
+    const end=target?hexCenter(target.q,target.r):hexCenter(...rayEnd(p));
+    const [gx,gy]=gooseMuzzle(x0,y0,S,p.dir,p.isPlayer);
+    const dist=Math.hypot(end[0]-gx,end[1]-gy);
+    const dur=Math.min(0.5,0.1+dist/(S*26));
+    bullets.push({x0:gx,y0:gy,x1:end[0],y1:target?end[1]-S*0.9:end[1],t:0,dur,col:'#ffd66b'});
+    await sleep(dur*1000+110);
+    if(target){
+      kill(target,p);
+      await sleep(360);
+      if(!me().alive){await sleep(380);lose();return;}
+    }else{
+      await sleep(150);
+    }
+  }
+  await sleep(620);
+  endRound();
+}
+function kill(t,shooter){
+  t.alive=false;t.dead=0;t.killer=shooter;
+  const [x,y]=hexCenter(t.q,t.r);
+  spawnFeathers(x,y,t.isPlayer?'#eef3f8':'#ffd84a');
+  updateHud();
+}
+async function endRound(){
+  updateHud();
+  const alive=pengs.filter(p=>p.alive);
+  if(!me().alive){lose();return;}
+  if(alive.length<=1){setHint('Last goose standing!');await sleep(900);win();return;}
+  setHint(alive.length+' geese left, the ice is cracking');
+  await sleep(700);
+  await shrinkBoard(alive.length);
+  roundNo++;
+  startPlacement();
+}
+/* поле сжимается: обгрызаем внешние плитки, но всегда оставляем место выжившим.
+   Чистая функция — её же гоняет калибровка матчей. */
+function computeShrink(src,survivors,roundN){
+  const keepMin=Math.max(4,survivors*2);
+  if(src.length<=keepMin)return {cells:src.slice(),removed:[]};
+  const fac=(survivors<=2)?0.42:(survivors<=3?0.48:(roundN>=3?0.5:0.58));
+  const target=Math.max(keepMin,Math.round(src.length*fac));
+  let cur=src.slice();const removed=[];
+  while(cur.length>target){
+    const s=new Set(cur.map(c=>key(c[0],c[1])));
+    const bnd=cur.filter(([q,r])=>DIRS.some(d=>!s.has(key(q+d[0],r+d[1]))));
+    if(!bnd.length)break;
+    let mx=0,my=0;
+    for(const c of cur){const u=hexUnit(c[0],c[1]);mx+=u[0];my+=u[1];}
+    mx/=cur.length;my/=cur.length;
+    bnd.sort((a,b)=>{const A=hexUnit(a[0],a[1]),B=hexUnit(b[0],b[1]);
+      return Math.hypot(B[0]-mx,B[1]-my)-Math.hypot(A[0]-mx,A[1]-my);});
+    const n=Math.min(bnd.length,cur.length-target,Math.max(1,Math.ceil(cur.length*0.18)));
+    const cut=bnd.slice(0,n), rm=new Set(cut.map(c=>key(c[0],c[1])));
+    removed.push(...cut);
+    cur=cur.filter(c=>!rm.has(key(c[0],c[1])));
+  }
+  return {cells:cur,removed};
+}
+async function shrinkBoard(survivors){
+  const res=computeShrink(cells,survivors,roundNo);
+  if(res.removed.length===0){await sleep(200);return;}
+  fading=res.removed.map(([q,r])=>({q,r,t:0,col:tileCol.get(key(q,r))||0}));
+  cells=res.cells;refreshCells();
+  await sleep(680);
+  fading=[];layout();
+  await sleep(160);
+}
+
+/* ---------- Финальные экраны ---------- */
+function drawResultPeng(cv,team,dir,sad){
+  const c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);
+  c.save();c.translate(cv.width/2,cv.height*0.94);
+  if(sad)c.rotate(0.24);
+  drawGoose(c,0,0,cv.width*0.30,true,dir,{noShadow:true});
+  c.restore();
+}
+/* карточки перерисовываем, когда спрайты догрузились */
+GOOSE.white.addEventListener('load',()=>{
+  if(!$('winOv').classList.contains('hidden'))drawResultPeng($('resultIcon'),TEAM[0],2);
+  if(!$('loseOv').classList.contains('hidden'))drawResultPeng($('loseIcon'),TEAM[0],3,true);
+});
+function win(){
+  phase='over';playing=false;busy=true;
+  $('winTxt').textContent='You outlasted '+LEVELS[level-1].foes+' geese in '+roundNo+(roundNo===1?' round':' rounds');
+  drawResultPeng($('resultIcon'),TEAM[0],2);
+  startConfetti();
+  $('winOv').classList.remove('hidden');
+  setHint('');
+}
+function lose(){
+  phase='over';playing=false;busy=true;
+  const k=me().killer;
+  $('loseTxt').textContent=k
+    ? ('Goose #'+k.ord+' was aiming '+DIR_NAME[k.dir]+', straight through your tile')
+    : 'You ran out of ice';
+  drawResultPeng($('loseIcon'),TEAM[0],3,true);
+  $('loseOv').classList.remove('hidden');
+  setHint('');
+}
+
+/* ---------- Конфетти (только на победу) ---------- */
+let conf=[],confOn=false;
+function startConfetti(){
+  const pr=$('phone').getBoundingClientRect();conf=[];confOn=true;
+  for(let i=0;i<90;i++)conf.push({x:rnd()*pr.width,y:-rnd()*pr.height*0.6,
+    vx:(rnd()-0.5)*60,vy:90+rnd()*150,s:6+rnd()*8,rot:rnd()*6,vr:(rnd()-0.5)*8,
+    col:['#3aa9f7','#ffd23f','#ff7a59','#56c23a','#fdfefe'][Math.floor(rnd()*5)]});
+}
+function stopConfetti(){confOn=false;conf=[];fxCtx.clearRect(0,0,fxCvs.width,fxCvs.height);}
+function drawConfetti(dt){
+  if(!confOn)return;
+  const pr=$('phone').getBoundingClientRect();
+  fxCtx.clearRect(0,0,pr.width,pr.height);
+  for(const p of conf){
+    p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=40*dt;p.rot+=p.vr*dt;
+    if(p.y>pr.height+20){p.y=-20;p.x=rnd()*pr.width;p.vy=90+rnd()*150;}
+    fxCtx.save();fxCtx.translate(p.x,p.y);fxCtx.rotate(p.rot);fxCtx.fillStyle=p.col;
+    fxCtx.fillRect(-p.s/2,-p.s/2,p.s,p.s*0.62);fxCtx.restore();
+  }
+}
+
+/* ---------- Экраны, меню ---------- */
+$('nextBtn').onclick=()=>{stopConfetti();$('winOv').classList.add('hidden');ProtoKit.play(level%LEVELS.length+1);};
+$('retryBtn').onclick=()=>{$('loseOv').classList.add('hidden');buildLevel(level);};
+$('playBtn').onclick=()=>ProtoKit.play(level);
+$('gearBtn').onclick=()=>{if(playing)$('menuOv').classList.remove('hidden');};
+$('mClose').onclick=()=>$('menuOv').classList.add('hidden');
+$('mRestart').onclick=()=>{$('menuOv').classList.add('hidden');buildLevel(level);};
+$('mHome').onclick=()=>{$('menuOv').classList.add('hidden');stopConfetti();ProtoKit.home();};
+function renderLevelRow(){
+  const row=$('lvlRow');row.textContent='';
+  for(let i=1;i<=LEVELS.length;i++){
+    const b=document.createElement('button');
+    b.className='lvlBtn'+(i===level?' sel':'');b.textContent=i;
+    b.onclick=()=>ProtoKit.play(i);row.appendChild(b);
+  }
+}
+
+/* ---------- Тест-хук для бота/аудита ---------- */
+window.__game={
+  get state(){return {level,round:roundNo,phase,busy,playing,cells:cells.length,
+    pengs:pengs.map(p=>({id:p.id,you:p.isPlayer,q:p.q,r:p.r,dir:p.dir,alive:p.alive,placed:p.placed})),
+    alive:pengs.filter(p=>p.alive).length};},
+  load(n){buildLevel(n);},
+  bounds(){return boardBounds();},
+  cells(){return cells.map(c=>[c[0],c[1]]);},
+  place(q,r){const p=me();if(phase!=='place')return false;
+    if(!cellSet.has(key(q,r)))return false;p.q=q;p.r=r;p.placed=true;afterPick();return true;},
+  aim(d){const p=me();if(phase!=='place'||!p.placed)return false;p.dir=d;afterPick();return true;},
+  lock(){if(phase==='place'&&!busy){lockIn();return true;}return false;},
+  over(){return {win:!$('winOv').classList.contains('hidden'),lose:!$('loseOv').classList.contains('hidden')};},
+};
+
+/* ---------- Цикл (setInterval: в headless rAF троттлится) ---------- */
+let last=performance.now();
+setInterval(()=>{
+  const now=performance.now();
+  const dt=Math.min(0.12,(now-last)/1000);last=now;
+  draw(dt);drawConfetti(dt);
+},16);
+
+/* ---------- Старт ---------- */
+$('homeIcon').appendChild(ProtoKit.iconTile(104));
+ProtoKit.init({slug:'penguinstandoff',name:'Goose Standoff',icon:'icon.png',iconEmoji:'🦆',
+  accent:'#2f7fd6',levels:LEVELS.length,
+  startLevel(n){
+    $('home').classList.add('hidden');stopConfetti();
+    buildLevel(n);
+  },
+  showHome(){
+    playing=false;busy=false;phase='over';stopConfetti();
+    $('winOv').classList.add('hidden');$('loseOv').classList.add('hidden');$('menuOv').classList.add('hidden');
+    cells=[];pengs=[];refreshCells();layout();renderLevelRow();
+    $('home').classList.remove('hidden');
+  },
+});
+</script>
+</body>
+</html>

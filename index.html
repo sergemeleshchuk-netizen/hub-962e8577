@@ -1,0 +1,628 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache">
+<title>Прототипы механик</title>
+<style>
+ :root{--ink:#1b1b2e}
+ *{box-sizing:border-box}
+ body{margin:0;min-height:100vh;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);
+   background:radial-gradient(120% 120% at 50% 0%,#eef0ff,#dfe3ff);padding:26px 16px 60px;
+   display:flex;flex-direction:column;align-items:center;}
+ h1{margin:0 0 4px;font-size:24px} .sub{color:#6a6a85;margin:0 0 24px;font-size:14px;text-align:center}
+ .cols{width:100%;max-width:1080px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start}
+ .col{min-width:0;display:flex;flex-direction:column;gap:12px}
+ .col h3{margin:0;font-size:15px;color:#5a5a75;display:flex;align-items:center;gap:8px}
+ .grid{width:100%;display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+ /* ---- подложка стор-листингов: зелёная панель + водяной знак Google Play ---- */
+ .col.store{position:relative;overflow:hidden;border-radius:22px;padding:14px 14px 18px;
+   background:linear-gradient(165deg,#e4f7ec,#cfeedd 60%,#c3e8d4);box-shadow:inset 0 0 0 1.5px #9bd3b4, 0 8px 22px #2a8a5a18}
+ .col.store h3{color:#1f6b45;position:relative;z-index:1;flex-wrap:wrap}
+ .col.store h3 .gp{flex:none;filter:drop-shadow(0 1px 2px #0003)}
+ .col.store .grid{position:relative;z-index:1}
+ .col.store::after{content:"";position:absolute;inset:0;opacity:.12;pointer-events:none;
+   background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-34 -34 168 168'><path d='M12 6 L58 50 L12 94 Q8 92 8 86 L8 14 Q8 8 12 6Z' fill='%2300d7fe'/><path d='M12 6 L76 44 L58 50 Z' fill='%2300f076'/><path d='M12 94 L76 56 L58 50 Z' fill='%23ff3a44'/><path d='M76 44 L94 54 L94 46 Z M76 44 L58 50 L76 56 L94 46 Q96 48 96 50 Q96 52 94 54 Z' fill='%23ffd500'/></svg>") repeat 14px 44px/118px 118px}
+ .col.store .tile{border-top-color:#1f8f5a;background:#f6fcf8}
+ .store-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:#fff;background:#1f8f5a;
+   border-radius:999px;padding:3px 9px;letter-spacing:.3px}
+ /* ---- телефон: один столбец разделов, но плитки в два столбца ---- */
+ @media (max-width:860px){
+   .cols{grid-template-columns:minmax(0,1fr)}
+   .col.store{order:-1;padding:12px 10px 14px}
+   .col.store::after{background-size:88px 88px;background-position:8px 40px}
+   .grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+   .tile{padding:10px 10px 12px;border-radius:14px;gap:6px}
+   .tile .ico{width:52px;height:52px;border-radius:12px;font-size:28px}
+   .tile .ico img{width:52px!important;height:52px!important;border-radius:12px!important}
+   .tile .ico .ball{width:34px;height:34px}
+   .tile h2{font-size:14px;line-height:1.2}
+   .tile .d{font-size:11px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+   .row{flex-direction:column;gap:6px}
+   select{font-size:12px;padding:8px}
+   .go{padding:9px 12px;font-size:13px}
+   .hide-btn,.drag-btn{width:24px;height:24px;top:8px}
+   .hide-btn{right:8px} .drag-btn{right:38px}
+ }
+ .tile{position:relative;min-width:0;background:#fff;border-radius:18px;padding:14px 16px;box-shadow:0 8px 22px #4a5b8020;
+   display:flex;flex-direction:column;gap:8px;border-top:5px solid var(--c)}
+ .hide-btn{position:absolute;top:10px;right:10px;width:26px;height:26px;border:none;border-radius:50%;
+   background:#eef0f7;color:#9a9ab5;font-size:13px;line-height:1;cursor:pointer;display:flex;
+   align-items:center;justify-content:center;transition:all .15s;z-index:2}
+ .hide-btn:hover{background:#ffe0e0;color:#e04848}
+ .drag-btn{position:absolute;top:10px;right:44px;width:26px;height:26px;border:none;border-radius:50%;
+   background:#eef0f7;color:#9a9ab5;font-size:14px;line-height:1;cursor:grab;display:flex;
+   align-items:center;justify-content:center;z-index:2;touch-action:none;user-select:none}
+ .drag-btn:hover{background:#e2e6ff;color:#6f7bf0}
+ .tile.dragging{opacity:.92;transform:scale(1.02);box-shadow:0 18px 40px #4a5b8045;z-index:5;cursor:grabbing}
+ /* hidden-cards bar */
+ .hiddenbar{width:100%;max-width:760px;margin:-6px 0 20px;display:none;flex-direction:column;gap:8px}
+ .hiddenbar.on{display:flex}
+ .hb-head{font-size:13px;font-weight:600;color:#5a5a75;background:#ffffffcc;border:1px solid #dfe3ff;
+   border-radius:12px;padding:10px 13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+ .hb-list{display:none;flex-wrap:wrap;gap:8px}
+ .hiddenbar.open .hb-list{display:flex}
+ .chip{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e2e6f7;border-radius:12px;
+   padding:7px 8px 7px 12px;font-size:13px;font-weight:600;color:var(--ink)}
+ .chip button{font:inherit;font-size:12px;font-weight:800;color:#fff;background:#6f7bf0;border:none;
+   border-radius:9px;padding:6px 10px;cursor:pointer}
+ .chip button:active{transform:translateY(1px)}
+ .tile .ico{width:72px;height:72px;border-radius:16px;display:flex;align-items:center;justify-content:center;
+   font-size:38px;line-height:1;background:#f0f2ff;background:color-mix(in srgb,var(--c) 15%,#fff);
+   box-shadow:inset 0 0 0 1px #0000000d}
+ .tile .ico .ball{width:46px;height:46px;border-radius:50%;
+   background:radial-gradient(circle at 34% 30%,#eafff9 0%,#3dffd2 45%,#10b89a 100%);
+   box-shadow:0 3px 8px #10b89a55, inset 0 -4px 8px #0b8c7340}
+ .tile h2{margin:0;font-size:18px}
+ .tile .d{color:#7a7a95;font-size:12.5px;line-height:1.35;margin:0}
+ .row{display:flex;gap:8px;margin-top:4px}
+ select{flex:1;min-width:0;font:inherit;font-size:14px;font-weight:600;color:var(--ink);background:#f4f6ff;
+   border:2px solid #e2e6f7;border-radius:11px;padding:10px;appearance:none;cursor:pointer;
+   text-overflow:ellipsis}
+ .row{min-width:0}
+ .go{font:inherit;font-weight:800;color:#fff;border:none;border-radius:11px;padding:10px 16px;
+   cursor:pointer;background:var(--c);box-shadow:0 4px 12px #0002;white-space:nowrap}
+ .go:active{transform:translateY(1px)}
+ /* ---- distinct block: Playables (UA-креативы) ---- */
+ .playables{width:100%;max-width:760px;margin-top:34px;background:linear-gradient(160deg,#10243a,#1b3a2c);
+   border-radius:18px;padding:20px 20px 8px;box-shadow:0 10px 28px #0c1b2e40;color:#eaf3ee}
+ .playables h2{margin:0;font-size:18px;display:flex;align-items:center;gap:8px}
+ .playables .ph-sub{margin:4px 0 14px;font-size:12.5px;color:#9fc4b3}
+ .plist{list-style:none;margin:0;padding:0}
+ .plist li{display:flex;align-items:center;gap:12px;padding:12px 4px;border-top:1px solid #ffffff14}
+ .plist li:first-child{border-top:none}
+ .plist .pico{font-size:22px;line-height:1;flex:none}
+ .plist .pmeta{flex:1;min-width:0}
+ .plist .pname{font-size:15px;font-weight:700;color:#fff}
+ .plist .pdate{font-size:11.5px;color:#8fb8a6;margin-top:2px}
+ .plist .pgo{font:inherit;font-weight:800;font-size:13px;color:#10243a;background:#7ed957;border:none;
+   border-radius:10px;padding:9px 16px;cursor:pointer;white-space:nowrap;box-shadow:0 4px 12px #0003}
+ .plist .pgo:active{transform:translateY(1px)}
+</style></head><body>
+ <h1>🎮 Прототипы механик</h1>
+ <p class="sub">Выбери версию в списке и нажми «Открыть». Играется в браузере и на телефоне.<br>Порядок плиток можно менять: тяни за ⠿ в углу карточки.<br>Игры на белых карточках, стор-листинги на зелёной подложке со знаком Google Play.</p>
+ <div class="hiddenbar" id="hiddenbar"></div>
+ <div class="cols">
+  <div class="col"><h3>🎮 Игры</h3><div class="grid" id="grid"></div></div>
+  <div class="col store"><h3><svg class='gp' viewBox='0 0 100 100' width='26' height='26' aria-hidden='true'><path d='M12 6 L58 50 L12 94 Q8 92 8 86 L8 14 Q8 8 12 6Z' fill='#00d7fe'/><path d='M12 6 L76 44 L58 50 Z' fill='#00f076'/><path d='M12 94 L76 56 L58 50 Z' fill='#ff3a44'/><path d='M76 44 L94 54 L94 46 Z M76 44 L58 50 L76 56 L94 46 Q96 48 96 50 Q96 52 94 54 Z' fill='#ffd500'/></svg> Store listings · UI kit <span class="store-badge">Google Play / App Store</span></h3><div class="grid" id="grid2"></div></div>
+ </div>
+
+ <section class="playables">
+   <h2>🃏 Playables · UA-креативы</h2>
+   <p class="ph-sub">Готовые играбельные рекламные креативы (Meta / Google). Тапни «Открыть».</p>
+   <ul class="plist" id="plist"></ul>
+ </section>
+
+<script>
+const MECH = [
+ {key:'picturepop', ico:'<img src="picturepop/icon.png" alt="" style="width:72px;height:72px;border-radius:16px;display:block;object-fit:cover">', name:'Picture Pop — собери картинки из карт', c:'#FF5C8A',
+  d:'Карточный пасьянс: картинки разрезаны на 2-4 карты, меняешь карты местами, пока каждая картинка не соберётся целиком за лимит ходов.',
+  v:[['picturepop/v2.html','v2 · игра снова открывается: исправлено зависание при смене недели в лиге'],['picturepop/v1.html','v1 · под стандарт хаба: рамка 9:16, ?level=N, лоадер с иконкой, все 60 уровней открыты (тап по названию главы или дорожке шагов открывает окно Levels), прогресс идёт вперёд с любого уровня; иконка = кроп обложки первой главы (заглушка до иконки от ChatGPT)']]},
+ {key:'gooknot', ico:'<img src="gooknot/icon.png" alt="" style="width:72px;height:72px;border-radius:16px;display:block;object-fit:cover">', name:'Goo Knot — доставь заряд батареи роботу', c:'#5fc92a',
+  d:'Тапами цепляешь и отпускаешь верёвки на болтах, чтобы качающийся заряд батареи долетел до робота Ниба за лимит ходов.',
+  v:[['gooknot/v7.html','🆕 v7 «Palette» · разные цвета у болтов, цели, заряда и верёвок (5 палитр по 6 уровней: фон, болты, цель, заряд, верёвки сведены в гармоничные казуальные наборы); индикатор зацепа на болте = цвет верёвки; геймплей v6'],
+     ['gooknot/v6.html','v6 «Clean» · другой геймплей (Goo Knot Clean): один экран без меты, тонкий HUD, 10 ручных + 20 сгенерированных уровней (всего 30 на home), подсказки, SKIP LEVEL / Claim x3 / Undo за «рекламу» (заглушки), монеты; под стандарт хаба: home с сеткой уровней, кнопка Home в HUD, ?level=n'],
+     ['gooknot/v5.html','v5 «Иконка» · иконка игры (ChatGPT: робот Ниб и его друг-заряд батареи, оба счастливые, простой голубой фон) на плитке, в лоадере и favicon; полная игра: 4 мастерские × 20 уровней, бустеры, магазин, темы'],
+     ['gooknot/v4.html','v4 «Добавление механики: алмазы» · на пути заряда появляются алмазы, за уровень собираются до трёх; прогресс мастерской считается по алмазам'],
+     ['gooknot/v3.html','v3 «Добавление механики: острые препятствия» · пилы и лезвия режут верёвки, заряд лопается (SPLAT); бустер Shield защищает от одного удара'],
+     ['gooknot/v2.html','v2 «10 уровней» · расширение до 10 уровней: больше болтов, уровни в несколько порций, обучение подсказками Ниба'],
+     ['gooknot/v1.html','v1 «5 уровней» · база: заряд батареи на верёвках между болтами, тап по болту цепляет/отпускает верёвку, цель — доставить заряд роботу Нибу за лимит ходов; 5 уровней']]},
+ {key:'bookshelf', ico:'<img src="bookshelf/icon.png" alt="" style="width:72px;height:72px;border-radius:16px;display:block;object-fit:cover">', name:'Bookshelf: Art Puzzle — картина из корешков книг', c:'#8c6039',
+  d:'Меняешь местами книги с кусками картины на корешках, пока шкаф не соберётся в Мону Лизу, Большую волну или Звёздную ночь.',
+  v:[['bookshelf/v12/index.html','v12 · уровни 1-50 волнами по десяткам (Hard в конце десятки, Super Hard на 40, после пика меньше полок); ходов на 50% больше минимума, на 1-5 ещё +2; механики как в Unity (звёзды 31, скрытые 41, ленты 51, замки 61, тикающие 71, ключ 80); Difficulty Curve в настройках с таблицей по десяткам; 350 картин в новом порядке; UI, магазин, бустеры и Water Quest из шаблона'],['bookshelf/v11.html','⭐ v11 · v10 с новой кривой: пики на 3/6/9 уровне десятки, после них лёгкие 4/7/10 (+3 хода, без препятствий); поздние картины переставлены, чтобы палитры не повторялись подряд; график кривой в Settings'],['bookshelf/v10.html','⭐ v10 · основная: 300 уровней и картин; высокие книги; каждая книга на своём месте сразу фиксируется золотом; Minimalistic UI в настройках'],['bookshelf/v8-2.html','v8.2 «Events» · v8.1 + три события: Lava Quest (5 побед подряд), Shield Tournament (24 ч, щиты за победы), Balloon Ride (забрать монеты или лететь дальше)'],['bookshelf/v8-1.html','v8.1 «Library Backgrounds» · v8, но фон = 8 залов библиотек, меняется каждые 10 уровней'],['bookshelf/v8.html','v8 «Tall Books» · v7 с высокими ровными книгами: над ними меньше пустоты, куски картины не прячутся'],['bookshelf/v7-1.html','🧪 v7.1 «Tall Books» · тест: у каждой книги цветной «колпак» корешка своей высоты, картина чуть меньше'],['bookshelf/v7-3.html','v7.3 «Minimal UI» · v7.2 в строгом интерфейсе: тёмный орех, латунь, текстовые кнопки, тонкие иконки'],['bookshelf/v7-2.html','v7.2 «Difficulty Curve» · кривая сложности автора: типы уровней от Easy до Peak, лимит ходов по симулятору, механики по одной (звёзды 7, скрытые 14, замки 16, ключ 22, ленты 31, тикающие 41); на первых уровнях самые читаемые картины'],['bookshelf/v7.html','v7 «Collections» · у каждой десятки своя комната и шкаф; Golden Frame (книга у края фиксируется); звёздные, тикающие и ключ-книги; +3 хода после двух неудач; повтор картин из Gallery на 4 сложностях'],
+     ['bookshelf/v6.html','v6 «Bottom Nav» · Daily, Gallery, Shop, League в нижней панели; у картины кнопки событий и покупок (заглушки)'],
+     ['bookshelf/v5.html','v5 «Frame Pins + Replay» · книга у боковой стенки прибивается гвоздиком, как край пазла; переигровка картины из Gallery на 4 размерах'],
+     ['bookshelf/v4.html','v4 «Horizontal Glue» · склейка книг только по горизонтали'],
+     ['bookshelf/v3.html','v3 «Meta» · полная мета: жизни, монеты, бустеры, Daily/Gallery/Shop/League, замки, ленты, скрытые книги'],
+     ['bookshelf/v2.html','v2 «Swap & Glue» · книги меняются местами, подходящие соседи склеиваются в блок'],
+     ['bookshelf/v1.html','v1 «Initial MVP» · первая версия: вставка книги сдвигает ряд, подсказка, превью по удержанию']]},
+ {key:'wordblock', ico:'<img src="wordblock/icon.png" alt="" style="width:72px;height:72px;border-radius:16px;display:block;object-fit:cover">', name:'Wordblock — блок-пазл + кроссворд', c:'#6a4bff',
+  d:'Ставишь бруски на поле 8×8 и собираешь линии, а буквы из разбитых брусков сами летят в кроссворд.',
+  v:[['wordblock/v5.html','🆕 v5 · кроссворд стал запасным шансом: во время игры слова не вписываются, кроссворд только для просмотра и заполняется буквами из брусков; на экране проигрыша новая кнопка «Solve the Crossword»: оставшиеся слова вписываются по очереди, одна ошибка закрывает экран и возвращает к бустеру и рекламе (попытка одна на уровень), все слова верно = уровень пройден'],
+     ['wordblock/v4.html','v4 «Wordblock» · английский язык и 185 новых слов под англоязычную аудиторию; сочный 3D-интерфейс, глянцевые бруски 8 цветов; картины нарисованы мазками, без слов; экран проигрыша: бустер за монеты (взрыв 3 рядов или +5 ходов) или реклама, крестик ведёт на «Level Failed» с рестартом; монеты; защита от зависания после угаданного слова; все 6 миров и 39 уровней открыты'],
+     ['wordblock/v3.html','v3 «Словоблок» · главное меню и режимы: Путешествие, Задание дня, Бесконечный, Дзен; 6 тем и 39 уровней с растущей сложностью; за уровень открывается фрагмент картины, сложенной из слов темы, галерея картин; плавные анимации; все уровни открыты'],
+     ['wordblock/v2.html','v2 «Словоблок» · мобильная версия на один экран: своя деревянная клавиатура для слов, молоток и новые бруски, подсказка-буква за разбитые ряды, словарь с фактами о словах, бесконечный режим'],
+     ['wordblock/v1.html','v1 «Словоблок» · первый прототип: блок-пазл 8×8 в тёплом дереве, буквы из разбитых брусков летят в кроссворд, угадывание слова раньше времени, ASMR-звук; 5 уровней']]},
+ {key:'musclemap', ico:'💪', name:'Muscle Map / Body Layers — найди часть тела', c:'#e0534a',
+  d:'Drag the given muscle onto the silhouette where it lives: three tries per muscle, 5 levels, 23 muscles.',
+  v:[['musclemap/v7.html','🆕 v7 · слой сосудов убран (обрывки вместо сети, перекос иерархии part-of, только левая сторона, не тот порядок слоёв, нет контраста; разбор proto-muscle-map/review-vessels.md): мышцы → органы → кости, 9 уровней'],
+     ['musclemap/v6.html','v6 · кости подписаны анатомической латынью (Sternum, Os coxae, Vertebra lumbalis V…), русское имя мелко; иконка от ChatGPT'],
+     ['musclemap/v5.html','v5 · захваченная часть видна сразу и поверх всего экрана (отдельный канвас над HUD и карточкой), в натуральную величину; над телом прилипает к поверхности, отпустить мимо тела = отмена'],
+     ['musclemap/v4.html','v4 · Слои тела по-русски: часть перетаскивают с карточки на тело (3D-призрак под пальцем), промах снова снимает слой, плюс бустер 🩻 снимает слой без траты попытки (3 на уровень), кожи нет'],
+     ['musclemap/v3.html','v3 · Body Layers без кожи: стартовый вид сосуды + мышцы (органы и кости под ними полупрозрачно), промахи слои не снимают, снять слой = бустер 🩻 (3 на уровень, 1 бустер = 1 слой, снятое остаётся до конца уровня)'],
+     ['musclemap/v2.html','v2 · Body Layers: 3D-тело (BodyParts3D + BodyExplorer, 7 МБ Draco) слоями кожа → сосуды → мышцы → органы → кости; цель = кость/мышца/орган/сосуд, тап по телу, 6 попыток, промах снимает слой, слои над целью полупрозрачны; 10 уровней (кости ×3, мышцы ×3, органы ×2, сосуды, экзамен)'],
+     ['musclemap/v1.html','v1 · 2D-силуэт: 5 уровней перед / спина / руки-бока / мелкие / экзамен; 3 попытки, drag формы мышцы']]},
+
+ {key:'bloombounce', ico:'<img src="bloombounce/icon.png" alt="" style="width:72px;height:72px;border-radius:16px;display:block;object-fit:cover">', name:'Gem Bounce', c:'#6c55d9',
+  d:'Six ricochet levels with angle-preserving portals, curved mirrors, hidden obstacles and finite ammo (<a href="bloombounce/level-review-v12.html">level diagrams</a>).',
+  v:[['bloombounce/v12.html','v12 · Ricochet redesign · Portal angles'],['bloombounce/v11.html','v11 · Five level families · Hidden obstacles'],['bloombounce/v10.html','v10 · Gem Shooter · Rename + full level review'],['bloombounce/v9.html','v9 · Candy Jewel · 30 levels + 2 bonuses + Booster Lab · Hold to fire'],['bloombounce/v3.html','v3 · Shatter · the picture starts built, bounce gems to smash every tile · 12 levels'],['bloombounce/v2.html','v2 · Diamond collection · 12 levels · Breakable blocks'],['bloombounce/v1.html','v1 · Ricochet garden · 4 levels']]},
+
+ {key:'cutrope-plinko', ico:'<img src="cutrope-plinko/icon.png" alt="" style="width:72px;height:72px;border-radius:16px;display:block;object-fit:cover">', name:'Cut the rope + plinko', c:'#427f84',
+  d:'Place your pelican, cut the fish free and bounce through eight tall seaside levels with tethers, bubbles and air boosts.',
+  v:[['cutrope-plinko/v3.html','V3 · Plinko · Bubbles & air boosts'],['cutrope-plinko/v2.html','V2 · Side & bottom tethers · Reactive pelican'],['cutrope-plinko/v1.html','V1 · Original pelican & fish · Rocks & ropes']]},
+ {key:'bubbleanimals', ico:'<img src="bubbleanimals/icon.png" alt="" style="width:72px;height:72px;border-radius:16px;display:block;object-fit:cover">', name:'Зверята в пузырях', c:'#238e9a',
+  d:'Собираешь зверят по три в ёмкости, следя за пятью запасными ячейками, на 12 уровнях.',
+  v:[['bubbleanimals/v2.html','v2 · Крупные пузыри и зверята'],['bubbleanimals/v1.html','v1 · Зверята в пузырях · 12 уровней']]},
+ {key:'sandcastle', ico:'<img src="sandcastle/icon.png" alt="" style="width:72px;height:72px;border-radius:16px;display:block;object-fit:cover">', name:'Sand Castle', c:'#589987',
+  d:'Original challenges vs the easy opening: v9 keeps the harder levels, wordless controls and free color pins, v10 is the simplified variant.',
+  v:[['sandcastle/v9.html','🆕 v9 · Before difficulty reduction · Wordless UI · Free color pins'],
+     ['sandcastle/v10.html','v10 · Easy opening · 4–10 pieces · No whirlpools'],
+     ['sandcastle/v8.html','v8 · Challenging levels · Rope pins · Full-edge taps'],
+     ['sandcastle/v7.html','v7 · Simultaneous free colors · Pin-based puzzles'],
+     ['sandcastle/v6.html','v6 · Selected color only · Optional pins · Side arrows'],
+     ['sandcastle/v5.html','v5 · Selected color only · Automatic walkthrough'],
+     ['sandcastle/v4.html','v4 · Selected color only · Guided moves and recovery'],
+     ['sandcastle/v3.html','v3 · Original harder mazes · Early step-by-step hints'],
+     ['sandcastle/v2.html','v2 · Original tilt mazes · Move limits and whirlpools'],
+     ['sandcastle/v1.html','v1 · Original tap-away puzzle']]},
+ {key:'justpull', ico:'<img src="justpull/icon.png" alt="" style="width:72px;height:72px;border-radius:16px;display:block;object-fit:cover">', name:'Just Pull', c:'#bca1e7',
+  d:'Follow the arrows through fourteen picture puzzles with one light-bulb hint, in Dark and Light themes.',
+  v:[['justpull/v6.html','\ud83c\udd95 v6 - Dark - \u0443\u0442\u0451\u043d\u043e\u043a \u0432 \u0441\u0435\u043c\u0438\u0446\u0432\u0435\u0442\u043d\u043e\u0439 \u043f\u0430\u043b\u0438\u0442\u0440\u0435 \u043f\u0435\u0440\u0432\u043e\u0439 \u0432\u0435\u0440\u0441\u0438\u0438 (30 \u0434\u0435\u0442\u0430\u043b\u0435\u0439); \u0444\u043e\u043d \u0438\u0437 \u043f\u0430\u043b\u0438\u0442\u0440\u044b \u043d\u0430\u0448\u0438\u0445 \u043f\u043b\u0435\u0439\u0431\u043b\u043e\u0432 (#1c2330 \u0441\u043e \u0441\u0432\u0435\u0447\u0435\u043d\u0438\u0435\u043c #3b4a6a) \u0432\u043c\u0435\u0441\u0442\u043e \u043f\u043e\u0447\u0442\u0438 \u0447\u0451\u0440\u043d\u043e\u0433\u043e; \u0441\u043e\u0441\u0435\u0434\u043d\u0438\u0435 \u0434\u0435\u0442\u0430\u043b\u0438 \u043d\u0438\u043a\u043e\u0433\u0434\u0430 \u043d\u0435 \u0441\u043e\u0432\u043f\u0430\u0434\u0430\u044e\u0442 \u043f\u043e \u0446\u0432\u0435\u0442\u0443, \u043a\u0440\u043e\u043c\u043a\u0430 \u0441\u043f\u043b\u043e\u0448\u043d\u0430\u044f; 14 \u0443\u0440\u043e\u0432\u043d\u0435\u0439'],
+     ['justpull/v7.html','v7 - Light - Original duck + vivid picture colors - 14 levels'],
+     ['justpull/v5.html','v5 - Dark - Original UI restored - 14 levels'],
+     ['justpull/v4.html','v4 - Light - Reference UI - 14 levels'],
+     ['justpull/v3.html','v3 - Dark - Reference UI - 11 levels (history)'],
+     ['justpull/v2.html','v2 - Free directions - No arrows (history)'],
+     ['justpull/v1.html','v1 - Original arrows - 6 levels (history)']]},
+ {key:'slideblocks', ico:'🐱', name:'Slide Match: Cats & Blocks', c:'#316ee3',
+  d:'Slide blocks. Match colors. Clear the board.',
+  v:[['slideblocks/v6.html','🆕 v6 · Boosters (Hint · Magnet · Undo), chest with keys, stars per level'],
+     ['slideblocks/v5.html','v5 · Jelly cats · pale-blue board · new icon'],
+     ['slideblocks/v4.html','v4 · Rectangular cats (Codex) · 10 levels'],
+     ['slideblocks/v3.html','v3 · Blocks · 10 levels · Trap puzzles'],
+     ['slideblocks/v2.html','v2 · English · Cleaner game screen'],
+     ['slideblocks/v1.html','v1 · Original prototype']]},
+ {key:'pastasort', ico:'<img src="pastasort/icon.png" alt="" style="width:72px;height:72px;border-radius:16px;display:block;object-fit:cover">', name:'Color Pasta Sort — найди приправу в куче пасты', c:'#e8632b',
+  d:'Разбираешь кучу пасты по банкам своего цвета, снимая только свободные куски, пока не откопаешь спрятанные приправы.',
+  v:[['pastasort/v3.html','🆕 v3 · цель = откопать приправу: под кучей спрятаны звёздчатый анис / чили / чеснок / имбирь + корица / печенье с предсказанием + анис (панель FIND сверху, победа когда всё найдено, разбирать всю кучу не нужно); только короткая паста (penne, rigatoni, farfalle, fusilli, рожки), мельче и с тёмной обводкой, тарелка меньше, куча плотнее к центру; уровни пересобраны (случайный бот 100→67→40→28→11 %, думающий 100/100/100/88/37 %)'],
+     ['pastasort/v2.html','v2 · арт ChatGPT Image: 6 настоящих видов пасты (penne, rigatoni, farfalle, fusilli, spaghetti, рожки) × 5 цветов, глянцевый 3D; тарелка, стеклянные банки с цветными крышками и деревянный лоток картинками; паста в банках лежит горкой; куча шире по тарелке, на первых уровнях куски крупнее; уровни пересобраны (случайный бот 100→74→49→41→15 %)'],
+     ['pastasort/v1.html','v1 · по спеке «Color Pasta Sort» (финальная заметка: куча слоями вместо Ball Sort): 5 уровней — 2 цвета penne → 3 цвета + лоток 2 → spaghetti (cap 4) → fusilli, 4 цвета → спайк 5 цветов, все формы, лоток 2; на столе 2 банки, очередь NEXT, ждущие куски сами перелетают в новую банку; тап = авто-раскладка, drag = свой выбор с подсветкой; UNDO без лимита; уровни: генератор с солвером, случайный бот 100→81→56→34→8 %, думающий 100/100/94/100/50 %; proto-kit, иконка-заглушка']]},
+ {key:'sandcastles', ico:'🏰', name:'Sand Castles — песок по трубам в замок', c:'#f0a441',
+  d:'Поворачиваешь жёлоба тапом и ведёшь песок из ведра в части замка, пока не заполнишь хотя бы 70%.',
+  v:[['sandcastles/v2.html','🆕 v2 · старт по готовности: кнопка START, до неё трубы заблокированы, песок идёт сразу после нажатия; настоящие трубы: глянцевые пластиковые спрайты ChatGPT (прямая синяя, угол зелёный, тройник красный), стыкуются фланцами; ведро, камень и части замка тоже спрайты ChatGPT; боты точный 5×100 %, медленный случайный 100/100/99/100/91'],
+     ['sandcastles/v1.html','v1 · по спеке «Sand Castles»: 5 уровней (два угла → первая башня → две цели с развилкой → первая волна → крепость из 4 частей), 4×4/5×5, Straight/Corner/T, камни; поток = порции, затор перед полной целью; звёзды 70/90%, проигрыш <70% с L3; волна рушит недостроенное (L4-L5); боты: точный 100%, медленный по порядку 100/100/100/100/93%, медленный случайный 100/100/100/100/78%; proto-kit, иконка-заглушка (ждёт арт)']]},
+ {key:'penguinstandoff', ico:'<img src="penguinstandoff/icon.png" alt="" style="width:72px;height:72px;border-radius:16px;display:block;object-fit:cover">', name:'Goose Standoff — слепая дуэль на льду', c:'#2f7fd6',
+  d:'Вслепую ставишь пингвина и линию огня на гекс-поле, все раскрываются и стреляют по очереди, поле сжимается — побеждает последний выживший.',
+  v:[['penguinstandoff/v2.html','🆕 v2 Гуси · персонажи из арта ChatGPT вместо нарисованных кодом пингвинов: белый гусь — игрок, жёлтые — соперники (различаются номером очереди выстрела); направление выстрела показывает разворот и наклон корпуса, пуля вылетает из дула; плитки поля лежат в один уровень (спрайт кита клипуется по верхней грани, 3D-бочок убран, соседи не наезжают); иконка из арта'],
+     ['penguinstandoff/v1.html','v1 · пингвины, нарисованные кодом; 10 уровней = формы полей Hexa Arrows (Hex 19 → Giant Hex 61), соперников 2→5']]},
+ {key:'ui-atlas', col:'store', ico:'🧩', name:'Puzzle UI Atlas — библиотека UI-элементов для прототипов', c:'#4ee7d1',
+  d:'Библиотека готовых UI-элементов и правил UX, из которой берём интерфейс для новых прототипов (один файл 44 МБ, открывается не сразу).',
+  v:[['ui-atlas/v5.html','🆕 v5 · «Архив экранов» (8 композиций) тоже ушёл в пункт «Старый UI · плохие референсы» внизу меню: один раздел для всего старого (32 компонента + таблица стратегий магазинов + 8 экранов); рабочая библиотека = Новые изображения и Premium UI Assets'],
+     ['ui-atlas/v5.html','v4 · (с хаба снят, лимит Surge; архив ui/ui-atlas/v4.html) · «Старый UI-набор» и «Магазины и офферы» слиты в один пункт внизу меню'],
+     ['ui-atlas/v5.html','v3 · (с хаба снят; архив ui/ui-atlas/v3.html) · исходный набор: 207 PNG + 4 новых референса, все разделы по отдельности']]},
+ {key:'aso-bookshelf', col:'store', ico:'<img src="aso/bookshelf/icon.png" alt="" style="width:72px;height:72px;border-radius:16px;display:block;object-fit:cover">', name:'Store Listing — Bookshelf: Art Puzzle', c:'#8c6039',
+  d:'Стор-листинг App Store + Google Play: 6 кадров живой игры bookshelf v2 с подписями, рука-курсор и баннер 1024×500 (тексты: aso/bookshelf/store_texts.md).',
+  v:[['aso/bookshelf/index.html','🆕 v1 · DRAG THE BOOKS / MATCHING SPINES LOCK TOGETHER / HOLD TO PREVIEW / ARTWORK RESTORED / BUILD YOUR OWN MUSEUM / SIX MASTERPIECES; GET/Install запускают bookshelf/v2.html']]},
+ {key:'aso-gemshooter', col:'store', ico:'<img src="aso/gem-shooter/icon.png" alt="" style="width:72px;height:72px;border-radius:16px;display:block;object-fit:cover">', name:'Store Listing — Gem Bounce', c:'#7951ce',
+  d:'Стор-листинг App Store + Google Play: 6 кадров с разными механиками (дракон, порталы, меню v10, Booster Lab, облако и зеркала) и кэпшенами внизу.',
+  v:[['aso/gem-shooter/index.html','v4 · Gem Bounce · новое описание'],['aso/gem-shooter/v3/index.html','v3 · 6 скриншотов · Новый фон меню'],['aso/gem-shooter/v2/index.html','v2 · Кадры 1, 3, 4, 5 по выбранным скриншотам'],['aso/gem-shooter/v1/index.html','v1 · Первый набор · 8 screenshots · Bottom captions']]},
+ {key:'aso-slideblocks', col:'store', ico:'<img src="aso/slide-blocks/icon.jpg" alt="" style="width:72px;height:72px;border-radius:16px;display:block;object-fit:cover">', name:'Store Listing — Slide Match: Cats', c:'#316ee3',
+  d:'Стор-листинг App Store + Google Play: 8 кадров живого геймплея на кошачьей сборке, тексты с ключами и иконка ChatGPT (GET/Install запускают slideblocks/v6.html).',
+  v:[['aso/slide-blocks/index.html',"🆕 v2 · восемь кадров на кошачьей сборке v6: SWIPE TO SLIDE, SAME COLOR? POP!, THREE BOOSTERS, MAGNET PULLS A PAIR, KEYS OPEN CHESTS, 10 LEVELS 30 STARS, EVERY BOARD IS NEW, CLEAR IT IN 3 STARS; в кадре живые бустеры, сундук с ключами и звёзды из самой игры"],
+     ['aso/slide-blocks/v1/index.html',"v1 · семь кадров на кубиках v3: SWIPE TO SLIDE, SAME COLOR? POP!, PLAN YOUR PATH, 10 LEVELS TO CLEAR, STUCK? USE HINTS, NO RUSH JUST THINK, BOARD CLEARED!"]]},
+ {key:'aso-justpull', col:'store', ico:'<img src="aso/just-pull/icon.jpg" alt="" style="width:72px;height:72px;border-radius:16px;display:block;object-fit:cover">', name:'Store Listing — Just Pull', c:'#7a5fd0',
+  d:'Стор-листинг App Store + Google Play: 7 скриншотов из реальной игры, иконка дизайнера и тексты с ключевыми словами (GET/Install открывают игру).',
+  v:[['aso/just-pull/index.html',"🆕 v7 · семь кадров, все живой геймплей (кадр с иконкой и Play Now снят); ассеты дизайнера: иконка-утёнок, feature graphic внизу листинга; кадры по разбору 56 топовых паззлов — в кадре весь интерфейс игры (уровень, сердца, счётчик, лампочка), а не голое поле; фон тёмной темы из палитры наших плейблов (#1c2330 со свечением #3b4a6a)"]]},
+ {key:'aso-sizematch', col:'store', ico:'<img src="sizematch/icon.png" alt="" style="width:72px;height:72px;border-radius:16px;display:block;object-fit:cover">', name:'Store Listing — Size Match', c:'#ff8a5c',
+  d:'Стор-листинг App Store + Google Play: 8 скриншотов по уровням из роликов с подписями и бейджами (GET/Install запускают игру v12).',
+  v:[['aso/size-match/index.html','🆕 v4 · без видео-превью: первым кадром уровень, с которого начинается рекламный ролик (Нептун → Африка), всего 9 кадров; v3 = кадры и превью на v12 (узнаваемые силуэты персонажей, чистые края); v2 = подписи внутри плашки; v1 = первый набор с UGC-превью']]},
+ {key:'sizematch', ico:'<img src="sizematch/icon.png" alt="" style="width:72px;height:72px;border-radius:16px;display:block;object-fit:cover">', name:'Size Match — угадай масштаб', c:'#c9553a',
+  d:'Слайдером угадываешь, во сколько раз один объект больше другого (кит против Титаника), и получаешь оценку за точность.',
+  v:[['sizematch/v49.html','🆕 v49 · МНОЖИТЕЛЬ ТОЛЬКО НА ЗОЛОТО (2026-10-22): v47, где очки пары = проценты точности (цели как в v48), а огонь умножает монеты: монеты пары = проценты × бонус / 10, строка GOLD +N 🪙 в окне результата, сумма выдаётся на победе (как раньше, только за первое прохождение уровня). Шаг 3 плана тестов сложности.'],['sizematch/v45.html','⭐ v45 · ОБНОВЛЁННЫЙ КОНТЕНТ · 300 объектов, 150 пар без повторов, затем новые пары с ещё не сравнивавшимися партнёрами · ОЧКИ И МНОЖИТЕЛЬ (переделка 2026-10-09 по заметкам встречи; прежняя v45 «простой уровень» со звёздами = история в proto-size-match/v45-stars): звёзд нет, пара даёт проценты точности (0-100), уровень = цель по очкам + ходы, волновая кривая EASY / MEDIUM / HARD / EXTRA HARD на 50 уровней: HARD есть в любых 6 подряд, EXTRA HARD — в любых 10; после пика сложность снижается и следующая волна немного растёт (L1 6 ходов / 360, L6 8 / 660, L10 9 / 860, L11 6 / 400); сцена сравнения в два экрана: YOUR CHOICE (объекты съезжаются, нижний в размере догадки, вокруг него появляется цветной контур: зелёный ≥75 %, оранжевый ≥40 %, красный) → REALITY (контур остаётся, объект едет в свой настоящий рост); попап результата по референсу «Glossy Amazing Score Reward Popup»: стекло с голубой кромкой, лучи, искры, пузырьковые буквы 8 градаций BULLSEYE (≥99, +1 ход) / AMAZING / GREAT / GOOD / ALMOST / CLOSE / FAR OFF / MISSED, счёт N/100 набегает, строка «🔥 FLAME BONUS +N%», крупное +N pts, при ≥99 % «TOP 0.01% OF PLAYERS», Tap to continue; справа на поле огненная полоска бонуса +50 % / +100 % / +200 % (без «×», оно занято слайдером; жёлтый → красный, огонёк сверху): полоска скрыта, пока ответы не дают прибавки (первая пара без бонуса); первый ответ ALMOST и лучше показывает её и заполняет ровно на прыжок по точности (правка 2026-10-16), дальше тает со временем (75 с от полной до пустой), прыгает по слову ответа (GREAT и выше +35 %, GOOD +20 %, ALMOST +8 %, CLOSE стоит, FAR OFF −30 %, MISSED = сброс); бустеры INFO (одна лампа с «i», 1-й тап = размер случайного объекта ярко-золотой плашкой с анимацией, 2-й = второго), SWAP (заменить верхний или нижний объект на новый), JOKER (полупрозрачная стенка диапазона выше и ниже слайдера); открываются на уровнях 1-2-3 с туториалом: карточка над бустерами + рука-ассет hand_A, бустер в туториале бесплатный (gif применения появятся после одобрения); BULLSEYE (≥99 %) = +1 ход; перед первым уровнем интро HOW TO PLAY (первая пара картинками, ходы и цель); HUD: слева MOVES, справа шестерёнка → окно настроек по составу реплики v44 (Sound / Music / Vibration, Language, Restart, Main Menu, Privacy Policy, Restore purchases, User Agreement, Privacy Options, Ids + Copy); ползунок меньше и цельный; все анимации и переходы медленнее на 25 %; уровень = цель по звёздам + ходы из прежней v45 ушёл'],['sizematch/content-atlas/index.html','🧭 Атлас · актуальный порядок · 300 пар / 600 объектов']]},
+ {key:'sandpour', ico:'🪣', name:'Sand Pour — кубики песка в наклонном баке', c:'#6b63c9',
+  d:'Тап по кубику — песок стекает по наклонному баку в приёмник и дальше в чашки своего цвета; переполнил приёмник — проигрыш.',
+  v:[['sandpour/v5.html','🆕 v5 · + уровни 6-10 по формам бака из референс-ролика: «Video Tank» (полоса скрытых «?» + блок, как в видео), лестница, крест, кольцо с островом, большой бак 3+4×4 (32 кубика, 2 бомбы); карта уровней в два ряда; ёмкость бака 4/3/3/2/2; оракул решает все, наивный бот 100/100/99/100/78%'],
+     ['sandpour/v4.html','🆕 v4 «Liquid Pour» · приёмник стал баком с ёмкостью: чужая жидкость заполняет его цветными слоями, процент = заполнение бака (белый пусто, жёлтый частично, оранжевый с пульсом 100%, красный переполнение); 1 кубик = 25% (L1-L4) или 33% (L5); переполнение или «100% и подходящего цвета нет» = проигрыш; уровни перекалиброваны: L3 24 кубика/6 цветов, L4-L5 35 кубиков/7 цветов/3 бомбы; боты naive/blind 100/100, 100/100, 99/100, 82/92, 62/98, оракул 5/5'],
+     ['sandpour/v3.html','v3 «Liquid Pour» · без прогресс-бара: проценты в приёмнике окрашены по местам ожидания (белый = пусто, жёлтый = есть ожидающие, оранжевый с пульсом = все места заняты, красный = переполнение); жидкость течёт в 2 раза медленнее (кубик сливается ~2.2 с вместо 1.6 с)'],
+     ['sandpour/v2.html','v2 «Liquid Pour» · вместо песка жидкость: кубики-желейки растекаются, жидкость собирается лужей у узкой горловины и льётся в стаканы с волнистой поверхностью; водная палитра; логика и уровни те же'],
+     ['sandpour/v1.html','v1 · песок: клеточная симуляция 168×171 зёрен, наклон 40°, скольжение по стенкам к горловине; home + 5 уровней (9→24 кубиков, 3→6 цветов, скрытые «?» 0→16, бомбы 0→2, мест ожидания 2→0); оракул-солвер 5/5, наивный бот 100/100/74/58/35%']]},
+ {key:'mazesigns', ico:'🚧', name:'Maze Signs — знаки выводят машинку из лабиринта', c:'#1259c9',
+  d:'Машинка едет по лабиринту-городу сама: расставляешь дорожные знаки на развилках и выводишь её к выходу, пока есть топливо.',
+  v:[['mazesigns/v5.html','🆕 v5 «Boosters» · лоток поднят выше, под ним ряд из трёх бустеров у нижнего края: 🔄 Reroll (новая тройка знаков), 🧹 Eraser (режим: тап по знаку на поле убирает его, кнопка и знаки пульсируют), ⛽ +3 fuel (канистра); по 1 использованию на уровень, счётчик-бейдж на кнопке, гаснут после конца уровня; проверено реальными кликами по CDP, оракул 4/4 на всех уровнях'],
+     ['mazesigns/v4-3.html','v4-3 · на обучении лоток всегда из 3 карт: нужные знаки с подсвеченными целями-призраками, лишние паркуются на любой свободный перекрёсток вне маршрута (боты 6/6)'],
+     ['mazesigns/v4-2.html','v4-2 · фикс перетаскивания: в v4 знаки в лотке стали <img>, браузер запускал системный drag картинки и отменял игровой (работал только тап-тап); теперь img без drag и без pointer-events, точка сброса = центр призрака над пальцем, радиус захвата шире'],
+     ['mazesigns/v4.html','v4 «Toy Town» · арт из ChatGPT-листа (art/sprites, нарезка rembg): дома и парки 3D-плитками с тротуаром, улицы 44 px / кварталы 112 px как в мокапе, красная машинка со стрелкой на крыше, знаки на столбиках (в т.ч. восьмиугольный STOP), шлагбаумы поперёк улиц, клетчатая лента EXIT с флагом, колонка ⛽ с бейджем +N, светящееся кольцо под машиной; сегментный бак топлива, тёмно-синие плашки HUD, лоток-панель; механика = v3 (обучение, STOP, заправка), приёмка оракул 8/8, 8/8, 8/8, 7/8, 8/8'],
+     ['mazesigns/v3.html','v3 «Driving School» · L1 = обучение (лоток даёт ровно нужный знак, цель подсвечена призраком, подсказки, ставить можно только на цель); белая стрелка курса на крыше + жёлтый указатель перед машиной; знак STOP (красный восьмиугольник): ставится на любой перекрёсток, в т.ч. поверх стоящего знака (заменяет его), машина на нём останавливается и обрывает ошибочную цепочку; заправка ⛽ на L3-L5: топливо = кратчайший маршрут минус 1 квартал, крюк через колонку даёт +5…+7; превью маршрута оранжевое с ⛽, если топлива не хватит; лимиты от PLAY-бота (оракул 8/8, 8/8, 8/8, 23/24, 8/8; случайный бот 6/6 на обучении, 0/6 дальше)'],
+     ['mazesigns/v2.html','v2 «City Grid» · дома-квадраты и сетка перекрёстков (16→29), часть улиц перекрыта шлагбаумами; машина СТОИТ и едет только по знаку из рук: знак под ней выполняется и исчезает, знаки можно ставить заранее на любые перекрёстки — проезжает цепочку; 5 знаков относительно курса: прямо (зелёный), налево/направо (синие), разворот (оранжевый), прямо ×2 (фиолетовый); манёвр в дом = авария; превью маршрута при наведении; топливо в кварталах от PLAY-бота (оракул 5/5, случайный бот 0/6)'],
+     ['mazesigns/v1.html','v1 · home + 5 уровней: лабиринт 7×7→7×11 с петлями (≥2 маршрута до выхода), скорость 1.15→1.8 клеток/с, лоток 3 знаков (2→1 гарантированно полезных), топливо от PLAY-бота (оракул 8/8 на всех уровнях, случайный бот проигрывает на L3-L4); drag и tap-tap; PLAY-проверка в браузере']]},
+ {key:'exit8', ico:'🚇', name:'Exit 8 — anomaly corridor', c:'#f2c400',
+  d:'Идёшь по одинаковому подземному переходу: заметил аномалию — разворачивайся, не заметил — вперёд; ошибка сбрасывает на Exit 0.',
+  v:[['exit8/v1.html','🆕 v1 · home + 5 уровней: цель Exit 4→8, аномалии 3 ярусов (очевидные → тонкие), время на отрезок 40→12с; псевдо-3D коридор на canvas; PLAY-проверка в браузере (оракул 5/5, случайный бот проигрывает)']]},
+ {key:'sodapuzzle', ico:'🥤', name:'Soda Puzzle — желейки в содовые трубы', c:'#3d8df6',
+  d:'Тянешь желейные фишки по полю к трубам своего цвета и очищаешь поле до таймера.',
+  v:[['sodapuzzle/v1.html','🆕 v1 · home + 5 уровней: 4→8 труб, поле 5×5→6×6, плотность до 5 свободных клеток на спайке с блокерами на устьях; все уровни решаемы ботом (11→45 шагов), таймеры от бота; PLAY-проверка в браузере']]},
+ {key:'sandblocks', ico:'⏳', name:'Sand Blocks — песок в контейнеры', c:'#8f7ae0',
+  d:'Подставляешь контейнеры-полимино из тесного лотка под бак с песком, чтобы каждый цвет ушёл в свой контейнер.',
+  v:[['sandblocks/v10.html','🆕 v10 «Waffle Sprites · единый цвет» · все вафли одного цвета выглядят одинаково: перекраска вынесена в сборщик — квантильный перенос яркости и насыщенности с родного спрайта цвета дизайнера + пересадка эталонного кармана во все карманы (45 готовых PNG в waffle-kit/recolor/), в браузере перекраски нет; остальное = v9; PLAY-бот 5/5 (31-44с)'],
+     ['sandblocks/v9.html','v9 «Waffle Sprites» · САМ арт дизайнера Waffle Sort (PSD): поддон 6×7 склеен из кусков platform_base.png, блоки = спрайты вафель 9 форм (S1 H2 V2, уголки L3 в 4 ориентациях, O4, T4), перекраска по оттенку под цвет жидкости, карманы найдены на спрайтах автоматически, сироп наливается в карманы снизу вверх; раскладки переделаны под доступные формы (67-81% заполнения, клоцки-открытие 2-11 сдвигов); ассеты в sandblocks/waffle-kit/, вырезки и спрайты — страница sandblocks/waffle-art/; PLAY-бот 5/5 (31-46с)'],
+     ['sandblocks/v8.html','v8 «Waffle Tray» · UI из дизайна Waffle Sort: розовая скатерть в клетку, деревянный поддон с плиткой, блоки = цветные ВАФЛИ с карманами 2×2 на клетку; жидкость-сироп наливается в карманы снизу вверх, карман за карманом (тёмная дырка → глянцевый налитый), процент убран — индикатор сами карманы; бак-лава-лампа и палитра перекрашены под вафли (оранжевый/фиолетовый/бирюзовый/розовый/синий); механика, уровни и таймеры = v7; PLAY-бот 5/5'],
+     ['sandblocks/v7.html','v7 «Water Blocks / Lava — Tight Tray» · лоток забит на 67-81% (в v6 было 29-55%): первый блок базы зажат под чужими и требует клоцки-перетасовки (6-14 сдвигов на открытие), дальше блоки «раскапываются» по очереди; 11-16 блоков на уровне, 4-8 шаров; бот получил настоящий клоцки-солвер (направленный поиск по совместным положениям всех блоков) — лимиты 75/90/110/130/180с от PLAY-бота (5/5, 28-54с)'],
+     ['sandblocks/v6.html','v6 «Water Blocks / Lava» · шары ВИСЯТ в базовой жидкости на разной высоте и опускаются на дно по мере её слива — доступны для выгрузки только приземлившись (сначала осушай базу, её блоки внизу лотка); физика позиционная — шары не дёргаются, плавно покачиваются; слив +20%; новые фигуры (вертикальная I3, зигзаг S4, длинный уголок L4); починен фантомный остаток базы; лимиты от PLAY-бота (5/5, L4-L5 по 3 прогона)'],
+     ['sandblocks/v5.html','v5 «Water Blocks / Lava» ·бак как настольная лава-лампа: базовая жидкость + цельные шары-капли других цветов (живая форма, глянец, БЕЗ перемешивания); шары лежат на дне и запирают свои колонки — их цвет сливается, база в этих колонках ждёт; блоки базы стартуют внизу лотка (сначала расчисти путь, слив хотя бы один шар); слив капельками вместо труб-струй; уровень 5 по композиции скриншота: 9 шаров 5 цветов; лимиты от PLAY-бота (5/5, спайк 5/5 по 24-44с из 120)'],
+     ['sandblocks/v4.html','v4 · поле и блоки по референсу Water Out (толстые глянцевые рамки-трубки со скруглёнными углами, градиент, разделители клеток, панель с 3D-юбкой); в баке вместо слоёв — цветные кляксы, плавающие в базовой жидкости: картинка из жидкостей разбирается, кляксы опускаются по мере слива; жидкость своего цвета со дна колонки течёт в подставленный блок, чужая клякса запирает колонку; мини-капли у дна показывают цвет каждой колонки; home + 5 уровней (1→6 клякс, 2→5 цветов), лимиты от PLAY-бота (5/5, спайк 64-75с из 140)'],
+     ['sandblocks/v3.html','v3 · жидкость слоями в баке-сцене: нижний слой стекает струями в контейнеры своего цвета, слой выше опускается; капля-подсказка; 2→16 слоёв, лимиты от PLAY-бота (5/5)'],
+     ['sandblocks/v2.html','v2 · жидкость в отдельных стеклянных трубах-очередях над колонками поля (промежуточный вариант; заменён v3 по фидбеку «нужен единый бак-сцена»)'],
+     ['sandblocks/v1.html','v1 · песок: бак с диагональными слоями/карманами, автомат падающего песка; home + 5 уровней; на спайке тёмная колонна с зелёной шапкой как в референсе; лимиты времени от PLAY-бота (прошёл 5/5, ×1.8-2.4 запаса)']]},
+ {key:'cargojam', ico:'🚂', name:'Cargo Jam — разгрузи состав по заказам', c:'#63a832',
+  d:'Тап — ящик со склада вылетает по стрелке в заказ своего цвета; собрал заказ — отцепил секцию состава, пока поезд не доехал.',
+  v:[['cargojam/v24.html','🆕 v24 Aquapark Shapes · по рефу Bus Jam (скрин юзера 09:33): причал БЕЗ рамки и сетки, лодки стоят плотно и образуют фигуру уровня — прямоугольник 5×4 → ромб 7×7 → кольцо 8×6 → овал 9×7 → сердце 9×8 (40 → 106 человек); генерация «очисткой»: фигура заполняется лодками случайной длины целиком, затем по одной снимается та, у которой есть свободный выезд хоть в одну сторону оси, и ей назначается это направление → паззл разрешим по построению, ≥1/3 заблокированы на старте; ожидание в доке как в v22; бот L1 15с, L5 31с (лимит 69с)'],
+     ['cargojam/v23.html','🆕 v23 Coaster Shapes · то же для горок: депо-фигура без рамки на ровной серо-лавандовой земле, составы плотно, поезд сбоку по горке; бот L1 15с, L5 31с'],
+     ['cargojam/v22.html','v22 Aquapark Wait · правки юзера к v20: у лодок ОСТРЫЙ НОС (арт ChatGPT: надувная лодка сверху, нос справа; 3 части корма/середина/нос, 1 секция = корма+нос) — нос показывает, куда лодка выезжает; ЛЕВЕЛ-ДИЗАЙН С ОЖИДАНИЕМ: часть лодок (35→70 %) получает людей двумя порциями, вторая порция стоит в очереди дальше активной зоны → лодка ждёт на старте, пока её цвет дойдёт; активна только голова очереди (8-10 человек), остальные видны и идут, но приглушены; не чаще одного «ждущего» на 4 лодки, чтобы 3 слота не встали; бот L1/L5 won'],
+     ['cargojam/v21.html','v21 Coaster Wait · те же правки для горок: ожидание на станции (порции, активная голова очереди); по горке поезд едет ВИДОМ СБОКУ (арт ChatGPT: вагон в профиль с пассажирами над бортом), вагоны сцеплены вплотную и каждый идёт по рельсам отдельно (свой элемент на том же пути со сдвигом по времени, постоянная скорость), плавный съезд со станции на рельсы; бот L1 7с, L5 18с (лимит 39с)'],
+     ['cargojam/v20.html','v20 Aquapark Jam · правки юзера к v18: очередь в ДВА ряда; плавсредства разной длины 1-4 секции = 2/4/6/8 мест (1 секция = круг, 2-4 = надувной плот, растянутый из 3 частей спрайта ChatGPT), вид зависит от размера; причал = ПАЗЗЛ-ПАРКОВКА: плоты стоят впритык на сетке, отплыть может только тот, у кого свободен путь до края по носу (заблокированный — толчок); генерация с проверкой разрешимости (жадное снятие), очередь = порядок отплытия, ≥1/3 плотов заблокированы на старте; сетка 6×4 → 10×7, людей 24 → 60, бюджет 1.2 → 0.65 с/чел (бот L1 6с, L5 16с при лимите 39с); водная горка сбоку'],
+     ['cargojam/v19.html','v19 Coaster Jam · то же для горок: очередь в два ряда; составы 1-4 вагона (головной с носом + прицепные, арт ChatGPT сверху, 2 места на вагон); депо = паззл-парковка с составами впритык; состав сначала выезжает по носу за край депо, потом летит на станцию; полный едет по холмам; бот L1/L5 won'],
+     ['cargojam/v18.html','v18 Aquapark Slide · аквапарк с правками v17: очередь ПО ОДНОМУ человеку (1 фигурка = 1 место), верх ужат до двух рядов, под стартами настоящая водная горка сбоку: жёлоб с холмами на стальных опорах, бегущая пена, полный круг скатывается крутясь и уходит за правый край в бассейн; стоянка кругов 1-6 мест; логика v15'],
+     ['cargojam/v17.html','v17 Coaster Hills · правки юзера к v16: очередь ПО ОДНОМУ человеку (1 фигурка = 1 место; раньше единица очереди рисовалась группой из 6 и «2 места» съедали 12 фигурок), верх ужат до двух рядов ленты (180px), под станциями полоса настоящих горок сбоку: спуск с холмами по всей ширине на деревянной эстакаде (опоры каждые 40px, раскосы, балка-земля), вагонетка со станции падает на рельсы и едет по холмам за правый край; стоянка ниже (378px), вагонетки 49-94px; логика v15/v16'],
+     ['cargojam/v16.html','v16 Coaster Lot · ГОРКИ БЕЗ СТРЕЛОК И ГЕКСОВ: внизу депо вагонеток разного размера и цвета с посадочными местами внутри (1-6 мест, размер растёт с местами; L1 до 3 мест → L5 до 6); тап по любой вагонетке → на станцию, пассажиры своего цвета садятся, полная уезжает по рельсам горки; генерация: очередь ранами цвета → объекты, сумма мест цвета = людей цвета; слоты/очередь/тайминги v11; приёмка скриншотами'],
+     ['cargojam/v15.html','v15 Aquapark Lot · АКВАПАРК БЕЗ СТРЕЛОК И ГЕКСОВ: внизу стоянка надувных кругов разного размера и цвета с посадочными местами (1-6); тап по кругу → на старт горки, люди садятся, полный круг уплывает по потоку; та же генерация, что v16; приёмка скриншотами'],
+     ['cargojam/v14.html','v14 Coaster · АМЕРИКАНСКИЕ ГОРКИ: плитки = вагонетки с посадочными местами (размер растёт с числом мест = стопка мержа), вагонетка повёрнута по стрелке; слоты = станции с рельсами, пассажиры садятся на места, полная вагонетка уезжает по рельсам горки (змейка вдоль правого края) за экран; арт вагонеток ChatGPT (лист 2×6 общий с v13); логика v11 без изменений; приёмка скриншотами'],
+     ['cargojam/v13.html','v13 Aquapark · АКВАПАРК: плитки = надувные круги с посадочными местами (размер растёт с числом мест), стрелка в дырке круга; слоты = старт водной горки, пассажиры садятся в круг, полный круг крутясь уплывает по водному потоку (змейка вдоль правого края) за экран; бассейн вместо поля; арт кругов ChatGPT; логика v11 без изменений; приёмка скриншотами'],
+     ['cargojam/v12.html','v12 Balloons · слоты = ВОЗДУШНЫЕ ШАРЫ (арт ChatGPT: лист 2×4, 6 цветов + серый пустой + золотой за 📺), пассажиры улетают из очереди в корзину, счётчик на оболочке, занятый шар покачивается; логика v11 без изменений (без цифр, плитка = 1 человек, левел-дизайн v5); приёмка ТОЛЬКО скриншотами (эксперимент по времени пайплайна)'],
+    ['cargojam/v11.html','v11 Office Lift · БЕЗ ЦИФР на стрелках: плитка = 1 человек, стопка после мержа = вместимость (лесенка слоёв); слоты = ЛИФТЫ с табло и дверями, пассажиры едут из очереди в лифт (спрайт летит к кабине), голова-дракон убрана, конец пути = двери офиса 🏢; изначальный левел-дизайн v5 (19→43 человек, секции 4-8, бюджеты 2.1→0.85); fit-бот 700мс 5/5, L5@1200 lose 32/43'],
+    ['cargojam/v10.html','v10 Bus Fever · человечки по скрину юзера Bus Traffic Fever: глянцевые 3D-фигурки с круглой головой без лица, тонкими руками и ногами (ChatGPT по прикреплённому рефу, 6 цветов палитры); остальное как v9 (голова дракона для шествия, толпа группами); fit-бот 700мс 5/5'],
+    ['cargojam/v9.html','v9 Parade · арт ChatGPT по видео-рефу Bus Crowd: 3D-глянцевые фигурки толпы (большая круглая голова без лица, вид сверху под углом) в 6 цветах вместо CSS-человечков; вместо головы змеи — ГОЛОВА ДРАКОНА ДЛЯ ШЕСТВИЯ на двух шестах (толпа несёт её и становится одним живым существом); чипы в слотах — те же фигурки; механика v8 без изменений; fit-бот 700мс 5/5'],
+    ['cargojam/v8.html','v8 Crowd · по рефу юзера: ШИРОКАЯ ДОРОЖКА С ТОЛПОЙ — каждый юнит змейки = группа из 6 мини-человечков (2×3 с джиттером, идут вразвалочку), цветные блоки толпы вместо одиночной цепочки; лента с бортиком и пунктиром, DOM только для видимых групп; механика v7 без изменений; fit-бот 700мс 5/5'],
+    ['cargojam/v7.html','v7 Passengers · вместо шаров очередь ОБЕЗЛИЧЕННЫХ ЧЕЛОВЕЧКОВ как в Bus Jam (CSS: голова+тело+ножки одним цветом, без лица), они шагают и разворачиваются по ходу маршрута; чипы цвета в слотах тоже человечки; линия-превью чуть ниже, чтобы головы не срезались; механика v6-4 без изменений; fit-бот 700мс 5/5'],
+    ['cargojam/v6-4.html','v6-4 Preview Line · ДОП. ЛИНИЯ МАРШРУТА сверху экрана (прячется за пилюлями HUD): змея на ней полупрозрачная (45%) и полностью неактивная — просто видно, что придёт дальше; активация при переходе на основной маршрут; путь превью и его пунктир тоже приглушены; скорость змейки выше (бюджеты 1.4/1.15/0.9/0.7/0.72, -12%); fit-бот 700мс 5/5; (v6-3 с блюр-зоной на активной линии — неверная трактовка, оставлена для истории)'],
+    ['cargojam/v6-3.html','v6-3 Blur Preview · будущая часть змеи видна заранее В БЛЮРЕ на первом отрезке пути (80px): цвет угадывается, но отстреливать её ещё нельзя — шары «просыпаются» (блюр плавно спадает) при входе в активную зону; старт головы сдвинут на +80px, чтобы блюр-зона не съедала окно отстрела; боты: подбор цифры под длину секции обязателен (наивная стратегия детерминированно стопорит слоты «кемперами» и проигрывает даже @700), fit-бот 700мс 5/5; бюджеты 1.6/1.3/1.0/0.8/0.85'],
+    ['cargojam/v6-2.html','v6-2 Numbers B · читаемость плиток по юзер-тесту: стрелка жирнее (63%), заряд тёмной цифрой ПО ЦЕНТРУ стрелки (вместо кружка в уголке) — одна точка фиксации, ровный контраст на всех 6 цветах, двузначные мержи читаются; выбран вариант B из сравнения A/B/C/D на живом поле'],
+    ['cargojam/v6.html','v6 Numbers · на каждой стрелке заряд 2-7 (мерж складывает заряды в одну плитку — лесенка слоёв растёт); БЕЗ выбора цвета: тап по плитке со свободным лучом — она сразу занимает слот и автоматически отстреливает шары СВОЕГО цвета в видимой зоне (снаряды + лопанье с осколками, змея сжимается, лёгкий откат); большой заряд надолго блокирует слот — риск мержей; шаров в 3-5 раз больше (48→210), змея длиннее; 3 слота + 4-й за rewarded 📺; боты: 700мс 5/5, 1200мс проходит L5, 2000мс на L5 проигрывает (48/210)'],
+    ['cargojam/v5.html','v5 Slots · голова змеи — вязаный ассет из мокапа (вырезан с мягкой маской); СЛОТЫ вместо авто-заказов: 3 слота, игрок сам ставит в слот ЛЮБОЙ цвет из очереди змеи (пикер по тапу, слот без прогресса можно сбросить ✕), 4-й слот за rewarded 📺 (фейк-ролик 1.5с); вылет разрешён только цветам в слотах; раскладка с цепочками одного направления (chain-bias 0.25→0.85) — на L4-L5 без мержей не успеть (бот-проверка: merge@1200 win, singles@1200 lose), все 5 уровней открыты с home'],
+     ['cargojam/v4.html','v4 Knitted · вязаный UI по мокапу ChatGPT (reference/ui-mockup-knitted.png): клубки-змея 48px с текстурой пряжи, путь укорочен до 2.5 рядов помпонов, голова-змея с язычком по ходу движения, кремовые вязаные карточки/пилюли/поднос, пустые гексы видны; на старте видно 2-3 секции; боты: 650мс 5/5 (запас 27с на L5), 1100мс 1/3 (спайк кусается), 2000мс 0/3'],
+     ['cargojam/v3.html','v3 Long Snake · змея крупнее и длиннее (шары 34px, секции 4-8), стартует на 30% пути — хвост вползает постепенно; вылет разрешён ТОЛЬКО цветам уже вошедших секций (карточки появляются по мере вползания, до 4 + «ждёт»), невошедшие цвета можно готовить мержами впрок — стратегия из ограниченной видимости как в рефе (реф-скрин L3 в proto-cargo-jam/reference/); генератор равномерно раздаёт направления; боты: 650мс 5/5 (запас 23с на L5), 1100мс win, 2000мс lose'],
+     ['cargojam/v2.html','v2 Balloons · вместо поезда змея из воздушных шаров (шары всегда вертикальны, голова-змея зеркалится только по горизонтали); низ = Hexa Arrows with merge: гекс-поле, цвет=направление, тап — столбик летит по стрелке (край → улетает в заказ, стопка = столько шаров; та же стрелка → сбор цепочки в столбик; чужая → бамп); вылет любого цвета с незакрытыми заказами, излишек в будущие заказы того же цвета — пат исключён; боты: 650мс 5/5, 1100мс win, 1900мс lose'],
+     ['cargojam/v1.html','v1 · поезд и склад квадратных ящиков (архив: вагоны вращались по пути)']]},
+ {key:'donutjam', ico:'🍩', name:'Donut Jam — пончики тройками в коробку', c:'#ef6f9d',
+  d:'Тап по открытому пончику — летит в коробку на 7 ячеек, три одинаковых упаковываются; коробка забита без тройки — проигрыш.',
+  v:[['donutjam/v1.html','🆕 v1 · home + 5 уровней: 2→6 цветов, 1→3 слоя досок, 6→36 пончиков; спайк на 5-м; PLAY-бот 5/5, случайный бот 6/6 → 0/8 (кривая сложности)']]},
+ {key:'petalpatch', ico:'🌸', name:'Petal Patch — цветы на клумбах', c:'#5cae4a',
+  d:'Merge-6 в саду: сажаешь цветы, одинаковые лепестки перелетают к соседям, шесть одного цвета — цветок расцвёл и улетел.',
+  v:[['petalpatch/v1.html','🆕 v1 · рескин Pond Hop: грядки, лепестки-капли, бабочки при сборе']]},
+   {key:'booknook', ico:'📚', name:'Book Nook / Book Sort — книги на полках', c:'#8a5a3a',
+  d:'Сортировка книг по ярусам на стеллаже: десять одинаковых сливаются в книгу яруса выше, сдаёшь их по заказам.',
+  v:[['booknook/v7.html','🆕 v7 «Book Sort: Volumes» · ЗАКАЗЫ СДАЮТСЯ САМИ (книга нужного тома сверху сразу улетает в заказ: ручная сдача сбивала); интерфейс английский, ярус = Volume (Vol 1, Vol 2 …: номер на каждой книге); заказ всегда на два тома выше полки, а тележка возит два тома ниже заказа, поэтому на поле два цвета и без слияний заказ не выполнить; заказов меньше (1/2/3/4/6 книг); на 1-2 уровне тележка блокируется, если полке не останется места, дальше предупреждение risky; бот 100 % везде, шагов 27/42/88/109/156, досыпок 5/6/10/12/14; PLAY-проверка в браузере'],
+     ['booknook/v6.html','v6 «Book Sort: Endless Tiers» · поле растёт по уровням (6 отсеков → 9 → 12 → 12 → 15 + арендуемый), тележка БЕСКОНЕЧНА и досыпает книги на 1-2 яруса ниже верхнего яруса поля, кладя книгу в каждый свободный отсек; заказы считаются от яруса полки (1 книга «ярус+2» и 2 книги «ярус+1»), поэтому ярусы бесконечны и перенос полки не ломает цепочку; на 1-м уровне почти всё ярус 1, ярус 2 попадается изредка; читаемость ярусов: номер на каждой книге, счётчик x/10 у отсека, лесенка ярусов в шапке, баннер «НОВЫЙ ЯРУС N»; бот-аккуратист 100 % на всех уровнях (шагов 20/30/69/90/159, досыпок 3/3/6/7/13), а игрок, жмущий тележку не думая, гибнет с 4-го уровня; PLAY-проверка в браузере'],
+     ['booknook/v5.html','v5 · та же механика, что v4, плюс читаемая лесенка ярусов (номер на каждой книге, x/10 у отсека, лесенка в шапке, баннер нового яруса)'],
+     ['booknook/v4.html','v4 «Book Sort: Tiers» · по поправке заказчика: 10 одинаковых книг сливаются в одну книгу яруса выше (ярусы бесконечны), а не уходят с поля; цель = заказы по ярусам (L1: 3 × ярус 2 + 1 × ярус 3 … L5: 2 × ярус 5 + 3 × ярус 4), сдача тапом по карточке заказа при выбранной книге; на полке два соседних яруса (L1: 1 и 2, L5: 3 и 4), тележка везёт их же; лимит тележки от потребности заказов и стока полки (бот: с нуля 100/99/87/87/51 %, цепочка с переносом 100/96/94/91/73 %); PLAY-проверка в браузере'],
+     ['booknook/v3.html','v3 «Book Sort» · механика Pocket Sort: стопки книг в 14 отсеках + арендуемый, тап-тап перенос верхней группы цвета, авто-сбор комплекта от порога этапа (3→7 … 6→10), цель 60→110 книг, тележка с лимитом завозов (от бота: 100/100/98/75/36 % с нуля, цепочка с переносом полки 100/100/95/81/28 %), книги «?», коробки возвратов открываются по прогрессу, аренда отсека 60 с; PLAY-проверка в браузере'],
+     ['booknook/v2.html','v2 · стеллаж предзаполнен на 80% стопками; слоёные отсеки на ур.2-5: после освобождения снизу выезжает новая полка (на 5-м отсек ×3), их разбор обязателен для победы; свой баланс (бот 94/73/63/39/23%)'],
+     ['booknook/v1.html','v1 · рескин Pond Hop: библиотека, корешки 6 в ряд, кот на карте уровней']]},
+ {key:'gemgrotto', ico:'💎', name:'Gem Grotto — кристаллы в пещере', c:'#7a5ce0',
+  d:'Merge-6 в пещере: ставишь плиты с осколками в гнёзда, одинаковые слетаются, шесть одного цвета — кристалл собран.',
+  v:[['gemgrotto/v1.html','🆕 v1 · рескин Pond Hop: тёмный грот, свечение осколков, сталагмит на спайке']]},
+ {key:'pondhop', ico:'🐸', name:'Pond Hop — семьи на кувшинках', c:'#3ba887',
+  d:'Merge-6 на пруду: кладёшь кувшинки, одинаковые лягушки перепрыгивают к соседям, шесть на одной — семья собрана.',
+  v:[['pondhop/v4.html','🆕 v4 «Endless Pond» · пруд предзаполнен кувшинками с капибарами (моно-стопки), капибары крупнее и без листика, цели 6-10 семей; перенос состояния: остатки пруда после победы = старт следующего уровня (как Pocket Sort), все уровни на одном поле 3×4; бот-цепочка 99/94/89/75/70%, вся цепочка 44%'],
+     ['pondhop/v3.html','v3 · арт и стиль из Capy-Doku playable: палитра пруда, панель воды, кувшинка = подушка с доски, капибары = спрайт с перекрашенной шерстью (6 семей), кнопки уровней = подушки; механика и баланс без изменений'],
+     ['pondhop/v2.html','v2 · капибары вместо лягушек (CSS-морды: уши, тупой нос); механика и баланс без изменений'],
+     ['pondhop/v1.html','v1 · лягушки; 5 уровней 3×3→3×4, 3→6 цветов, цели 3→8 семей; жадный бот-солвер встроен (__game.botStats)']]},
+ {key:'sandcannons', ico:'🏖️', name:'Sand Cannons — блоки-пушки против картинки', c:'#e0a13a',
+  d:'Двигаешь блоки-пушки в тесном лотке к линии огня, чтобы они расстреляли пиксельную картинку по своим цветам.',
+  v:[['sandcannons/v4.html','🆕 v4 · 3D-фигуры как в Cube Land, но неглубокие (2-3 слоя, внутренние слои других цветов: 6-13 цветов на уровень); лоток 8×7 держит вдвое больше блоков (13-17), остальные ждут в очереди и заезжают снизу, когда есть место; пушка стреляет сама, как подъехала к верхней границе'],
+     ['sandcannons/v3.html','v3 · блоки разных форм как в Block Jam (уголки L, палки, T, зигзаг S, квадраты, одиночки): лоток стал настоящим пятнашечным пазлом, число зарядов растёт с размером блока'],
+     ['sandcannons/v2.html','v2 · пушка не стреляет сама: у линии огня спит (закрытые глаза + пульсирующая обводка), тап по блоку будит её; движение снова усыпляет'],
+     ['sandcannons/v1.html','v1 · 5 картинок: Сердце, Мороженое, Рыбка, Бабочка, Сова (спайк: 127 клеток, шесть блоков 2×2 и лишь 2 пустых клетки); sim 60/60, PLAY-бот 5/5']]},
+ {key:'flymatch', ico:'<img src="flymatch/icon.png" alt="" style="width:72px;height:72px;border-radius:16px;display:block;object-fit:cover">', name:'Hexa Arrows with tiles', c:'#4daf62',
+  d:'Трей-матч по раскладкам Zen Match: плитка снимается, если не накрыта и путь по её стрелке свободен; три одинаковых в лотке схлопываются.',
+  v:[['flymatch/v9-2.html','🆕 v9-2 · фидбек на неверное действие: плитка не может уйти (путь закрыт, накрыта, лоток полон) — вспыхивает красным 0.5 с, красная виньетка по краям, тряска всего экрана'],
+      ['flymatch/v9.html','v9 Designer Kit · интерфейс из архива дизайнера (Art.zip): фон, шестерёнка, плашки LEVEL/Left, плитки-спрайты 310 px с тенью и отдельными стрелками (одинарная, двойная 180°, развилка 120°), лоток с гекс-фишками; 9 цветов (pink/lime — сдвиг тона); механика v8-2 без изменений; бот 3/3 уровней'],
+      ['flymatch/v8-2.html','v8-2 · без блокировки ввода: следующую плитку можно снимать сразу, пока предыдущая ещё летит в лоток; слот резервируется в момент тапа, проигрыш только когда все 5 приземлились без тройки'],
+     ['flymatch/v8.html','v8 Flip · перелистывание пластинок в темпе Hexa Arrows with piles: прыжок между клетками 0.2 с (вдвое медленнее), один переворот на прыжок — кувырок читается на видео при 30 fps; дуга в лоток 0.4 с'],
+    ['flymatch/v7.html','v7 · 10 уровней: к пяти прежним добавлены Diamond 48 (ромб в 3 яруса), Bar 42 (широкая полоса), Big Ring 54 (кольцо), Giant Hex 60 (плоский гекс R=4), Mountain 99 (гора в 4 яруса, спайк) — формы разного размера для съёмки креативов; все 10 уровней кнопками в меню; иконка продукта на cover-экране'],
+     ['flymatch/v6-2.html','v6-2 · двойная стрелка единым знаком-развилкой (как на дорожных знаках); БЕЗ индикации заблокированных лучей — все стрелки белые (гипотеза: серая стрелка = слишком большая подсказка); вылет как в Hexa Arrows: фишка распадается на 3 пластинки, они цепочкой прыгают по клеткам с кувырком и дугой уходят в лоток'],
+     ['flymatch/v6.html','v6 · как в Zen Match: лоток-буфер на 5 слотов; палитра 9 цветов; у трёх новых цветов двойные стрелки (бирюза ↔ вперёд-назад, розовый и лайм — развилка 120°): хватит одного свободного пути из двух'],
+     ['flymatch/v5.html','v5 · выбор уровня 1-5 в главном меню (кнопки, выбор запоминается); механика и раскладки = v4'],
+     ['flymatch/v4.html','v4 · гексагональные плитки, стрелки в 6 направлений; верхний гекс лежит на стыке трёх нижних; раскладки: мини-пирамида, кольцо, гора, звезда, большая пирамида в 4 яруса (90 гексов)'],
+     ['flymatch/v3.html','v3 · без иконок: плитка = цвет + белая стрелка, вид плиток по референсу (скругление, 3D-бочок, блик); те же 5 раскладок Zen Match'],
+     ['flymatch/v2.html','v2 · раскладки настоящего Zen Match: слои со сдвигом в полплитки, плитка доступна без верхнего слоя и с чистым лучом; L1 = пирамида с рекламного скрина, дальше крест/башни/рамка/лестница'],
+     ['flymatch/v1.html','v1 · гекс-поле в один слой: 5 уровней R2→R3, 3→5 цветов, mix 1→3']]},
+ {key:'sheepsort', ico:'🐾', name:'Pet Sort — зверята в пузырях по заказам', c:'#6aa84f',
+  d:'Механика Fish Sort Puzzle: зверята в пузырях сыплются кучей, тап отправляет зверя в загон под заказ (3 одного вида) или на дорогу ожидания из 5 мест.',
+  v:[['sheepsort/v2.html','🆕 v2 · 28 разных зверят (лист ChatGPT, нарезка по хромакею), пузыри с физикой падения и покачиванием внутри, лопаются пустыми; правила и уровни = v1'],
+     ['sheepsort/v1.html','v1 · Sheep Sort: овцы одного вида в цветах на лугу, кучки без пузырей (юзер: объекты не те); 5 уровней 3→7 цветов, замки, NEXT, таймер 70 с на L5, proto-kit']]},
+ {key:'arrowsort', ico:'🧪', name:'Arrow Sort — сортировка по стрелкам', c:'#8a5bd4',
+  d:'Water sort по стрелкам: верхняя одноцветная группа перелетает в первую стопку на луче, четыре одного цвета улетают с поля.',
+  v:[['arrowsort/v2.html','🆕 v2 · стандарт экрана (rules 0.1): запуск по ?level=1, лоадинг-скрин с иконкой, home с выбором любого из 5 уровней, английский UI; поле центруется по габаритам всей гекс-сетки (в v1 сетка уезжала за край рамки); эталон proto-kit'],
+     ['arrowsort/v1.html','v1 · 5 уровней: 3→6 цветов, скрэмбл 6→18 шагов, случайная игра проваливает лимит в 45-75%']]},
+ {key:'arrowmerge', ico:'<img src="arrowmerge/icon.png" alt="" style="width:72px;height:72px;border-radius:16px;display:block;object-fit:cover">', name:'Hexa Arrows with piles', c:'#e08b3a',
+  d:'Поле из стопок плиток: тап — верхняя улетает, если путь до края свободен, иначе съезжает по стрелке до упора.',
+  v:[['arrowmerge/v8-2.html','🆕 v8-2 · фидбек на неверное действие: верхняя плитка упёрлась и не ушла — вспыхивает красным 0.5 с, красная виньетка по краям, тряска всего экрана'],
+      ['arrowmerge/v8.html','v8 Designer Kit · интерфейс из архива дизайнера: лавандовый фон, шестерёнка, плашки LEVEL/Moves, стопки из плиток-спрайтов 310 px слоями (слой = бочок спрайта), мягкие тени вместо серой подложки, вид строго сверху; механика v7-2 без изменений; бот 3/3 уровней'],
+      ['arrowmerge/v7-2.html','v7-2 · без блокировки ввода: тапать следующую плитку можно сразу, пока предыдущая летит (в полёте недоступны только съезжающая плитка, цель мерджа и стопки-призраки цепочки)'],
+     ['arrowmerge/v7.html','v7 · мердж как вывод с поля: стрелка доезжает до первой стопки своего цвета по лучу (пустые клетки перелетаются) и за ОДИН тап собирает все доступные стопки цвета подряд (цепной мердж, промежуточные отдают верхнюю серию); съезд только при чужом препятствии; лимиты и полосы сложности пересчитаны (random проваливает L10 в 85%)'],
+     ['arrowmerge/v6.html','v6 · серия вылетает ЦЕЛИКОМ: тап по чистому лучу выводит всю верхнюю одноцветную группу за один ход (награда за мерджи); фирменное перелистывание: любое перемещение — прыжки пластинки по клеткам с кувырком, группа летит цепочкой, вылет тает за полем; стартовые стопки без одноцветных серий; лимиты пережаты (random проигрывает L10 в ~88%)'],
+     ['arrowmerge/v5.html','v5 · 10 уровней: к пяти прежним добавлены Triangle 28, Ring 30 (кольцо с дырой), Bar 36 (широкая полоса), Star 31, Giant Hex 61 (101 плитка, спайк) — формы для съёмки креативов; лучи живут внутри описанного гекса поля (зазоры перелетаются); все 10 уровней кнопками в меню; иконка продукта на cover-экране'],
+     ['arrowmerge/v4.html','v4 · мердж по стрелке: сосед ровно по стрелке того же цвета — верхняя одноцветная группа прыгает на него (серия вылетает цепочкой тапов, клетка освобождается, ход тратится); стартовые стопки 2-3 цветов (одноцветных ≤15%); случайная игра проваливает L3-L5 в 45-72%'],
+     ['arrowmerge/v2.html','v2 · Hexa Arrows with piles: полное покрытие стопками 2→5, вылет/съезд по стрелке, 5 уровней (19→37 клеток, 27→67 плиток), случайная игра проваливает L3-L5 в 48-78%'],
+     ['arrowmerge/v1.html','v1 (Arrow Merge) · мердж 2048: фишка скользит до упора, равные сливаются в ступень выше; цель ✦3→✦5, обманки с 3-го уровня']]},
+ {key:'hexarrows', ico:'<img src="hexarrows/icon.png" alt="" style="width:72px;height:72px;border-radius:16px;display:block;object-fit:cover">', name:'Hexa Arrows with merge', c:'#b04ef5',
+  d:'Гекс-поле закрыто фишками, цвет = направление стрелки: тап — фишка улетает, если путь до края свободен (база для миксов).',
+  v:[['hexarrows/v9-2.html','🆕 v9-2 · фидбек на неверное действие: плитка столкнулась с чужой стрелкой и не ушла — вспыхивает красным 0.5 с, красная виньетка по краям, тряска всего экрана (вместо прежнего джиттера 4 px)'],
+      ['hexarrows/v9.html','v9 Designer Kit · интерфейс из архива дизайнера (Art.zip): фон, шестерёнка, плашки LEVEL/Moves, плитки 310 px с тенью и отдельной стрелкой, вид строго сверху; всплывашки x2/x3 при сборе цепочки и Cool! при вылете стопки 3+; панели OBJECTIVE, подложки и бара в мокапе нет — убраны; шрифт Futura Round; жадный бот 10/10'],
+      ['hexarrows/v8.html','v8 Kit Tiles · плитки и стрелки на поле — спрайты из UI-кита: тела гексов из кита (стрелка стёрта, оранжевый — перекрашенный жёлтый), одна белая стрелка кита поворачивается под направление; стопки слоями толщиной спрайта, поле без наклона как в мокапе, вылет — по одной пластинке на слой; иконки OBJECTIVE теми же спрайтами; логика и перелистывание без изменений'],
+    ['hexarrows/v7-3.html','v7-3 UI Kit · цели по центру плашки OBJECTIVE, обводка панели без шва (панель пересобрана из оригинала, вырез только из прямого участка бортов)'],
+    ['hexarrows/v7-2.html','v7-2 UI Kit · панель OBJECTIVE компактнее (78% ширины) и без пустой полосы между шапкой и иконками (из картинки вырезан лишний крем)'],
+    ['hexarrows/v7.html','v7 UI Kit · интерфейс из мокапа ChatGPT (лист элементов вырезан по альфе): шестерёнка, баннер LEVEL, панель Moves, панель OBJECTIVE с живыми остатками плиток по цветам, кремовая подложка под полем, фиолетовая нижняя панель, пастельное небо, палитра плиток из кита, шрифт Nunito; монеты и бустеры из мокапа не добавлены (нет механики); логика и перелистывание v6 без изменений'],
+    ['hexarrows/v6.html','v6 Flip · фирменное перелистывание как в Hexa Arrows with piles на ВСЕХ перемещениях: пластинки вылета и стопка при слиянии на соседа прыгают по клеткам и переворачиваются на каждом прыжке (0.2 с/клетка — вдвое медленнее, кувырок виден на видео); за краем поля два прыжка с растворением; победа после того, как последняя пластинка растворилась, +1 с'],
+    ['hexarrows/v5.html','v5 · Hexa Arrows with merge, 10 уровней: к пяти прежним добавлены Triangle 28, Ring 30 (кольцо с дырой — цепочка сливается через дыру), Bar 36 (широкая полоса), Star 31, Giant Hex 61 (спайк) — формы для съёмки креативов; выбор уровня 1-10 в меню; иконка продукта на cover-экране'],
+     ['hexarrows/v3.html','v3 · слияние по направлению: тап — фишка летит по стрелке и запрыгивает стопкой на такую же'],
+     ['hexarrows/v2.html','v2 · стопки и слияния: часть фишек — стопки со старта, тяни на соседа того же цвета — сливаются (бесплатно); тап снимает стопку целиком, с 3-го уровня ходов меньше, чем стопок'],
+     ['hexarrows/v4.html','v4 (быв. v3) · микс с Cube Land: каждая выведенная фишка заряжает пушку своего цвета порцией патронов — та сразу стреляет по фигуре; патронов ровно на все кубики'],
+     ['hexarrows/v1.html','v1 · точная реплика референса: полное покрытие, цвет = направление, при вылете пластинки идут цепочкой по клеткам (анимация «пересыпания»)']]},
+ {key:'cubeland', ico:'🧊', name:'Cube Land — воксельный бластер', c:'#4a90e2',
+  d:'Ставишь пушки в слоты, они расстреливают воксельную фигуру по своим цветам и открывают внутренние слои.',
+  v:[['cubeland/v9.html','🆕 v9 · L11 «Пиньята»-ловушка: первые 5 пушек — цвета конфет внутри, бездумная расстановка = тупик; + проигрыш после полного оборота без целей'],
+     ['cubeland/v8.html','v8 · скорострельность растёт с числом целей + пушка в ожидании не моргает'],
+     ['cubeland/v7.html','v7 · стрельба только по видимым кубикам: нужна открытая к игроку грань и свободный путь под текущим углом; цель сзади — пушка ждёт поворота'],
+     ['cubeland/v6.html','v6 · скруглённые кубики, авто-вращение, донат толще и без жёлтого + 5 новых моделей: Арбуз, Бургер, Клубника, Снеговик, Леденец (всего 10 уровней)'],
+     ['cubeland/v5.html','v5 · мяч 8 радужных долек с жёлтым клапаном (по референсу) + пушки с язычком-глазками (по референсу)'],
+     ['cubeland/v4.html','v4 · вращение любой осью, кубик рассыпается на 4 осколка, пушки с дулом, круглые лимиты, ярче цвета + красочная внутрянка (гроздья, каркасы, радуга)'],
+     ['cubeland/v3.html','v3 · казуальные цвета + фигуры ×2 в сфере/цилиндре: Пляжный мяч, Донат, Мороженое, Капкейк, Неваляшка'],
+     ['cubeland/v2.html','v2 · полнотелые фигуры (Сатурн, Тедди, Мухомор, Ракета, Пингвин) + реверс-генерация пушек: снятие снаружи-внутрь, патронов ровно по кубикам — без тупиков'],
+     ['cubeland/v1.html','v1 · базовая механика: Куб, Сердце, Цыплёнок, Крепость, Пёс; ручные лимиты от бота, спайк на 5-м']]},
+ {key:'balllift', ico:'🎾', name:'Ball Lift — мячик на рейке', c:'#4aa63e',
+  d:'Двумя половинами экрана поднимаешь концы гибкой рейки и катишь по ней мячик снизу вверх через узкую змейку.',
+  v:[['balllift/v2.html','🆕 v2 · игра одной рукой: один палец — вверх/вниз подъём, вбок наклон; два пальца — как раньше'],
+     ['balllift/v1.html','v1 · базовая механика: физика качения, змейка, 5 уровней, PLAY-verified ботом-балансиром']]},
+ {key:'birdsort', ico:'🐦', name:'Bird Sort — птички по веткам', c:'#5b8def',
+  d:'Сортировка птиц по веткам: четыре одинаковых — стая улетает (в v6-v8 только под заказ из скворечника сверху).',
+  v:[['birdsort/v8.html','🆕 v8 · Пингвины + заказы: 8 цветов, 11 льдин, выбор любого уровня, 3-й заказ за рекламу'],
+     ['birdsort/v7.html','🆕 v7 · Пассажиры + заказы: туры-заказы сверху, 8 цветов, 11 платформ, 3-й тур за рекламу'],
+     ['birdsort/v6.html','🆕 v6 · Пчёлы + заказы: улья-заказы сверху, 8 цветов, 11 жёрдочек, 3-й заказ за рекламу'],
+     ['birdsort/v5.html','v5 · Пингвины: льдины вместо веток, арт-спрайты (ChatGPT), стая ныряет в море'],
+     ['birdsort/v4.html','v4 · Пассажиры: туристы с чемоданами на платформах, автобус увозит четвёрку'],
+     ['birdsort/v3.html','v3 · Пчёлы: жёрдочки у ульев, медовая палитра, рой улетает в улей'],
+     ['birdsort/v2.html','v2 · базовая механика: 5 уровней, спящие + скрытые птицы, лимиты от бота']]},
+ {key:'nika', ico:'🧋', name:'Nika — конвейер топпингов', c:'#5fbf8f',
+  d:'Выпускаешь объекты из очередей на конвейер, нужные по рецепту улетают в стакан; лента переполнилась — проигрыш.',
+  v:[['nika/v4.html','🆕 v4 · пастельные яркие баблы (без чёрного), тёмный чай для контраста, быстрее конвейер и покачивание в стакане'],
+     ['nika/v3.html','v3 · EN-интерфейс + жанровый win-скрин: LEVEL COMPLETE, монеты с подсчётом летят в баланс (копится между уровнями)'],
+     ['nika/v2.html','v2 · Bubble Tea: разноцветные баблы-тапиока + слайсы фруктов/лёд/топпинги, жемчужины ложатся на дно стакана'],
+     ['nika/v1.html','v1 · очереди → конвейер → блендер, 5 уровней со спайком']]},
+ {key:'smashfest', ico:'🎯', name:'Smash Fest', c:'#f0653b',
+  d:'Пляжный тир: стреляешь мячами по башне из ящиков и жестянок, снёс всё ограниченным запасом — победа.',
+  v:[['smashfest/v16-3.html','v16-3 · Nut Volley'],
+    ['smashfest/v16.html','v16 · Squirrel']]},
+ {key:'butterfly', ico:'🦋', name:'Butterfly Heart', c:'#a26bf0',
+  d:'Лопаешь группы блоков одного цвета, и за каждый блок из сердца улетает бабочка; отпусти всех — победа.',
+  v:[['butterfly/v3.html','🆕 v3 · ПРОТОТИП: home-карта 5 уровней со спайком, линия только под прямым углом, лимит ходов + проигрыш, 3 бустера (🌈 джокер · 💨 ряд · 🔀 шафл)'],
+     ['butterfly/v2.html','v2 · ломаная линия: веди палец по 3+ соседним блокам одного цвета (8 направлений, с откатом), отпустил — улетели']]},
+ {key:'pinbox', ico:'📦', name:'Pin Box', c:'#8f7be0',
+  d:'Коробка падает по шахте на пинах: тянешь нужный пин, чтобы она села на пушку, а та отстреляла пиксели своего цвета.',
+  v:[['pinbox/v7.html','🆕 v7 · пушки-хрюшки по бокам картинки + аварийный груз: при застревании ползёт вверх и переваливает коробку'],
+     ['pinbox/v6.html','v6 · съезды без отскоков: гладкие горки из кружков, стресс-тест без зависаний']]},
+ {key:'wordcrash', ico:'❓', name:'Word Crash — Загадки', c:'#f5a33b',
+  d:'Собираешь ответ на загадку, тапая буквы по порядку на гекс-поле.',
+  v:[['wordcrash/v4.html','🆕 v4 · все 5 уровней открыты; Sundae → Cupcake, добавлен Time Flies (2 слова)'],
+     ['wordcrash/v3.html','v3 · картинки-каламбуры вместо текста (10 генераций, без подписей)']]},
+ {key:'arrowjam', ico:'🎯', name:'Arrow Jam', c:'#e8563f',
+  d:'Тап — блок летит по стрелке в ворота или заказ своего цвета; скамейка на 5 мест переполнилась — проигрыш.',
+  v:[['arrowjam/v2.html','🆕 v2 · заказы вместо ворот + скамейка ожидания, все края открыты'],
+     ['arrowjam/v1.html','v1 · 5 уровней (генератор+солвер), ворота по цветам, лоток на 5']]},
+ {key:'brusca', ico:'🧱', name:'Brusca', c:'#b89b72',
+  d:'Поворачиваешь плитки брусчатки (Truchet), собирая узор по образцу; отдельный режим Pipes — соединить линии с источником.',
+  v:[['brusca/v12/index.html','🆕 v12 · казуальные яркие цвета + толстые скруглённые узоры, все уровни открыты'],
+     ['brusca/v11/index.html','v11 · без туториалов, 10 уровней (эталонный гекс ≥5 ходов первым)']]},
+ {key:'mathbubbles', ico:'🍉', name:'Fruit Bubble Jam', c:'#3f8fe6',
+  d:'Склеиваешь шары одной категории, четвёрка собрана — улетает; контент — фрукты со словами (в ранних версиях математика).',
+  v:[['bubblewords/fruit-v30-menu.html','🆕 v30 ORIGINAL · Fruit Bubble Jam · фрукт на 97% круга, текст 90%, мелкие ягоды крупнее (199 уровней)'],
+    ['bubblewords/fruit-v29-menu.html','v29 ORIGINAL · Fruit Bubble Jam · исправленные круги, текст и быстрая загрузка (199 уровней)']]},
+ {key:'bubblewords', ico:'🫧', name:'Bubble Words', c:'#2aa4d4',
+  d:'Один словесный контент в 27 обёртках: 01-20 разные механики, 21-26 одна склейка в разных сеттингах.',
+  v:[['bubblewords/index.html','🆕 ㉗ Bubble Words ORIGINAL · v27 · Fruit Jam (199 уровней)'],
+     ['bubblewords/21_galaxy.html','㉑ Galaxy · та же склейка, 3D-облёт планет'],
+     ['bubblewords/22_aquarium.html','㉒ Aquarium · та же склейка, рыбы сбоку (физика)'],
+     ['bubblewords/23_cooking.html','㉓ Soup Kitchen · та же склейка, кухня/котёл'],
+     ['bubblewords/24_dig.html','㉔ Archaeology Dig · та же склейка, расчисти черепки'],
+     ['bubblewords/25_balloons.html','㉕ Balloons · та же склейка, шары вверх (физика)'],
+     ['bubblewords/26_laundry.html','🆕 ㉖ Laundry Day · та же склейка, сортировка белья']]},
+ {key:'push', ico:'🀄', name:'Push', c:'#36c6c0',
+  d:'Сортировка проталкиванием: толкаешь карту сверху, нижняя выпадает; собери колонки по темам.',
+  v:[['push/mobile-v6.html','mobile v6 · паттерны'],['push/mobile-v7.html','mobile v7 · открытое поле']]},
+ {key:'arrows', ico:'➡️', name:'Arrows', c:'#7a5cf6',
+  d:'Вытаскиваешь стрелки с поля, если путь до края свободен; с v2 из букв собираются слова.',
+  v:[['arrows/index_v5.html','v5 · список скрыт'],['arrows/index_v6.html','v6 · угадай слово']]},
+ {key:'hexa', ico:'🔷', name:'Word Hexa', c:'#36b7c9',
+  d:'Сортировка слов по категориям на гекс-поле: тащи стопку на такую же, собери 4 одного цвета → стопка уходит. Цель — очистить всё поле.',
+  v:[['hexa/index.html','🆕 v11 · классика: рука из 3 + авто-слияние'],['hexa/v10.html','v10 · water-sort, крупные плитки + карта']]},
+ {key:'drop', ico:'<span class="ball"></span>', name:'Drop', c:'#ef6aa0',
+  d:'Drop the Ball: тащи фигуру, собирай шары своего цвета — в слова или в картинку.',
+  v:[['drop/index_v5.html','v5 · собери картинку 🍄'],['drop/index_v6.html','v6 · картинка, квадратные куски']]},
+ {key:'rush', ico:'🚌', name:'Rush Park', c:'#f4a23f',
+  d:'Bus Jam: автобусы выезжают по стрелке, паркуются, пассажиры садятся по цвету.',
+  v:[['rush/index_v1.html','v1 · top-down']]},
+ {key:'blockjam', ico:'🧩', name:'Block Jam', c:'#5b7cf5',
+  d:'Слайд-фигуры уезжают в ворота; есть миксы со словами (ворота = категории) и с сортингом Loop Sort.',
+  v:[['blockjam/waffle21.html','🆕 🧇 Waffle Sort v21 (фон из дизайна — светло-голубой)'],['blockjam/waffle20.html','🧇 Waffle Sort v20 (ворота из арта — убрана лишняя плашка)'],['blockjam/waffle19.html','🧇 Waffle Sort v19 (деления колб N/8 + остаток в следующую колбу)'],['blockjam/waffle18.html','🧇 Waffle Sort v18 (3 общие колбы + микс + упаковка товара)']]},
+ {key:'manac', ico:'🟦', name:'Word Shikaku', c:'#2ea49a',
+  d:'Shikaku × слова: тяни прямоугольник нужной площади от подсказки (буква+число), собери слово, замости всё поле.',
+  v:[['manac/index_v18.html','v18 · Генератор ∞'],['manac/index_search2.html','🆕 ЯДРО · Поиск слова — 5 уровней (слово спрятано внутри)']]},
+ {key:'carsort', ico:'🚗', name:'Car Sort', c:'#e8563f',
+  d:'Water sort про машинки: раскладываешь авто из кольцевого буфера по цветным боксам (v8 — рескин в овечек с собаками-проводниками).',
+  v:[['carsort/v10.html','🆕 v10 · 🐑 Овечий Сорт — новый визуал по UE-рендеру (трава·камни·цветы, тропа со стрелками, цветные трубы-загоны, силосы)'],['carsort/v9.html','v9 · чистый рескин без собак (крупные овцы, 5 форм)']]},
+ {key:'herd', ico:'🐕', name:'Пастушья собака', c:'#7da04a',
+  d:'Ведёшь собаку свайпом, она толкает живое стадо овец в загон сверху (v11 — бесконечный тайкун с прокачкой).',
+  v:[['herd/v13.html','🆕 v13 · джойстик ЖЁСТКО прибит внизу-центру + загон у края экрана (зайти за него нельзя) + тосты про волка и овцу'],['herd/v12.html','v12 · РЕЗКОЕ управление: курс собаки идёт прямо за стиком, разворот мгновенный, ускорение/торможение отзывчивее']]},
+ {key:'craft', ico:'⛏️', name:'Pocket Craft', c:'#5aa130',
+  d:'Воксельный мир как Minecraft: ходишь, ломаешь и ставишь блоки (Three.js, играется в браузере).',
+  v:[['craft/index.html','v2 · фиксы движения и respawn']]},
+ {key:'meowdoku', ico:'🐱', name:'Meow-Doku', c:'#c66bd2',
+  d:'Котики-судоку (LinkedIn Queens): по одному зверю в ряду, столбце и цветной зоне, без касаний по диагонали, плюс мета «Зверинец».',
+  v:[['meowdoku/v7/index.html','🆕 v7 · крестики видны на телефоне + старт всегда с 1-го уровня'],['meowdoku/v6/index.html','v6 · видимые тёмные авто-крестики']]},
+];
+const g=document.getElementById('grid'), g2=document.getElementById('grid2');
+const gridOf=m=>m.col==='store'?g2:g;
+const hb=document.getElementById('hiddenbar');
+const DEFAULT_HIDDEN=['craft'];           // craft спрятан по умолчанию
+let hidden;
+try{ hidden=JSON.parse(localStorage.getItem('hiddenMech')); }catch(e){}
+if(!Array.isArray(hidden)) hidden=DEFAULT_HIDDEN.slice();
+const save=()=>{ try{ localStorage.setItem('hiddenMech',JSON.stringify(hidden)); }catch(e){} };
+let listOpen=false;
+
+// ---- пользовательский порядок плиток (drag-n-drop за ⠿) ----
+let order;
+try{ order=JSON.parse(localStorage.getItem('mechOrder')); }catch(e){}
+if(!Array.isArray(order)) order=[];
+function fullOrder(){                       // все ключи: сохранённый порядок + новые игры сверху
+  const known=order.filter(k=>MECH.some(m=>m.key===k));
+  const fresh=MECH.map(m=>m.key).filter(k=>!known.includes(k));
+  return fresh.concat(known);
+}
+function sortedMech(){
+  const fo=fullOrder();
+  return MECH.slice().sort((a,b)=>fo.indexOf(a.key)-fo.indexOf(b.key));
+}
+function saveOrderFromDom(){
+  const visSeq=[...g.children,...g2.children].map(t=>t.dataset.key);
+  const visSet=new Set(visSeq);
+  let i=0;                                  // скрытые плитки остаются на своих местах
+  order=fullOrder().map(k=>visSet.has(k)?visSeq[i++]:k);
+  try{ localStorage.setItem('mechOrder',JSON.stringify(order)); }catch(e){}
+}
+function startDrag(tile,e0){
+  e0.preventDefault();
+  const btn=e0.currentTarget;
+  btn.setPointerCapture(e0.pointerId);
+  tile.classList.add('dragging');
+  // ВАЖНО: двигаем в DOM соседей, а не саму плитку — иначе браузер
+  // сбрасывает pointer capture и драг обрывается на первом же переносе
+  // «курсор раньше соседа»: выше его ряда, либо в его ряду левее центра (сетка может быть в 2 столбца)
+  const before=(x,y,r)=> y<r.top ? true : y>r.bottom ? false : x<r.left+r.width/2;
+  const move=e=>{
+    const x=e.clientX, y=e.clientY, g=tile.parentElement;
+    let prev=tile.previousElementSibling;
+    while(prev){ const r=prev.getBoundingClientRect();
+      if(before(x,y,r)){ g.insertBefore(prev,tile.nextSibling); prev=tile.previousElementSibling; }
+      else break; }
+    let next=tile.nextElementSibling;
+    while(next){ const r=next.getBoundingClientRect();
+      if(!before(x,y,r)){ g.insertBefore(next,tile); next=tile.nextElementSibling; }
+      else break; }
+  };
+  const up=()=>{
+    btn.removeEventListener('pointermove',move);
+    btn.removeEventListener('pointerup',up);
+    btn.removeEventListener('pointercancel',up);
+    tile.classList.remove('dragging');
+    saveOrderFromDom();
+  };
+  btn.addEventListener('pointermove',move);
+  btn.addEventListener('pointerup',up);
+  btn.addEventListener('pointercancel',up);
+}
+
+// выбрать «самую последнюю» версию: 🆕-пометка → иначе максимальный номер vN → иначе первый пункт
+function latestIdx(v){
+  const ni=v.findIndex(o=>/🆕/.test(o[1]));
+  if(ni>=0) return ni;
+  let best=-1,bestVer=-Infinity;
+  v.forEach((o,i)=>{ const mm=(''+o[1]).match(/v(\d+)/i); const ver=mm?+mm[1]:-1; if(ver>bestVer){ bestVer=ver; best=i; } });
+  return best>=0?best:0;
+}
+function buildTile(m){
+  const t=document.createElement('div'); t.className='tile'+(m.col==='store'?' store':''); t.style.setProperty('--c',m.c);
+  t.dataset.key=m.key;
+  const def=latestIdx(m.v);
+  const opts=m.v.map((o,i)=>`<option value="${o[0]}"${i===def?' selected':''}>${o[1]}</option>`).join('');
+  t.innerHTML=`<button class="hide-btn" title="Спрятать карточку">✕</button>
+    <button class="drag-btn" title="Перетащить (изменить порядок)">⠿</button>
+    <div class="ico">${m.ico}</div><h2>${m.name}</h2><p class="d">${m.d}</p>
+    <div class="row"><select>${opts}</select><button class="go">Открыть ▶</button></div>`;
+  const sel=t.querySelector('select');
+  t.querySelector('.go').onclick=()=>{ location.href=sel.value; };
+  t.querySelector('.hide-btn').onclick=()=>{ if(!hidden.includes(m.key)){ hidden.push(m.key); save(); render(); } };
+  t.querySelector('.drag-btn').addEventListener('pointerdown',e=>startDrag(t,e));
+  gridOf(m).appendChild(t);
+}
+
+function renderHidden(){
+  const items=MECH.filter(m=>hidden.includes(m.key));
+  if(!items.length){ hb.className='hiddenbar'; hb.innerHTML=''; return; }
+  hb.className='hiddenbar on'+(listOpen?' open':'');
+  const chips=items.map(m=>`<span class="chip">${m.name}<button data-k="${m.key}">Вернуть ↩</button></span>`).join('');
+  hb.innerHTML=`<div class="hb-head"><span>🫥 Спрятано: ${items.length}</span><span>${listOpen?'Свернуть ▲':'Достать ▼'}</span></div>
+    <div class="hb-list">${chips}</div>`;
+  hb.querySelector('.hb-head').onclick=()=>{ listOpen=!listOpen; renderHidden(); };
+  hb.querySelectorAll('.hb-list button').forEach(b=>b.onclick=()=>{
+    hidden=hidden.filter(k=>k!==b.dataset.k); save(); render();
+  });
+}
+
+function render(){
+  g.innerHTML='';g2.innerHTML='';
+  sortedMech().filter(m=>!hidden.includes(m.key)).forEach(buildTile);
+  renderHidden();
+}
+render();
+
+// ---- Playables list (name + publication date) ----
+const PLAYABLES = [
+ {ico:'🦫', name:'Capy-Doku · Level 42 ✅ ФИНАЛ v5 (крестики волной с 1-й капибары; неправильный тап = сердечко раскалывается на клетке)', date:'2026-06-19', url:'capydoku/v5.html'},
+ {ico:'🦫', name:'Capy-Doku · Level 42 v3 (фикс обрезки: убран чёрный край справа + баннер-артефакт, скруглённая доска)', date:'2026-06-19', url:'capydoku/v3.html'},
+ {ico:'🦫', name:'Capy-Doku · Level 42 v2 (поле с запасом, крестики-веточки из дизайна, центровка, цель в 2 строки)', date:'2026-06-19', url:'capydoku/v2.html'},
+ {ico:'🦫', name:'Capy-Doku · Level 42 v1 (первая версия)', date:'2026-06-19', url:'capydoku/v1.html'},
+ {ico:'🐱', name:'Meow-Doku · v5 (EN, диагональ разрешена, фикс крестиков на телефоне, панда + PLAY NOW)', date:'2026-06-19', url:'meowdoku/playable-v5.html'},
+ {ico:'🐱', name:'Meow-Doku · v4 (2 уровня + поп-ап открытия льва после 1-го, авто-крестики)', date:'2026-06-18', url:'meowdoku/playable-v4.html'},
+ {ico:'🐱', name:'Meow-Doku · v3 (PNG-кот + рука Math Solitaire + авто-крестики по ряду/столбцу)', date:'2026-06-18', url:'meowdoku/playable-v3.html'},
+ {ico:'🐱', name:'Meow-Doku · v1 (3 уровня, рука-туториал, CTA)', date:'2026-06-18', url:'meowdoku/playable.html'},
+ {ico:'🃏', name:'Math Solitaire · v17 (стек + перенос на пустую колонку)', date:'2026-06-12', url:'mathsol/index_v17.html'},
+ {ico:'🃏', name:'Math Solitaire · v16 (стек карт по результату + групп-драг)', date:'2026-06-12', url:'mathsol/index_v16.html'},
+ {ico:'🃏', name:'Math Solitaire · v15 (дизайн-система: фикс фон/рука/CTA)', date:'2026-06-09', url:'mathsol/index_v15.html'},
+ {ico:'🃏', name:'Math Solitaire · v14 (дизайн-система: PSD-арт + Lilita One)', date:'2026-06-09', url:'mathsol/index_v14.html'},
+ {ico:'🃏', name:'Math Solitaire · v13 (Detective Jazz фон + swipe-колода)', date:'2026-06-09', url:'mathsol/index_v13.html'},
+ {ico:'🃏', name:'Math Solitaire · v11 (реальные SFX + store link)', date:'2026-06-09', url:'mathsol/index_v11.html'},
+];
+const pl=document.getElementById('plist');
+PLAYABLES.forEach(p=>{
+  const li=document.createElement('li');
+  li.innerHTML=`<span class="pico">${p.ico}</span>
+    <div class="pmeta"><div class="pname">${p.name}</div><div class="pdate">Опубликовано: ${p.date}</div></div>
+    <button class="pgo">Открыть ▶</button>`;
+  li.querySelector('.pgo').onclick=()=>{ location.href=p.url; };
+  pl.appendChild(li);
+});
+
+// ---- Авто-обновление: если на сервере появился новый контент — страница сама перезагрузится ----
+(function(){
+  const url=location.pathname;
+  let known=null;
+  async function token(){
+    const r=await fetch(url+'?_cv='+Date.now(),{cache:'no-store'});
+    if(!r.ok) throw 0;
+    return r.headers.get('etag')||r.headers.get('last-modified')||String((await r.text()).length);
+  }
+  async function poll(){
+    try{
+      const t=await token();
+      if(known===null){ known=t; return; }
+      if(t!==known){
+        const last=+sessionStorage.getItem('hubReload')||0;
+        if(Date.now()-last>4000){ sessionStorage.setItem('hubReload',Date.now()); location.reload(); }
+        else { known=t; }
+      }
+    }catch(e){}
+  }
+  poll();
+  setInterval(poll, 30000);              // проверка раз в 30 секунд (авто-рефреш)
+})();
+</script>
+</body></html>
