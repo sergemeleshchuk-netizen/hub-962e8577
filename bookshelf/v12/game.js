@@ -587,7 +587,7 @@ function mechIntro(list,done){if(!list.length||!G||G.solved){done();return}const
   const w=document.createElement('div');w.id='mechW';G.locked=true;
   w.innerHTML=`<div class="spotH" style="left:${x0-pad}px;top:${y0-pad}px;width:${x1-x0+pad*2}px;height:${y1-y0+pad*2}px"></div>
    <div class="mcCard ${up?'up':'dn'}" style="${up?`bottom:${app.clientHeight-y0+pad+16}px`:`top:${y1+pad+16}px`};--ax:${ax}px">
-    <div class="mcHd"><span class="mcIc">${MECH_UI[m.k].ic}</span><b>${m.t}</b><small>New</small></div><span class="mcX">${m.x}</span>
+    <div class="mcHd">${m.k==='hidden'?'':'<span class="mcIc">'+MECH_UI[m.k].ic+'</span>'}<b>${m.t}</b><small>New</small></div><span class="mcX">${m.x}</span>
     <button class="btn wide" id="mcOk"><span class="t">Got it</span></button></div>`;
   app.appendChild(w);Sound.play('magic');m.ids.forEach(i=>{const el=G.books[i].el;el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake')});
   const t0=performance.now();w.onclick=()=>{if(performance.now()-t0<500)return;Sound.play('click');w.classList.add('out');setTimeout(()=>{w.remove();G.locked=false;mechIntro(list.slice(1),done)},180)}}
