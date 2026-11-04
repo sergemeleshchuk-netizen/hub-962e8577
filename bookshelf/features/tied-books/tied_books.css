@@ -1,0 +1,31 @@
+/* Tied Books («Ribbons») — styles, cleaned up from the Bookshelf prototype (final look, v131–v132).
+   The arm is a child of the LEFT book: <div class="book"> … <b class="tie knot"><i class="tn">5</i></b></div>
+   Books need position:absolute/relative. JS sets --kw (span of both books) and --ah (arm height). */
+
+.book:has(.tie.knot){z-index:6}                       /* arms above the neighbouring book */
+.book .tie.knot{position:absolute;left:0;top:50%;width:var(--kw,200%);height:0;z-index:5;pointer-events:none;transition:opacity .2s}
+/* hands (clasp, centred on the gap) + stretchable sleeve that ends flush with both book edges */
+.book .tie.knot::after{content:'';position:absolute;left:0;top:0;width:100%;height:var(--ah,36px);transform:translateY(-50%);
+  background:var(--hands) center/auto 100% no-repeat,var(--sleeve) center/100% 100% no-repeat;
+  filter:drop-shadow(0 3px 3px rgba(10,20,50,.45));animation:tbIdle 2.6s ease-in-out infinite}
+@keyframes tbIdle{0%,100%{transform:translateY(-50%)}50%{transform:translateY(-58%)}}
+
+/* moves-left counter, under the clasp */
+.book .tie.knot .tn{position:absolute;left:50%;top:calc(var(--ah,36px)*.5 - 4px);translate:-50% 0;z-index:2;min-width:20px;padding:2px 6px;border-radius:9px;
+  background:linear-gradient(#FFE36A,#F2A91E);border:2px solid #1C2E6E;font:700 12px/1 'Fredoka','Baloo 2',system-ui,sans-serif;font-style:normal;color:#fff;text-align:center;
+  text-shadow:0 1.5px 0 #7A3E00,0 -1px 0 #7A3E00,1px 0 0 #7A3E00,-1px 0 0 #7A3E00}
+.book .tie.knot .tn:empty{display:none}
+.book .tie.knot .tn.bump{animation:tbNum .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes tbNum{40%{scale:1.5}100%{scale:1}}
+
+/* release: the two gloves fly apart (img elements on the fx layer) + sparkles */
+.tb-fly{position:absolute;left:0;top:0;z-index:235;pointer-events:none;filter:drop-shadow(0 3px 3px rgba(10,20,50,.45)) drop-shadow(0 0 4px rgba(255,255,255,.55))}
+.tb-pt{position:absolute;width:var(--s);height:var(--s);margin:calc(var(--s)/-2) 0 0 calc(var(--s)/-2);background:var(--c);pointer-events:none;z-index:236;
+  clip-path:polygon(50% 0,61% 38%,100% 50%,61% 62%,50% 100%,39% 62%,0 50%,39% 38%);animation:tbPt var(--d) cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes tbPt{0%{transform:translate(0,0) scale(.4)}20%{transform:translate(calc(var(--x)*.4),calc(var(--y)*.4)) scale(1.1) rotate(60deg)}100%{transform:translate(var(--x),calc(var(--y) + 30px)) scale(.2) rotate(240deg);opacity:0}}
+
+/* tried to move only one of the pair */
+.book.tb-shake{animation:tbShake .35s}
+@keyframes tbShake{20%,60%{translate:-4px 0}40%,80%{translate:4px 0}}
+
+@media (prefers-reduced-motion:reduce){.book .tie.knot::after,.book .tie.knot .tn.bump,.book.tb-shake{animation:none}}

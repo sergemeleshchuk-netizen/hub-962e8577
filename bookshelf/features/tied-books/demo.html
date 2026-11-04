@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tied Books demo</title>
+<link rel="stylesheet" href="tied_books.css">
+<style>
+  body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;gap:14px;padding:16px;box-sizing:border-box;
+    background:radial-gradient(circle at 50% 30%,#5a3a22,#24140a);font-family:system-ui,sans-serif;color:#fff}
+  h1{font-size:18px;margin:4px 0 0}
+  #wrap{position:relative}
+  #shelf{position:relative;width:min(360px,92vw);padding:12px;border-radius:14px;background:#3b220f;box-shadow:inset 0 0 0 4px #E9B44C;box-sizing:border-box}
+  .book{position:absolute;border-radius:6px;background:#888 url(demo_art.jpg) no-repeat;box-shadow:0 3px 4px rgba(0,0,0,.4);transition:transform .3s cubic-bezier(.3,.8,.3,1);cursor:pointer}
+  .book.sel{outline:3px solid #FFE36A}
+  #fx{position:absolute;inset:0;pointer-events:none}
+  button{font:600 15px system-ui;padding:10px 16px;border-radius:12px;border:0;background:#4FD67A;color:#123;cursor:pointer}
+  .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  #log{font-size:13px;opacity:.85;text-align:center;max-width:360px}
+</style></head><body>
+<h1>Tied Books — demo</h1>
+<div id="wrap"><div id="shelf"></div><div id="fx"></div></div>
+<div class="row"><button id="mv">Make a move</button><button id="gl">Glue a tied book</button><button id="key" style="background:#FFC548">Golden Key</button><button id="rs" style="background:#E9B44C">Restart</button></div>
+<div id="log">Tap two books to swap them. Tied books move together (tap one of them, then a slot two books wide).</div>
+<script src="tied_books.js"></script>
+<script>
+const COLS=6,ROWS=3,N=COLS*ROWS,shelf=document.getElementById('shelf'),logEl=document.getElementById('log');let tb,books,order,sel=-1;
+function slotRect(p){const W=shelf.clientWidth-24,bw=W/COLS,bh=bw*2.2;return{x:12+(p%COLS)*bw+2,y:12+Math.floor(p/COLS)*(bh+10),w:bw-4,h:bh}}
+function place(){order.forEach((id,p)=>{const r=slotRect(p),b=books[id];b.style.width=r.w+'px';b.style.height=r.h+'px';b.style.transform=`translate(${r.x}px,${r.y}px)`});
+  const r=slotRect(N-1);shelf.style.height=(r.y+r.h+12)+'px';requestAnimationFrame(()=>setTimeout(()=>tb.sync(),320))}
+function build(){shelf.innerHTML='';books=[];order=[...Array(N).keys()].sort(()=>Math.random()-.5);
+  for(let i=0;i<N;i++){const b=document.createElement('div');b.className='book';b.style.left=b.style.top='0';
+    b.style.backgroundSize=`${COLS*100}% ${ROWS*100}%`;b.style.backgroundPosition=`${(i%COLS)/(COLS-1)*100}% ${Math.floor(i/COLS)/(ROWS-1)*100}%`;b.onclick=()=>tap(i);shelf.appendChild(b);books.push(b)}
+  tb=TiedBooks.create({pairs:TiedBooks.pick(order,COLS,2),el:id=>books[id],fx:document.getElementById('fx'),assets:'',onUntie:()=>{try{TiedBooks.untieSound(ac||(ac=new AudioContext()))}catch(e){}}});
+  place();tb.mount();log()}
+let ac=null;
+function tap(id){if(sel<0){sel=id;books[id].classList.add('sel');return}
+  const a=sel;books[a].classList.remove('sel');sel=-1;if(a===id)return;
+  const pa=order.indexOf(a),pb=order.indexOf(id),mate=tb.partner(a);
+  if(mate>=0){const pm=order.indexOf(mate),left=Math.min(pa,pm),dst=pb-(pa>pm?1:0);              // move the pair as a block
+    if(dst%COLS===COLS-1||tb.has(order[dst])||tb.has(order[dst+1])){books[a].classList.add('tb-shake');setTimeout(()=>books[a].classList.remove('tb-shake'),400);return}
+    const L=order[left],R=order[left+1],X=order[dst],Y=order[dst+1];order[dst]=L;order[dst+1]=R;order[left]=X;order[left+1]=Y}
+  else if(tb.has(id)){books[a].classList.add('tb-shake');setTimeout(()=>books[a].classList.remove('tb-shake'),400);return}
+  else{order[pa]=id;order[pb]=a}
+  place();tb.onMove();log()}
+function log(){logEl.textContent='Tied pairs: '+tb.count()+'   '+tb.timers().map(t=>t.pair.join('+')+' → '+t.moves).join(' · ')}
+document.getElementById('mv').onclick=()=>{tb.onMove();log()};
+document.getElementById('gl').onclick=()=>{const t=tb.timers()[0];tb.onMove({glued:t?[t.pair[0]]:[]});log()};
+document.getElementById('key').onclick=()=>{tb.untieFirst();log()};
+document.getElementById('rs').onclick=build;addEventListener('resize',()=>place());build();
+</script></body></html>

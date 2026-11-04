@@ -289,15 +289,19 @@ const natSize=(g,id)=>g.natMembers[g.nat[id]].length;
 function pairCount(order){let c=0;const cols=G.cols;for(let p=0;p<order.length;p++){const a=order[p];if(p%cols<cols-1&&order[p+1]===a+1&&Math.floor((a+1)/cols)===Math.floor(a/cols))c++;}return c}
 
 function decorate(){G.books.forEach(b=>{const el=b.el,id=b.id;
-  let cv=el.querySelector('.cover');if(G.hidden.has(id)&&!cv){cv=document.createElement('u');cv.className='cover ol';cv.textContent='?';el.appendChild(cv)}
+  let cv=el.querySelector('.cover');if(G.hidden.has(id)&&!cv){cv=document.createElement('u');cv.className='cover';cv.innerHTML='<i class="hbB t"></i><i class="hbE"></i><i class="hbB b"></i>';el.appendChild(cv)}
   let ch=el.querySelector('.chains');if(G.locks[id]&&!ch){ch=document.createElement('s');ch.className='chains';ch.innerHTML=SVG.pad+'<em class="ol"></em>';el.appendChild(ch)}
   if(ch&&G.locks[id])ch.querySelector('em').textContent=G.locks[id];
   el.classList.toggle('lockd',!!G.locks[id]);
   let tie=el.querySelector('.tie');const lk=G.links.find(l=>l.includes(id));
-  if(lk&&!tie){tie=document.createElement('b');tie.className='tie'+(lk[0]===id?' knot':'');el.appendChild(tie)}
+  if(lk&&lk[0]===id&&!tie){tie=document.createElement('b');tie.className='tie knot';el.appendChild(tie)}
   badge(el,'star',G.stars.has(id),SVG.star);
   badge(el,'tick',G.ticks[id]!==undefined,`<span>${G.ticks[id]??''}</span>`);
-  badge(el,'kb',G.keyBook===id,`<img src="${ICO.key}" alt="">`)})}
+  badge(el,'kb',G.keyBook===id,`<img src="${ICO.key}" alt="">`)});syncTies()}
+/* hands span from the left book's left edge to the right book's right edge, clasp on the seam (TiedBooks pack) */
+function syncTies(){if(!G||!G.Lay||!G.links)return;const L=G.Lay;G.links.forEach(l=>{const [a,b]=G.pos[l[0]]<=G.pos[l[1]]?l:[l[1],l[0]];const ea=G.books[a].el,k=G.books[l[0]].el.querySelector('.tie.knot');if(!k)return;
+  if(k.parentNode!==ea)ea.appendChild(k);const A=G.books[a],B=G.books[b],xa=slot(L,G.pos[a]).x+(A.insL||0),xb=slot(L,G.pos[b]).x+L.sw-(B.insR||0),wa=L.sw-(A.insL||0)-(A.insR||0);
+  k.style.setProperty('--kw',(xb-xa)+'px');k.style.setProperty('--ah',Math.round(Math.max(26,Math.min(54,wa*.42)))+'px')})}
 function badge(el,k,on,html){let b=el.querySelector('.bdg.'+k);if(on&&!b){b=document.createElement('em');b.className='bdg '+k;el.appendChild(b)}
   if(on){if(b.dataset.h!==html){b.innerHTML=html;b.dataset.h=html}}else if(b&&!b.classList.contains('gone')){b.classList.add('gone');setTimeout(()=>b.remove(),420)}}
 /* specials after each move: Star Book (+3 moves), Key Book (opens every lock), Ticking Book (-3 moves at zero) */
@@ -325,7 +329,7 @@ function refreshBooks(instant){const L=G.Lay;G.groups=computeGroups();
     el.style.width=(L.sw-b.insL-b.insR)+'px';el.style.height=(L.sh*b.hfNow)+'px';
     el.style.backgroundPosition=`${-(cc*L.sw+b.insL)}px ${-(cr*L.sh+L.sh*(1-b.hfNow))}px`;
     el.classList.toggle('glued',glued&&!L.solved);el.classList.toggle('framed',isAnch(b.id)&&!L.solved);el.classList.toggle('gl-l',!!lk.l);el.classList.toggle('gl-r',!!lk.r);
-    placeBook(b.id);if(instant){el.offsetHeight;el.style.transition=''}})}
+    placeBook(b.id);if(instant){el.offsetHeight;el.style.transition=''}});syncTies()}
 function bookXY(id,p){const L=G.Lay,b=G.books[id],s=slot(L,p);return{x:s.x+b.insL,y:s.y+L.sh*(1-b.hfNow)}}
 function placeBook(id,p=G.pos[id],lift=0,solo=true){const {x,y}=bookXY(id,p);G.books[id].el.style.transform=`translate3d(${x}px,${y-lift*9}px,0) scale(${solo?1+lift*.06:1})`}
 function liftGroup(ids,on){const solo=ids.length===1;ids.forEach(i=>{G.books[i].el.classList.toggle('lift',on);placeBook(i,G.pos[i],on?1:0,solo)})}
@@ -406,16 +410,23 @@ function afterMerge(grown){const g=G.groups;let changed=false;
 function unlockBook(id){delete G.locks[id];const el=G.books[id].el,ch=el.querySelector('.chains');
   const key=document.createElement('img');key.src=ICO.key;key.className='mergeKey';el.appendChild(key);setTimeout(()=>key.remove(),700);el.classList.remove('lockd');if(ch){ch.classList.add('gone');setTimeout(()=>ch.remove(),400)}
   const r=relRect(el);burst(r.cx,r.cy,14,{colors:['#DDE3EA','#FFC548','#fff']});Sound.play('unlock');buzz('medium');G.groups=computeGroups()}
-function revealBook(id){if(!G.hidden.has(id))return;G.hidden.delete(id);const cv=G.books[id].el.querySelector('.cover');if(cv){cv.classList.add('gone');setTimeout(()=>cv.remove(),450)}const r=relRect(G.books[id].el);burst(r.cx,r.cy,8,{colors:['#C29BFF','#FFC548','#fff']});Sound.play('magic')}
+/* reveal (HiddenBooks pack look): shake + brighten, the cover swings open like a book cover, sparkles + «Revealed!» */
+function revealBook(id){if(!G.hidden.has(id))return;G.hidden.delete(id);const el=G.books[id].el,cv=el.querySelector('.cover');Sound.play('magic');
+  if(!cv||RM){cv&&cv.remove();return}cv.classList.add('opening');
+  setTimeout(()=>{cv.classList.add('gone');const r=relRect(el);burst(r.cx,r.cy,16,{colors:['#C29BFF','#FFE08A','#fff','#8FE0FF']});
+    const t=document.createElement('div');t.className='hb-txt';t.textContent='Revealed!';t.style.left=r.cx+'px';t.style.top=(r.cy-r.h/2-6)+'px';fx.appendChild(t);setTimeout(()=>t.remove(),1200);
+    el.classList.remove('hb-reveal');void el.offsetWidth;el.classList.add('hb-reveal');setTimeout(()=>{cv.remove();el.classList.remove('hb-reveal')},700)},520)}
 function untie(l){snapTie(l);G.links=G.links.filter(x=>x!==l);l.forEach(id=>{const t=G.books[id].el.querySelector('.tie');if(t){t.classList.add('gone');setTimeout(()=>t.remove(),350)}});
-  const r=relRect(G.books[l[0]].el);burst(r.x+r.w,r.cy,10,{colors:['#E58BFF','#C35BE0','#fff']});Sound.play('unlock');G.groups=computeGroups()}
+  Sound.play('unlock');G.groups=computeGroups()}
 
 
-/* The strap snaps at the clasp and the two pieces slide away. */
-function snapTie(l){const kn=G.books[l[0]].el.querySelector('.tie.knot');if(!kn||RM)return;const r=relRect(kn),x=r.x+r.w,y=r.cy;
-  for(const dir of [-1,1]){const piece=document.createElement('div');piece.className='tieFly';piece.style.width='30px';fx.appendChild(piece);
-    piece.animate([{transform:`translate(${x-15}px,${y-6}px)`,opacity:1},{transform:`translate(${x-15+dir*48}px,${y-31}px) rotate(${dir*25}deg)`,opacity:0}],{duration:650,easing:'ease-out'}).onfinish=()=>piece.remove()}
-  burst(x,y,10,{colors:['#FFE08A','#C35BE0','#fff'],spread:50})}
+/* The hands let go: the pair fades and two gloves wave apart (TiedBooks pack look) */
+function snapTie(l){const kn=G.books[l[0]].el.querySelector('.tie.knot');if(!kn||RM)return;const k=relRect(kn),W=parseFloat(kn.style.getPropertyValue('--kw'))||k.w,Hh=W*116/420,y0=k.y-Hh/2;kn.style.opacity='0';
+  for(const [src,dir,f] of [['ui/arm_l.webp',-1,240],['ui/arm_r.webp',1,260]]){const w=W*f/420*1.04,x0=dir<0?k.x:k.x+W-w,h=document.createElement('img');h.src=src;h.className='tb-fly';h.style.width=w+'px';fx.appendChild(h);
+    h.animate([{transform:`translate(${x0}px,${y0}px)`,opacity:1},{transform:`translate(${x0+dir*6}px,${y0}px) rotate(${dir*-6}deg)`,offset:.25},
+      {transform:`translate(${x0+dir*W*.35}px,${y0-18}px) rotate(${dir*14}deg)`,opacity:1,offset:.7},{transform:`translate(${x0+dir*W*.5}px,${y0-30}px) rotate(${dir*20}deg) scale(.85)`,opacity:0}],
+      {duration:950,easing:'cubic-bezier(.3,.7,.3,1)'}).onfinish=()=>h.remove()}
+  burst(k.x+W/2,k.y,12,{colors:['#FFE08A','#fff','#7CC8FF'],spread:50});toast('The hands let go!')}
 /* =========================================================
    INPUT — drag a book or a glued block; tap-tap to swap
    ========================================================= */
@@ -535,7 +546,7 @@ function testLevel(rows,cols){const base=levelDef(Math.max(S.level,101));const d
   toast(`Test shelf: ${def.n} books · correct books pin in place`,2600);startLevel({def,order,locks:{},links:[],hidden:[],moves,opt},{})}
 function openStart(){tickLives();if(S.lives<=0){outOfLives();return}
   const L=S.level;if(L<powerFrom()){pkPre=null;ProtoKit.play(L);return}const prep=prepareLevel(L),def=prep.def;const sel={bookmark:false,corners:false,center:false,glue:false,shelf:false};
-  const mods=[];if(Object.keys(prep.locks).length)mods.push(`<span class="mod">${SVG.pad}Locks</span>`);if(prep.links.length)mods.push(`<span class="mod">${SVG.ribbon}Ribbons</span>`);if(prep.hidden.length)mods.push(`<span class="mod">${SVG.q}Hidden books</span>`);
+  const mods=[];if(Object.keys(prep.locks).length)mods.push(`<span class="mod">${SVG.pad}Locks</span>`);if(prep.links.length)mods.push(`<span class="mod"><img src="ui/hs_both.webp" alt="" style="width:1.6em;height:auto">Tied books</span>`);if(prep.hidden.length)mods.push(`<span class="mod">${SVG.q}Hidden books</span>`);
   if(prep.stars.length)mods.push(`<span class="mod">${SVG.star}Star books +3</span>`);if(Object.keys(prep.ticks).length)mods.push(`<span class="mod tickc"><b>${prep.def.mods.tickN}</b>Ticking books</span>`);if(prep.keyBook>=0)mods.push(`<span class="mod"><img src="${ICO.key}" alt="">Key book</span>`);
   const wind=(S.attempts[L]||0)>=2;if(wind)prep.moves+=3;
   const p=popup({title:'Level '+L,ribbon:def.d>=9?'purple':def.d>=7?'coral':'',html:`
@@ -668,8 +679,8 @@ function complete(){G.solved=true;G.locked=true;clearHint();tipOff();
 
 
 /* ---------- unlock roadmap: what opens next (boosters, obstacles, features) ---------- */
-const MECH_UI={locks:{n:'Locked Books',ic:'<img src="ui/lk_pad.webp" alt="">'},stars:{n:'Star Books',ic:SVG.star},links:{n:'Tied Books',ic:SVG.ribbon},
-  hidden:{n:'Hidden Books',ic:'<img src="ui/hid_cover.webp" alt="">'},ticks:{n:'Ticking Books',ic:'<img src="ui/tk_clock.webp" alt="">'},keyBook:{n:'Key Book',ic:`<img src="${ICO.key}" alt="">`},doubleLock:{n:'Double Lock',ic:'<img src="ui/lk_pad.webp" alt="">'}};
+const MECH_UI={locks:{n:'Locked Books',ic:'<img src="ui/lk_pad.webp" alt="">'},stars:{n:'Star Books',ic:SVG.star},links:{n:'Tied Books',ic:'<img src="ui/hs_both.webp" alt="">'},
+  hidden:{n:'Hidden Books',ic:'<img src="ui/hid_icon.webp" alt="">'},ticks:{n:'Ticking Books',ic:'<img src="ui/tk_clock.webp" alt="">'},keyBook:{n:'Key Book',ic:`<img src="${ICO.key}" alt="">`},doubleLock:{n:'Double Lock',ic:'<img src="ui/lk_pad.webp" alt="">'}};
 function unlockList(){const out=[];
   IN_LEVEL.concat(PRE).forEach(k=>out.push({L:BOOST[k].unlock,n:BOOST[k].name,ic:`<img src="${bImg(k)}" alt="">`,t:PRE.includes(k)?'New power-up':'New booster'}));
   Object.keys(MECH).forEach(k=>out.push({L:MECH[k],n:MECH_UI[k].n,ic:MECH_UI[k].ic,t:'New challenge'}));
@@ -831,7 +842,7 @@ const CURVE_MECHANICS=[
   {L:2,name:'Glued blocks',how:'Matching neighbours join and move together.'},
   {L:MECH.locks,name:'Locks',how:'Two nearby merges make a key open the lock.'},
   {L:MECH.stars,name:'Star books',how:'Place the star book correctly for +3 moves.'},
-  {L:MECH.links,name:'Ribbons',how:'A merge beside the tied pair unties them.'},
+  {L:MECH.links,name:'Tied books',how:'They hold hands and move together. A merge beside the pair makes them let go.'},
   {L:MECH.hidden,name:'Hidden books',how:'Join neighbours to reveal the hidden picture.'},
   {L:MECH.ticks,name:'Ticking books',how:'Place the ticking book before zero or lose 3 moves.'},
   {L:MECH.keyBook,name:'Key book',how:'Place the key book to open every lock.'}

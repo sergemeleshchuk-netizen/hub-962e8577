@@ -1794,30 +1794,45 @@ body{height:100dvh;display:flex;align-items:center;justify-content:center;backgr
 .shSeal{box-shadow:0 4px 0 #7A0E10!important}
 .shTag{border:0!important}.shTag::after{border:0!important}
 
-/* v14 linked books: one violet strap across the pair, with a clasp at the seam. */
-.book .tie{left:-3px!important;right:-3px!important;top:50%!important;height:14px!important;transform:translateY(-50%);z-index:5;
-  border-top:2px solid #FFE49A;border-bottom:2px solid #8A3DB0;border-radius:2px!important;
-  background:linear-gradient(#B96FEB,#8640C5 55%,#7131AD)!important;
-  box-shadow:0 2px 4px rgba(36,12,48,.42),inset 0 1px 0 rgba(255,255,255,.35)!important}
-.book .tie.knot::after{content:''!important;position:absolute!important;right:-12px!important;left:auto!important;top:-5px!important;width:20px!important;height:20px!important;
-  border:2px solid #8F4A22!important;border-radius:50%!important;
-  background:radial-gradient(circle at 35% 30%,#FFF3B2,#F5BB3B 62%,#A76A16)!important;
-  box-shadow:0 2px 4px rgba(36,12,48,.45)!important;z-index:2}
-.book .tie.gone{transform:translateY(-50%) scaleY(0)}
-.tieFly{position:absolute;left:0;top:0;z-index:235;pointer-events:none;height:11px;border-top:2px solid #FFE49A;border-bottom:2px solid #8A3DB0;
-  background:linear-gradient(#B96FEB,#8640C5 55%,#7131AD);box-shadow:0 2px 4px rgba(36,12,48,.42)}
-/* hidden books: mystery cover */
-.book .cover{background:url(ui/hid_cover.webp) center/100% 100% no-repeat!important;font-size:0!important;color:transparent!important;border:0!important;
-  box-shadow:0 0 0 2px #FFD36A,0 0 14px 3px rgba(180,110,255,.85)!important;overflow:hidden;animation:hidGlow 2.2s ease-in-out infinite}
-.book .cover::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,240,200,.55) 50%,transparent 65%) -150% 0/250% 100% no-repeat;animation:hidSheen 3s ease-in-out infinite}
-@keyframes hidGlow{0%,100%{box-shadow:0 0 0 2px #FFD36A,0 0 10px 2px rgba(180,110,255,.7)}50%{box-shadow:0 0 0 2px #FFE9A0,0 0 20px 6px rgba(200,140,255,1)}}
-@keyframes hidSheen{0%,40%{background-position:-150% 0}80%,100%{background-position:250% 0}}
+/* 2026-11-04 tied books: hands in blue sleeves hold the pair (TiedBooks_Ribbons pack, look only) */
+.book .tie{background:none!important;box-shadow:none!important;border:0!important;right:auto!important;border-radius:0!important}
+.book:has(.tie.knot){z-index:6}
+.book .tie.knot{left:0!important;top:50%!important;width:var(--kw,200%);height:0!important;transform:none;z-index:5;pointer-events:none;transition:opacity .2s}
+.book .tie.knot::after{content:''!important;position:absolute!important;left:0!important;right:auto!important;top:0!important;width:100%!important;height:var(--ah,36px)!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;transform:translateY(-50%);
+  background:url(ui/arm_hands.webp) center/auto 100% no-repeat,url(ui/arm_sleeve.webp) center/100% 100% no-repeat!important;
+  filter:drop-shadow(0 3px 3px rgba(10,20,50,.45));animation:tbIdle 2.6s ease-in-out infinite}
+@keyframes tbIdle{0%,100%{transform:translateY(-50%)}50%{transform:translateY(-58%)}}
+.tb-fly{position:absolute;left:0;top:0;z-index:235;pointer-events:none;filter:drop-shadow(0 3px 3px rgba(10,20,50,.45)) drop-shadow(0 0 4px rgba(255,255,255,.55))}
+/* hidden books: «Enchanted Flame» mystery cover (HiddenBooks pack, look only) — fits any book proportion */
+.book .cover{inset:0;z-index:4;overflow:hidden;pointer-events:none;border-radius:6px;container-type:size;display:block;font-size:0;color:transparent;
+  --ct:min(calc(100cqw * 94 / 332),11cqh);--cb:min(calc(100cqw * 126 / 332),14cqh);
+  background:#2a0e33 url(ui/hf_body2.webp) center/100% 100% no-repeat;border:0;
+  box-shadow:0 0 0 2px #FFD84A,0 0 12px 3px rgba(80,230,220,.7);transition:opacity .4s,transform .4s;animation:none}
+.book .cover::after{content:'';position:absolute;inset:0;z-index:4;border-radius:inherit;
+  background:linear-gradient(110deg,transparent 35%,rgba(255,240,200,.55) 50%,transparent 65%) -150% 0/250% 100% no-repeat;animation:hbSheen 3s ease-in-out infinite}
+@keyframes hbSheen{0%,40%{background-position:-150% 0}80%,100%{background-position:250% 0}}
+.book .cover .hbB{position:absolute;left:0;right:0;z-index:1;border-style:solid;border-color:transparent;box-sizing:border-box}
+.book .cover .hbB.t{top:0;height:var(--ct);border-width:0 calc(var(--ct) * 60 / 94);border-image:url(ui/hf_top2.webp) 0 60 fill / 0 calc(var(--ct) * 60 / 94) stretch}
+.book .cover .hbB.b{bottom:0;height:var(--cb);border-width:0 calc(var(--cb) * 60 / 126);border-image:url(ui/hf_bot2.webp) 0 60 fill / 0 calc(var(--cb) * 60 / 126) stretch}
+.book .cover .hbE{position:absolute;left:50%;top:50%;z-index:2;aspect-ratio:380/736;width:auto;
+  height:min(calc(100cqw * 736 / 380),calc(100cqh - 2 * max(var(--ct),var(--cb))));transform:translate(-50%,-50%);background:url(ui/hf_emblem.webp) center/contain no-repeat}
+.book .cover.opening{animation:hbOpen .52s cubic-bezier(.36,0,.66,-.2) forwards}
+@keyframes hbOpen{0%{transform:none;filter:brightness(1)}30%{transform:scale(1.06) rotate(-3deg);filter:brightness(1.3)}55%{transform:scale(1.08) rotate(3deg);filter:brightness(1.6)}
+  80%{transform:scale(1.1) rotate(-2deg);filter:brightness(2.2)}100%{transform:scale(1.12);filter:brightness(2.6)}}
+.book .cover.gone{transform-origin:0 50%;transform:perspective(320px) rotateY(-100deg);opacity:0;transition:transform .45s cubic-bezier(.3,.7,.3,1),opacity .3s .15s}
+.book.hb-reveal{animation:hbFlash .6s cubic-bezier(.34,1.56,.64,1)}
+@keyframes hbFlash{0%{filter:brightness(1.8)}100%{filter:none}}
+.hb-txt{position:absolute;transform:translate(-50%,-50%);pointer-events:none;z-index:240;white-space:nowrap;font:700 22px/1 var(--f-hero);color:#fff;
+  text-shadow:0 2px 0 #6A2FC9,0 -1.5px 0 #6A2FC9,1.5px 0 0 #6A2FC9,-1.5px 0 0 #6A2FC9;animation:hbTxt 1.2s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes hbTxt{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-160%) scale(1)}}
+@media (prefers-reduced-motion:reduce){.book .tie.knot::after,.book .cover::after,.book.hb-reveal,.book .cover.opening{animation:none}.book .cover.gone{transition:opacity .2s}}
 /* ticking books: alarm clock badge */
 .book .bdg.tick{width:min(42px,96%)!important;top:6%!important;border:0!important;border-radius:0!important;background:url(ui/tk_clock.webp) center/contain no-repeat!important;box-shadow:none!important;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45));animation:tkWob 1s ease-in-out infinite}
 .book .bdg.tick::before{display:none}
 .book .bdg.tick span{display:grid;place-items:center;margin-top:12%;width:52%;aspect-ratio:1;border-radius:50%;background:#fff;font:800 11px/1 var(--f-num);color:#C8231A;text-shadow:none}
 @keyframes tkWob{0%,60%,100%{rotate:0deg}70%{rotate:-10deg}80%{rotate:9deg}90%{rotate:-5deg}}
-@media (prefers-reduced-motion:reduce){.book .cover,.book .cover::after,.book .bdg.tick{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.book .bdg.tick{animation:none!important}}
 /* v13: the key appears when the neighbouring merge removes the final lock charge. */
 .book .mergeKey{position:absolute;left:50%;top:50%;width:min(44px,90%);height:auto;z-index:8;pointer-events:none;
   transform:translate(-50%,-50%);animation:mergeKey .7s ease-out both;filter:drop-shadow(0 3px 4px rgba(40,20,0,.5))}
@@ -1891,7 +1906,7 @@ body{height:100dvh;display:flex;align-items:center;justify-content:center;backgr
 </div></div>
 <script src="../../proto-kit/proto-kit.js"></script>
 <script src="config/load.js?v=20261029"></script>
-<script src="levels.js?v=xlsx-20261104"></script>
+<script src="levels.js?v=hands-20261104"></script>
 <script src="lib_backgrounds.js"></script>
-<script src="game.js?v=xlsx-20261104"></script>
+<script src="game.js?v=hands-20261104"></script>
 </body></html>

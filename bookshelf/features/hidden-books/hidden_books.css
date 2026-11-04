@@ -1,0 +1,56 @@
+/* Hidden Books («Mystery Book») — styles, final look from the Bookshelf prototype (v136, «Enchanted Flame»).
+   Markup (the JS builds it): <div class="book"> … <u class="cover"><i class="hbB t"></i><i class="hbE"></i><i class="hbB b"></i><b class="hm">4</b></u></div>
+   The cover fits ANY book proportion: top/bottom caps are 3-sliced (corners keep their shape, the middle stretches only sideways),
+   the body is a 4-px shading strip, the "?" + smoke emblem keeps its proportions and sits centred. Book needs position:relative/absolute. */
+
+.book .cover{position:absolute;inset:0;z-index:4;overflow:hidden;pointer-events:none;border-radius:6px;container-type:size;
+  --ct:min(calc(100cqw * 94 / 332),11cqh);          /* top cap height    (hf_top2: 332×94)  */
+  --cb:min(calc(100cqw * 126 / 332),14cqh);         /* bottom cap height (hf_bot2: 332×126) */
+  background:#2a0e33 url(hf_body2.webp) center/100% 100% no-repeat;
+  box-shadow:0 0 0 2px #FFD84A,0 0 12px 3px rgba(80,230,220,.7);   /* gold rim + turquoise magic glow */
+  transition:opacity .4s,transform .4s}
+/* soft sheen passing over the cover every 3 s */
+.book .cover::after{content:'';position:absolute;inset:0;z-index:4;border-radius:inherit;
+  background:linear-gradient(110deg,transparent 35%,rgba(255,240,200,.55) 50%,transparent 65%) -150% 0/250% 100% no-repeat;animation:hbSheen 3s ease-in-out infinite}
+@keyframes hbSheen{0%,40%{background-position:-150% 0}80%,100%{background-position:250% 0}}
+
+/* caps (3-slice via border-image: 60 px corners stay, middle stretches) */
+.book .cover .hbB{position:absolute;left:0;right:0;z-index:1;border-style:solid;border-color:transparent;box-sizing:border-box}
+.book .cover .hbB.t{top:0;height:var(--ct);border-width:0 calc(var(--ct) * 60 / 94);border-image:url(hf_top2.webp) 0 60 fill / 0 calc(var(--ct) * 60 / 94) stretch}
+.book .cover .hbB.b{bottom:0;height:var(--cb);border-width:0 calc(var(--cb) * 60 / 126);border-image:url(hf_bot2.webp) 0 60 fill / 0 calc(var(--cb) * 60 / 126) stretch}
+/* "?" emblem: never stretched, centred on the book, as big as fits between the caps */
+.book .cover .hbE{position:absolute;left:50%;top:50%;z-index:2;aspect-ratio:380/736;width:auto;
+  height:min(calc(100cqw * 736 / 380),calc(100cqh - 2 * max(var(--ct),var(--cb))));transform:translate(-50%,-50%);
+  background:url(hf_emblem.webp) center/contain no-repeat}
+
+/* moves-left counter, sitting on the bottom cap; scales down on dense shelves */
+.book .cover .hm{position:absolute;left:50%;bottom:calc(var(--cb) * .5);transform:translate(-50%,50%);z-index:3;
+  padding:clamp(2px,2.4cqmin,3px) clamp(4px,6cqmin,7px);border-radius:99px;text-align:center;font-style:normal;
+  background:linear-gradient(#FFE36A,#F2A91E);border:clamp(1px,1.2cqmin,2px) solid #3B1E78;
+  font:700 clamp(10px,24cqmin,14px)/1 'Fredoka','Baloo 2',system-ui,sans-serif;color:#fff;
+  text-shadow:0 1.5px 0 #7A3E00,0 -1px 0 #7A3E00,1px 0 0 #7A3E00,-1px 0 0 #7A3E00}
+.book .cover .hm:empty{display:none}
+.book .cover .hm.bump{animation:hbNum .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes hbNum{40%{transform:translate(-50%,50%) scale(1.4)}100%{transform:translate(-50%,50%)}}
+
+/* reveal: 1) shake + brighten (.52 s)  2) cover swings open like a book cover (.45 s)  3) painting flashes */
+.book .cover.opening{animation:hbOpen .52s cubic-bezier(.36,0,.66,-.2) forwards}
+@keyframes hbOpen{0%{transform:none;filter:brightness(1)}30%{transform:scale(1.06) rotate(-3deg);filter:brightness(1.3)}55%{transform:scale(1.08) rotate(3deg);filter:brightness(1.6)}
+  80%{transform:scale(1.1) rotate(-2deg);filter:brightness(2.2)}100%{transform:scale(1.12);filter:brightness(2.6)}}
+.book .cover.gone{transform-origin:0 50%;transform:perspective(320px) rotateY(-100deg);opacity:0;transition:transform .45s cubic-bezier(.3,.7,.3,1),opacity .3s .15s}
+.book.hb-reveal{animation:hbFlash .6s cubic-bezier(.34,1.56,.64,1)}
+@keyframes hbFlash{0%{filter:brightness(1.8)}100%{filter:none}}
+
+/* sparkles + floating "Revealed!" */
+.hb-pt{position:absolute;width:var(--s);height:var(--s);margin:calc(var(--s)/-2) 0 0 calc(var(--s)/-2);background:var(--c);pointer-events:none;z-index:50;
+  clip-path:polygon(50% 0,61% 38%,100% 50%,61% 62%,50% 100%,39% 62%,0 50%,39% 38%);animation:hbPt var(--d) cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes hbPt{0%{transform:translate(0,0) scale(.4)}20%{transform:translate(calc(var(--x)*.4),calc(var(--y)*.4)) scale(1.1) rotate(60deg)}100%{transform:translate(var(--x),calc(var(--y) + 30px)) scale(.2) rotate(240deg);opacity:0}}
+.hb-txt{position:absolute;transform:translate(-50%,-50%);pointer-events:none;z-index:51;white-space:nowrap;
+  font:700 22px/1 'Fredoka','Baloo 2',system-ui,sans-serif;color:#fff;
+  text-shadow:0 2px 0 #6A2FC9,0 -1.5px 0 #6A2FC9,1.5px 0 0 #6A2FC9,-1.5px 0 0 #6A2FC9;animation:hbTxt 1.2s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes hbTxt{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-160%) scale(1)}}
+
+@media (prefers-reduced-motion:reduce){
+  .book .cover::after,.book .cover .hm.bump,.book.hb-reveal,.book .cover.opening{animation:none}
+  .book .cover.gone{transition:opacity .2s}
+}
