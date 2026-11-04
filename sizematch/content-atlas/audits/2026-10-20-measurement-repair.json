@@ -1,0 +1,1128 @@
+{
+  "date": "2026-10-20",
+  "scope": "Original 200 v45 pairs repaired; one new pair appended at row 201",
+  "objects_before": 400,
+  "objects_after": 402,
+  "pairs_before": 200,
+  "pairs_after": 201,
+  "axis_mismatches_before": 86,
+  "axis_mismatches_after": 54,
+  "visual_truth_gap_threshold": 1.35,
+  "visual_risks_before": 21,
+  "visual_risks_after": [
+    {
+      "order": 9,
+      "a": "mount_rushmore",
+      "b": "b747",
+      "visual_truth_gap_factor": 1.642,
+      "different_axis": true
+    },
+    {
+      "order": 28,
+      "a": "atat",
+      "b": "chinook_helicopter",
+      "visual_truth_gap_factor": 1.501,
+      "different_axis": true
+    },
+    {
+      "order": 34,
+      "a": "pirate_ship",
+      "b": "balanced_rock",
+      "visual_truth_gap_factor": 1.503,
+      "different_axis": false
+    },
+    {
+      "order": 43,
+      "a": "paraglider",
+      "b": "halfpipe",
+      "visual_truth_gap_factor": 1.5,
+      "different_axis": true
+    },
+    {
+      "order": 69,
+      "a": "everest",
+      "b": "hawaii_big_island",
+      "visual_truth_gap_factor": 1.553,
+      "different_axis": true
+    },
+    {
+      "order": 93,
+      "a": "refrigerator",
+      "b": "suburban_house",
+      "visual_truth_gap_factor": 1.431,
+      "different_axis": false
+    },
+    {
+      "order": 133,
+      "a": "museum_of_the_future",
+      "b": "luxury_yacht_65m",
+      "visual_truth_gap_factor": 1.5,
+      "different_axis": true
+    },
+    {
+      "order": 141,
+      "a": "tower_bridge",
+      "b": "falcon",
+      "visual_truth_gap_factor": 1.5,
+      "different_axis": true
+    },
+    {
+      "order": 151,
+      "a": "pineapple",
+      "b": "dog",
+      "visual_truth_gap_factor": 1.366,
+      "different_axis": false
+    },
+    {
+      "order": 163,
+      "a": "half_dome",
+      "b": "sagrada_familia",
+      "visual_truth_gap_factor": 1.544,
+      "different_axis": false
+    },
+    {
+      "order": 164,
+      "a": "asteroid_bennu",
+      "b": "mount_etna",
+      "visual_truth_gap_factor": 1.534,
+      "different_axis": false
+    },
+    {
+      "order": 165,
+      "a": "chrysler_building",
+      "b": "mount_vesuvius",
+      "visual_truth_gap_factor": 1.628,
+      "different_axis": false
+    },
+    {
+      "order": 170,
+      "a": "guggenheim_museum_nyc",
+      "b": "water_slide",
+      "visual_truth_gap_factor": 1.483,
+      "different_axis": false
+    }
+  ],
+  "changed_object_fields": [
+    {
+      "key": "rbc",
+      "before": {
+        "name": "Red blood cell",
+        "size_m": 8e-06,
+        "dimension": "diameter",
+        "axis": "w",
+        "viewbox": [
+          900,
+          735
+        ],
+        "image": "art/master/rbc.webp"
+      },
+      "after": {
+        "name": "Red blood cell",
+        "size_m": 8e-06,
+        "dimension": "diameter",
+        "axis": "h",
+        "viewbox": [
+          900,
+          735
+        ],
+        "image": "art/master/rbc.webp"
+      }
+    },
+    {
+      "key": "pyramid",
+      "before": {
+        "name": "Great Pyramid",
+        "size_m": 139,
+        "dimension": "height",
+        "axis": "h",
+        "viewbox": [
+          900,
+          525
+        ],
+        "image": "art/master/pyramid.webp"
+      },
+      "after": {
+        "name": "Great Pyramid",
+        "size_m": 230,
+        "dimension": "width",
+        "axis": "w",
+        "viewbox": [
+          900,
+          525
+        ],
+        "image": "art/master/pyramid.webp"
+      }
+    },
+    {
+      "key": "goldengate",
+      "before": {
+        "name": "Golden Gate tower",
+        "size_m": 227,
+        "dimension": "height",
+        "axis": "h",
+        "viewbox": [
+          900,
+          605
+        ],
+        "image": "art/master/goldengate.webp"
+      },
+      "after": {
+        "name": "Golden Gate Bridge",
+        "size_m": 1280,
+        "dimension": "length",
+        "axis": "w",
+        "viewbox": [
+          1600,
+          285
+        ],
+        "image": "art/measurement-repair-2026-10-20/game/goldengate.webp"
+      }
+    },
+    {
+      "key": "soccerball",
+      "before": {
+        "name": "Soccer ball",
+        "size_m": 0.22,
+        "dimension": "diameter",
+        "axis": "w",
+        "viewbox": [
+          1060,
+          1060
+        ],
+        "image": "art/remaining-2026-10-12/game/soccerball.webp"
+      },
+      "after": {
+        "name": "Soccer ball",
+        "size_m": 0.22,
+        "dimension": "diameter",
+        "axis": "h",
+        "viewbox": [
+          1060,
+          1060
+        ],
+        "image": "art/remaining-2026-10-12/game/soccerball.webp"
+      }
+    },
+    {
+      "key": "tennisball",
+      "before": {
+        "name": "Tennis ball",
+        "size_m": 0.067,
+        "dimension": "diameter",
+        "axis": "w",
+        "viewbox": [
+          880,
+          900
+        ],
+        "image": "art/master/tennisball.webp"
+      },
+      "after": {
+        "name": "Tennis ball",
+        "size_m": 0.067,
+        "dimension": "diameter",
+        "axis": "h",
+        "viewbox": [
+          880,
+          900
+        ],
+        "image": "art/master/tennisball.webp"
+      }
+    },
+    {
+      "key": "neptune",
+      "before": {
+        "name": "Neptune",
+        "size_m": 49244000,
+        "dimension": "diameter",
+        "axis": "w",
+        "viewbox": [
+          311,
+          311
+        ],
+        "image": "art/master/neptune.webp"
+      },
+      "after": {
+        "name": "Neptune",
+        "size_m": 49244000,
+        "dimension": "diameter",
+        "axis": "h",
+        "viewbox": [
+          311,
+          311
+        ],
+        "image": "art/master/neptune.webp"
+      }
+    },
+    {
+      "key": "life_ring",
+      "before": {
+        "name": "Life Ring",
+        "size_m": 0.75,
+        "dimension": "diameter",
+        "axis": "h",
+        "viewbox": [
+          1176,
+          1210
+        ],
+        "image": "art/group-07-us-2026-10-14/game/life_ring.webp"
+      },
+      "after": {
+        "name": "Life Ring",
+        "size_m": 0.75,
+        "dimension": "diameter",
+        "axis": "w",
+        "viewbox": [
+          1176,
+          1210
+        ],
+        "image": "art/group-07-us-2026-10-14/game/life_ring.webp"
+      }
+    },
+    {
+      "key": "snow_tube",
+      "before": {
+        "name": "Snow Tube",
+        "size_m": 1.1,
+        "dimension": "diameter",
+        "axis": "w",
+        "viewbox": [
+          1266,
+          999
+        ],
+        "image": "art/group-07-us-2026-10-14/game/snow_tube.webp"
+      },
+      "after": {
+        "name": "Snow Tube",
+        "size_m": 1.1,
+        "dimension": "diameter",
+        "axis": "h",
+        "viewbox": [
+          1266,
+          999
+        ],
+        "image": "art/group-07-us-2026-10-14/game/snow_tube.webp"
+      }
+    },
+    {
+      "key": "lincoln_memorial",
+      "before": {
+        "name": "Lincoln Memorial",
+        "size_m": 30.1752,
+        "dimension": "height",
+        "axis": "h",
+        "viewbox": [
+          1326,
+          826
+        ],
+        "image": "art/group-09-us-2026-10-15/game/lincoln_memorial.webp"
+      },
+      "after": {
+        "name": "Lincoln Memorial",
+        "size_m": 57.9,
+        "dimension": "width",
+        "axis": "w",
+        "viewbox": [
+          1326,
+          826
+        ],
+        "image": "art/group-09-us-2026-10-15/game/lincoln_memorial.webp"
+      }
+    },
+    {
+      "key": "igloo",
+      "before": {
+        "name": "Igloo",
+        "size_m": 3,
+        "dimension": "height",
+        "axis": "h",
+        "viewbox": [
+          420,
+          336
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/igloo.webp"
+      },
+      "after": {
+        "name": "Igloo",
+        "size_m": 3,
+        "dimension": "width",
+        "axis": "w",
+        "viewbox": [
+          420,
+          336
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/igloo.webp"
+      }
+    },
+    {
+      "key": "yurt",
+      "before": {
+        "name": "Yurt",
+        "size_m": 4,
+        "dimension": "height",
+        "axis": "h",
+        "viewbox": [
+          420,
+          350
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/yurt.webp"
+      },
+      "after": {
+        "name": "Yurt",
+        "size_m": 4,
+        "dimension": "width",
+        "axis": "w",
+        "viewbox": [
+          420,
+          350
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/yurt.webp"
+      }
+    },
+    {
+      "key": "playground_slide",
+      "before": {
+        "name": "Playground Slide",
+        "size_m": 3,
+        "dimension": "height",
+        "axis": "h",
+        "viewbox": [
+          420,
+          384
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/playground_slide.webp"
+      },
+      "after": {
+        "name": "Playground Slide",
+        "size_m": 3,
+        "dimension": "length",
+        "axis": "w",
+        "viewbox": [
+          420,
+          384
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/playground_slide.webp"
+      }
+    },
+    {
+      "key": "button",
+      "before": {
+        "name": "Button",
+        "size_m": 0.01,
+        "dimension": "diameter",
+        "axis": "h",
+        "viewbox": [
+          420,
+          384
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/button.webp"
+      },
+      "after": {
+        "name": "Button",
+        "size_m": 0.01,
+        "dimension": "diameter",
+        "axis": "w",
+        "viewbox": [
+          420,
+          384
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/button.webp"
+      }
+    },
+    {
+      "key": "triangle_instrument",
+      "before": {
+        "name": "Triangle Instrument",
+        "size_m": 0.15,
+        "dimension": "height",
+        "axis": "h",
+        "viewbox": [
+          420,
+          280
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/triangle_instrument.webp"
+      },
+      "after": {
+        "name": "Triangle Instrument",
+        "size_m": 0.15,
+        "dimension": "width",
+        "axis": "w",
+        "viewbox": [
+          420,
+          280
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/triangle_instrument.webp"
+      }
+    },
+    {
+      "key": "mobile_crane",
+      "before": {
+        "name": "Mobile Crane",
+        "size_m": 15,
+        "dimension": "length",
+        "axis": "w",
+        "viewbox": [
+          420,
+          384
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/mobile_crane.webp"
+      },
+      "after": {
+        "name": "50 m Mobile Crane",
+        "size_m": 50,
+        "dimension": "height",
+        "axis": "h",
+        "viewbox": [
+          532,
+          1024
+        ],
+        "image": "art/measurement-repair-2026-10-20/game/mobile_crane_50m.webp"
+      }
+    },
+    {
+      "key": "tiny_house",
+      "before": {
+        "name": "Tiny House",
+        "size_m": 4,
+        "dimension": "height",
+        "axis": "h",
+        "viewbox": [
+          420,
+          280
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/tiny_house.webp"
+      },
+      "after": {
+        "name": "Tiny House",
+        "size_m": 6,
+        "dimension": "length",
+        "axis": "w",
+        "viewbox": [
+          420,
+          280
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/tiny_house.webp"
+      }
+    },
+    {
+      "key": "log_cabin",
+      "before": {
+        "name": "Log Cabin",
+        "size_m": 5,
+        "dimension": "height",
+        "axis": "h",
+        "viewbox": [
+          420,
+          280
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/log_cabin.webp"
+      },
+      "after": {
+        "name": "Log Cabin",
+        "size_m": 5,
+        "dimension": "width",
+        "axis": "w",
+        "viewbox": [
+          420,
+          280
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/log_cabin.webp"
+      }
+    },
+    {
+      "key": "trampoline",
+      "before": {
+        "name": "Trampoline",
+        "size_m": 4,
+        "dimension": "diameter",
+        "axis": "h",
+        "viewbox": [
+          420,
+          384
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/trampoline.webp"
+      },
+      "after": {
+        "name": "Trampoline",
+        "size_m": 4,
+        "dimension": "diameter",
+        "axis": "w",
+        "viewbox": [
+          420,
+          384
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/trampoline.webp"
+      }
+    },
+    {
+      "key": "bouncy_castle",
+      "before": {
+        "name": "Inflatable Bouncy Castle",
+        "size_m": 5,
+        "dimension": "height",
+        "axis": "h",
+        "viewbox": [
+          420,
+          384
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/bouncy_castle.webp"
+      },
+      "after": {
+        "name": "Inflatable Bouncy Castle",
+        "size_m": 5,
+        "dimension": "width",
+        "axis": "w",
+        "viewbox": [
+          420,
+          384
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/bouncy_castle.webp"
+      }
+    },
+    {
+      "key": "sydney_harbour_bridge",
+      "before": {
+        "name": "Sydney Harbour Bridge",
+        "size_m": 134,
+        "dimension": "height",
+        "axis": "h",
+        "viewbox": [
+          420,
+          280
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/sydney_harbour_bridge.webp"
+      },
+      "after": {
+        "name": "Sydney Harbour Bridge",
+        "size_m": 503,
+        "dimension": "length",
+        "axis": "w",
+        "viewbox": [
+          1600,
+          424
+        ],
+        "image": "art/measurement-repair-2026-10-20/game/sydney_harbour_bridge.webp"
+      }
+    },
+    {
+      "key": "rafflesia",
+      "before": {
+        "name": "Rafflesia Flower",
+        "size_m": 1,
+        "dimension": "diameter",
+        "axis": "h",
+        "viewbox": [
+          420,
+          394
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/rafflesia.webp"
+      },
+      "after": {
+        "name": "Rafflesia Flower",
+        "size_m": 1,
+        "dimension": "diameter",
+        "axis": "w",
+        "viewbox": [
+          420,
+          394
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/rafflesia.webp"
+      }
+    },
+    {
+      "key": "snowflake",
+      "before": {
+        "name": "Snowflake",
+        "size_m": 0.005,
+        "dimension": "diameter",
+        "axis": "h",
+        "viewbox": [
+          420,
+          420
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/snowflake.webp"
+      },
+      "after": {
+        "name": "Snowflake",
+        "size_m": 0.005,
+        "dimension": "diameter",
+        "axis": "w",
+        "viewbox": [
+          420,
+          420
+        ],
+        "image": "content-atlas/generated-candidates-2026-10-19/assets/snowflake.webp"
+      }
+    },
+    {
+      "key": "weather_balloon",
+      "before": {
+        "name": "Weather balloon",
+        "size_m": 2.0,
+        "dimension": "diameter",
+        "axis": "h",
+        "viewbox": [
+          328,
+          420
+        ],
+        "image": "content-atlas/art-ready-assets/weather_balloon.webp"
+      },
+      "after": {
+        "name": "Weather balloon",
+        "size_m": 2.0,
+        "dimension": "diameter",
+        "axis": "w",
+        "viewbox": [
+          328,
+          420
+        ],
+        "image": "content-atlas/art-ready-assets/weather_balloon.webp"
+      }
+    },
+    {
+      "key": "pluto",
+      "before": {
+        "name": "Pluto",
+        "size_m": 2377000.0,
+        "dimension": "diameter",
+        "axis": "w",
+        "viewbox": [
+          420,
+          420
+        ],
+        "image": "content-atlas/art-ready-assets/pluto.webp"
+      },
+      "after": {
+        "name": "Pluto",
+        "size_m": 2377000.0,
+        "dimension": "diameter",
+        "axis": "h",
+        "viewbox": [
+          420,
+          420
+        ],
+        "image": "content-atlas/art-ready-assets/pluto.webp"
+      }
+    },
+    {
+      "key": "asteroid_bennu",
+      "before": {
+        "name": "Asteroid Bennu",
+        "size_m": 490.0,
+        "dimension": "diameter",
+        "axis": "w",
+        "viewbox": [
+          420,
+          385
+        ],
+        "image": "content-atlas/art-ready-assets/asteroid_bennu.webp"
+      },
+      "after": {
+        "name": "Asteroid Bennu",
+        "size_m": 490.0,
+        "dimension": "diameter",
+        "axis": "h",
+        "viewbox": [
+          420,
+          385
+        ],
+        "image": "content-atlas/art-ready-assets/asteroid_bennu.webp"
+      }
+    },
+    {
+      "key": "burger",
+      "before": {
+        "name": "Burger",
+        "size_m": 0.12,
+        "dimension": "height",
+        "axis": "h",
+        "viewbox": [
+          420,
+          365
+        ],
+        "image": "content-atlas/art-ready-assets/burger.webp"
+      },
+      "after": {
+        "name": "Burger",
+        "size_m": 0.12,
+        "dimension": "diameter",
+        "axis": "w",
+        "viewbox": [
+          420,
+          365
+        ],
+        "image": "content-atlas/art-ready-assets/burger.webp"
+      }
+    },
+    {
+      "key": "coconut",
+      "before": {
+        "name": "Coconut",
+        "size_m": 0.22,
+        "dimension": "diameter",
+        "axis": "w",
+        "viewbox": [
+          420,
+          408
+        ],
+        "image": "content-atlas/art-ready-assets/coconut.webp"
+      },
+      "after": {
+        "name": "Coconut",
+        "size_m": 0.22,
+        "dimension": "diameter",
+        "axis": "h",
+        "viewbox": [
+          420,
+          408
+        ],
+        "image": "content-atlas/art-ready-assets/coconut.webp"
+      }
+    },
+    {
+      "key": "cheese_wheel",
+      "before": {
+        "name": "Cheese wheel",
+        "size_m": 0.35,
+        "dimension": "diameter",
+        "axis": "w",
+        "viewbox": [
+          420,
+          332
+        ],
+        "image": "content-atlas/art-ready-assets/cheese_wheel.webp"
+      },
+      "after": {
+        "name": "Cheese wheel",
+        "size_m": 0.35,
+        "dimension": "diameter",
+        "axis": "h",
+        "viewbox": [
+          420,
+          332
+        ],
+        "image": "content-atlas/art-ready-assets/cheese_wheel.webp"
+      }
+    },
+    {
+      "key": "skis",
+      "before": {
+        "name": "Skis",
+        "size_m": 1.7,
+        "dimension": "length",
+        "axis": "w",
+        "viewbox": [
+          368,
+          420
+        ],
+        "image": "content-atlas/art-ready-assets/skis.webp"
+      },
+      "after": {
+        "name": "Skis",
+        "size_m": 1.7,
+        "dimension": "length",
+        "axis": "h",
+        "viewbox": [
+          368,
+          420
+        ],
+        "image": "content-atlas/art-ready-assets/skis.webp"
+      }
+    },
+    {
+      "key": "tidal_turbine",
+      "before": {
+        "name": "Tidal turbine",
+        "size_m": 18.0,
+        "dimension": "diameter",
+        "axis": "h",
+        "viewbox": [
+          373,
+          420
+        ],
+        "image": "content-atlas/art-ready-assets/tidal_turbine.webp"
+      },
+      "after": {
+        "name": "Tidal turbine",
+        "size_m": 18.0,
+        "dimension": "diameter",
+        "axis": "w",
+        "viewbox": [
+          373,
+          420
+        ],
+        "image": "content-atlas/art-ready-assets/tidal_turbine.webp"
+      }
+    }
+  ],
+  "new_objects": [
+    {
+      "key": "great_wall_75m_segment",
+      "name": "Great Wall — 75 m section",
+      "name_ru": "Участок Великой Китайской стены 75 м",
+      "size_m": 75,
+      "dimension": "length",
+      "axis": "w",
+      "source": null,
+      "measurement_basis": "A clearly labeled representative 75 m section, not the full Great Wall. The pictured segment has two cut ends.",
+      "measurement_status": "representative_gameplay_value",
+      "label": "75 m",
+      "image": "art/measurement-repair-2026-10-20/game/great_wall_75m_segment.webp",
+      "original": "art/measurement-repair-2026-10-20/game/great_wall_75m_segment.png",
+      "viewbox": [
+        1600,
+        395
+      ],
+      "in_build": "v45",
+      "art_status": "updated",
+      "art_origin": "measurement-repair-2026-10-20",
+      "art_approval": "requested_content_2026-10-20",
+      "content_group": "historic_landmarks",
+      "batch": 23,
+      "size_unit": "m",
+      "size_semantics": "authored_measurement_dimension"
+    },
+    {
+      "key": "parthenon",
+      "name": "Parthenon",
+      "name_ru": "Парфенон",
+      "size_m": 69.5,
+      "dimension": "length",
+      "axis": "w",
+      "source": "https://www.perseus.tufts.edu/hopper/artifact?name=Athens%2C+Parthenon&object=Building",
+      "measurement_basis": "69.50 m long side of the stylobate, shown in side elevation.",
+      "measurement_status": "source_checked",
+      "label": "69.5 m",
+      "image": "art/measurement-repair-2026-10-20/game/parthenon.webp",
+      "original": "art/measurement-repair-2026-10-20/game/parthenon.png",
+      "viewbox": [
+        1600,
+        465
+      ],
+      "in_build": "v45",
+      "art_status": "updated",
+      "art_origin": "measurement-repair-2026-10-20",
+      "art_approval": "requested_content_2026-10-20",
+      "content_group": "historic_landmarks",
+      "batch": 23,
+      "size_unit": "m",
+      "size_semantics": "authored_measurement_dimension"
+    }
+  ],
+  "partner_exchanges": [
+    {
+      "order": 80,
+      "before": [
+        "saturnv",
+        "sydney_harbour_bridge"
+      ],
+      "after": [
+        "saturnv",
+        "devils_tower"
+      ]
+    },
+    {
+      "order": 81,
+      "before": [
+        "colosseum",
+        "us_capitol"
+      ],
+      "after": [
+        "colosseum",
+        "cloud_gate"
+      ]
+    },
+    {
+      "order": 82,
+      "before": [
+        "goldengate",
+        "cloud_gate"
+      ],
+      "after": [
+        "goldengate",
+        "meteor_crater"
+      ]
+    },
+    {
+      "order": 84,
+      "before": [
+        "bicycle",
+        "firefighter"
+      ],
+      "after": [
+        "bicycle",
+        "galapagos_tortoise"
+      ]
+    },
+    {
+      "order": 91,
+      "before": [
+        "cruiseship",
+        "devils_tower"
+      ],
+      "after": [
+        "cruiseship",
+        "sydney_harbour_bridge"
+      ]
+    },
+    {
+      "order": 96,
+      "before": [
+        "delicate_arch",
+        "lincoln_memorial"
+      ],
+      "after": [
+        "delicate_arch",
+        "leaning_tower_pisa"
+      ]
+    },
+    {
+      "order": 97,
+      "before": [
+        "whale",
+        "titanic"
+      ],
+      "after": [
+        "whale",
+        "great_wall_75m_segment"
+      ]
+    },
+    {
+      "order": 144,
+      "before": [
+        "airliner",
+        "leaning_tower_pisa"
+      ],
+      "after": [
+        "airliner",
+        "lincoln_memorial"
+      ]
+    },
+    {
+      "order": 168,
+      "before": [
+        "brooklyn_bridge",
+        "meteor_crater"
+      ],
+      "after": [
+        "brooklyn_bridge",
+        "us_capitol"
+      ]
+    },
+    {
+      "order": 187,
+      "before": [
+        "beach_umbrella",
+        "galapagos_tortoise"
+      ],
+      "after": [
+        "beach_umbrella",
+        "firefighter"
+      ]
+    }
+  ],
+  "appended_pair": {
+    "id": "parthenon__titanic",
+    "order": 201,
+    "a": "parthenon",
+    "b": "titanic",
+    "ratio": 3.870503597122302,
+    "concept_approval": "requested_by_user",
+    "art_review": "awaiting_user_review",
+    "in_build": "v45",
+    "is_reference": false,
+    "pair_source": "approved_width_landmarks_2026-10-20"
+  },
+  "invariants": {
+    "unique_objects": true,
+    "existing_pair_order_unchanged": true,
+    "slider_eligible": true
+  },
+  "note": "Visible footprint audit measures nontransparent pixels, accounting for calibration and transparent padding. An axis mismatch is a review signal; a portrait/landscape comparison can be visually truthful.",
+  "visible_footprint_risks_after_calibration": [
+    {
+      "order": 14,
+      "a": "snow_tube",
+      "b": "duck",
+      "visible_scale_gap_factor": 1.355
+    },
+    {
+      "order": 28,
+      "a": "atat",
+      "b": "chinook_helicopter",
+      "visible_scale_gap_factor": 1.501
+    },
+    {
+      "order": 34,
+      "a": "pirate_ship",
+      "b": "balanced_rock",
+      "visible_scale_gap_factor": 1.503
+    },
+    {
+      "order": 43,
+      "a": "paraglider",
+      "b": "halfpipe",
+      "visible_scale_gap_factor": 1.464
+    },
+    {
+      "order": 69,
+      "a": "everest",
+      "b": "hawaii_big_island",
+      "visible_scale_gap_factor": 1.819
+    },
+    {
+      "order": 93,
+      "a": "refrigerator",
+      "b": "suburban_house",
+      "visible_scale_gap_factor": 1.431
+    },
+    {
+      "order": 141,
+      "a": "tower_bridge",
+      "b": "falcon",
+      "visible_scale_gap_factor": 1.491
+    },
+    {
+      "order": 151,
+      "a": "pineapple",
+      "b": "dog",
+      "visible_scale_gap_factor": 1.553
+    },
+    {
+      "order": 163,
+      "a": "half_dome",
+      "b": "sagrada_familia",
+      "visible_scale_gap_factor": 1.548
+    },
+    {
+      "order": 164,
+      "a": "asteroid_bennu",
+      "b": "mount_etna",
+      "visible_scale_gap_factor": 1.526
+    },
+    {
+      "order": 165,
+      "a": "chrysler_building",
+      "b": "mount_vesuvius",
+      "visible_scale_gap_factor": 1.619
+    },
+    {
+      "order": 170,
+      "a": "guggenheim_museum_nyc",
+      "b": "water_slide",
+      "visible_scale_gap_factor": 1.499
+    }
+  ],
+  "transparent_padding_calibrations": {
+    "luxury_yacht_65m": 0.6404761904761904,
+    "button": 0.6071428571428571,
+    "guinea_pig": 0.6333333333333333,
+    "handcar": 0.7333333333333333
+  },
+  "first_ten_visual_repair": {
+    "order": 9,
+    "object": "mount_rushmore",
+    "before": "36 m height",
+    "after": "60 m approximate width of the sculpted group",
+    "basis": "NPS head height 18.3 m and sprite proportions"
+  }
+}

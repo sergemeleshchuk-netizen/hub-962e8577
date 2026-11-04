@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Word Shikaku v18 — Генератор ∞</title>
+<style>
+  :root{ --bg:#141821; --cell:#2c3140; --ink:#e6e9f0; --muted:#7b8190; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; height:100%; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif; overscroll-behavior:none; }
+  #app{ max-width:560px; margin:0 auto; min-height:100%; display:flex; flex-direction:column;
+    align-items:center; padding:16px 14px 28px; }
+  header{ width:100%; display:flex; align-items:center; justify-content:center; position:relative; margin:4px 0; }
+  header h1{ font-size:18px; font-weight:700; margin:0; }
+  #reset{ position:absolute; right:0; top:-2px; background:var(--cell); color:var(--ink);
+    border:none; border-radius:10px; padding:7px 12px; font-size:13px; cursor:pointer; }
+  #levels{ display:flex; gap:7px; margin:12px 0 6px; flex-wrap:wrap; justify-content:center; }
+  #levels button{ background:var(--cell); color:var(--muted); border:none; border-radius:10px;
+    padding:7px 11px; font-size:13px; font-weight:700; cursor:pointer; }
+  #levels button.cur{ color:#fff; }
+  #dots{ display:flex; gap:8px; margin:10px 0; }
+  #dots .d{ width:10px; height:10px; border-radius:50%; background:var(--cell); }
+  #hint{ color:var(--muted); font-size:13px; margin:6px 0 14px; text-align:center; min-height:18px; }
+  #board{ position:relative; display:grid; gap:7px; touch-action:none; user-select:none; }
+  .cell{ position:relative; border-radius:13px; background:var(--cell);
+    display:flex; align-items:center; justify-content:center; font-weight:800; color:transparent;
+    transition:background .16s, color .16s; }
+  .cell.clue{ color:var(--c); }
+  .cell.solved{ background:var(--c); color:#fff; }
+  .cell.sel{ outline:3px solid rgba(255,255,255,.85); outline-offset:-3px; color:#fff; }
+  .cell.bad{ outline:3px solid #e2566a; outline-offset:-3px; }
+  .cell .badge{ position:absolute; top:4px; right:4px; width:18px; height:18px; border-radius:50%;
+    background:#000; color:#fff; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+  .cell.solved .badge{ display:none; }
+  #win{ position:fixed; inset:0; background:rgba(10,13,20,.86); display:none; flex-direction:column;
+    align-items:center; justify-content:center; gap:14px; z-index:10; }
+  #win.show{ display:flex; }
+  #win .big{ font-size:38px; font-weight:800; font-style:italic; }
+  #win .lbl{ color:#aab; font-size:15px; }
+  #win button{ background:#fff; color:#141821; border:none; border-radius:14px; padding:13px 28px;
+    font-size:16px; font-weight:700; cursor:pointer; }
+  .hand{ position:absolute; width:48px; height:42px; z-index:60; pointer-events:none; opacity:0;
+    background:url(data:image/png;base64,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) center/contain no-repeat;
+    filter:drop-shadow(0 3px 4px rgba(0,0,0,.45)); }
+  .hand.tap{ animation:tap 1s ease-in-out infinite; }
+  @keyframes tap{ 0%,100%{ transform:translate(0,0) scale(1); } 50%{ transform:translate(-3px,-8px) scale(.93); } }
+</style>
+</head>
+<body>
+<div id="app">
+  <header><h1 id="title">Word Shikaku</h1><button id="reset">↺</button></header>
+  <div id="levels"></div>
+  <div id="dots"></div>
+  <div id="hint">Протяни прямоугольник от подсказки — собери слово</div>
+  <div id="board"></div>
+  <div class="hand" id="hand"></div>
+</div>
+<div id="win"><div class="big">Nailed It!</div><div class="lbl" id="winlbl"></div><button id="next">Дальше ▶</button></div>
+<script>
+const LEVELS = [
+{name:"L1 · Sunny",theme:"Лето",W:4,H:3,words:[{text:"SAND",color:"#2ea49a",r:0,c:0,h:1,w:4},{text:"WAVE",color:"#6c9ed6",r:1,c:0,h:1,w:4},{text:"PALM",color:"#b8a082",r:2,c:0,h:1,w:4}]},
+{name:"L2 · Reef",theme:"Риф",W:5,H:3,words:[{text:"ISLAND",color:"#2ea49a",r:0,c:0,h:2,w:3},{text:"REEF",color:"#6c9ed6",r:0,c:3,h:2,w:2},{text:"BEACH",color:"#b8a082",r:2,c:0,h:1,w:5}]},
+{name:"L3 · Beach",theme:"Пляж",W:6,H:4,words:[{text:"SEA",color:"#2ea49a",r:0,c:0,h:1,w:3},{text:"LAGOON",color:"#6c9ed6",r:0,c:3,h:3,w:2},{text:"TIDE",color:"#b8a082",r:0,c:5,h:4,w:1},{text:"ANCHOR",color:"#a896d2",r:1,c:0,h:2,w:3},{text:"CORAL",color:"#d6c460",r:3,c:0,h:1,w:5}]},
+{name:"L4 · Ocean",theme:"Океан",W:6,H:5,words:[{text:"BAY",color:"#2ea49a",r:0,c:0,h:1,w:3},{text:"FISH",color:"#6c9ed6",r:0,c:3,h:2,w:2},{text:"WHALE",color:"#b8a082",r:0,c:5,h:5,w:1},{text:"CRAB",color:"#a896d2",r:1,c:0,h:4,w:1},{text:"STARFISH",color:"#d6c460",r:1,c:1,h:4,w:2},{text:"TURTLE",color:"#e0796f",r:2,c:3,h:3,w:2}]},
+{name:"L5 · Tropics",theme:"Тропики",W:6,H:6,words:[{text:"SUN",color:"#2ea49a",r:0,c:0,h:1,w:3},{text:"BOAT",color:"#6c9ed6",r:0,c:3,h:2,w:2},{text:"PEBBLE",color:"#b8a082",r:0,c:5,h:6,w:1},{text:"MARINA",color:"#a896d2",r:1,c:0,h:2,w:3},{text:"FLAMINGO",color:"#d6c460",r:2,c:3,h:4,w:2},{text:"JELLYFISH",color:"#e0796f",r:3,c:0,h:3,w:3}]}
+];
+
+
+// ===== процедурный генератор уровней (после L5 — бесконечно) =====
+const POOL={
+ 3:["SEA","SUN","BAY","RAY","OAR","FIN","KOI","ICE"],
+ 4:["SAND","WAVE","PALM","REEF","TIDE","FISH","CRAB","BOAT","GULL","KELP","DUNE","SAIL","COVE","MIST","SWIM","CALM"],
+ 5:["BEACH","CORAL","WHALE","SHELL","SHARK","OCEAN","SHORE","CONCH","ALGAE","SQUID","PEARL"],
+ 6:["ISLAND","LAGOON","ANCHOR","TURTLE","PEBBLE","MARINA","SUNSET","BREEZE","URCHIN","WALRUS"],
+ 7:["DOLPHIN","OCTOPUS","SEAWEED","LOBSTER","PELICAN"],
+ 8:["STARFISH","FLAMINGO","SEAHORSE","SAILBOAT","PLANKTON"],
+ 9:["JELLYFISH","DRIFTWOOD","SURFBOARD"]};
+const PALETTE=["#2ea49a","#6c9ed6","#b8a082","#a896d2","#d6c460","#e0796f","#6fb87a"];
+const usedWords=new Set();
+const rnd=n=>Math.floor(Math.random()*n);
+function rectOpts(Ln,H,W){ const o=[]; for(let h=1;h<=Ln;h++) if(Ln%h===0&&h<=H&&Ln/h<=W) o.push([h,Ln/h]); return o; }
+function pickLengths(area){ // разбить площадь на длины 3..9 (с учётом запаса слов в пуле)
+  for(let t=0;t<200;t++){
+    const lens=[]; let rem=area; const cnt={};
+    let ok=true;
+    while(rem>0){
+      const cand=[];
+      for(let l=3;l<=9;l++){
+        if(l>rem) continue;
+        if(rem-l!==0&&rem-l<3) continue;
+        if((cnt[l]||0)>=POOL[l].length) continue;
+        cand.push(l);
+      }
+      if(!cand.length){ ok=false; break; }
+      const l=cand[rnd(cand.length)];
+      lens.push(l); cnt[l]=(cnt[l]||0)+1; rem-=l;
+    }
+    if(ok) return lens;
+  }
+  return null;
+}
+function tileJS(W,H,lengths){
+  const grid=[...Array(H)].map(()=>Array(W).fill(-1));
+  const placed=[];
+  function fe(){ for(let r=0;r<H;r++)for(let c=0;c<W;c++) if(grid[r][c]<0) return [r,c]; return null; }
+  function bt(rem){
+    const cell=fe(); if(!cell) return true;
+    const [r,c]=cell; const seen=new Set();
+    // перемешанный порядок длин
+    const order=[...rem.keys()].sort(()=>Math.random()-0.5);
+    for(const k of order){
+      const Ln=rem[k]; if(seen.has(Ln)) continue; seen.add(Ln);
+      const opts=rectOpts(Ln,H,W).sort(()=>Math.random()-0.5);
+      for(const [h,w] of opts){
+        if(r+h>H||c+w>W) continue;
+        let free=true;
+        for(let i=0;i<h&&free;i++)for(let j=0;j<w;j++) if(grid[r+i][c+j]>=0){ free=false; break; }
+        if(!free) continue;
+        for(let i=0;i<h;i++)for(let j=0;j<w;j++) grid[r+i][c+j]=placed.length;
+        placed.push([r,c,h,w,Ln]);
+        if(bt(rem.slice(0,k).concat(rem.slice(k+1)))) return true;
+        placed.pop();
+        for(let i=0;i<h;i++)for(let j=0;j<w;j++) grid[r+i][c+j]=-1;
+      }
+    }
+    return false;
+  }
+  return bt(lengths)?placed:null;
+}
+function genLevel(n){ // n — номер уровня (6,7,8...)
+  const Wg=6, Hg=4+Math.min(2,Math.floor((n-6)/2)); // 6×4 → 6×5 → 6×6
+  for(let t=0;t<60;t++){
+    const lens=pickLengths(Wg*Hg); if(!lens) continue;
+    const placed=tileJS(Wg,Hg,lens); if(!placed) continue;
+    // слова: на каждую длину — случайное, не использованное раньше; первые буквы в уровне разные
+    const words=[]; const firsts=new Set(); let fail=false;
+    for(const [r,c,h,w,Ln] of placed){
+      let cand=POOL[Ln].filter(x=>!usedWords.has(x)&&!firsts.has(x[0]));
+      if(!cand.length) cand=POOL[Ln].filter(x=>!firsts.has(x[0]));
+      if(!cand.length){ fail=true; break; }
+      const txt=cand[rnd(cand.length)];
+      usedWords.add(txt); firsts.add(txt[0]);
+      words.push({text:txt,color:PALETTE[words.length%PALETTE.length],r,c,h,w});
+    }
+    if(fail) continue;
+    return {name:'L'+n+' · Шахта #'+(n-5),theme:'Океан ∞',W:Wg,H:Hg,words};
+  }
+  return null;
+}
+window.__gen=genLevel; // для автотеста
+
+let cur=0, L, W, H, letter, owner, cells=[];
+const solved=new Set();
+const board=document.getElementById('board');
+const fidx=(i,j,h,w)=> (w>=h) ? i*w+j : j*h+i;   // широкий→строки, высокий→столбцы
+
+function buildBoard(){
+  W=L.W; H=L.H;
+  letter=[...Array(H)].map(()=>Array(W).fill(""));
+  owner =[...Array(H)].map(()=>Array(W).fill(-1));
+  L.words.forEach((wd,idx)=>{
+    for(let i=0;i<wd.h;i++)for(let j=0;j<wd.w;j++){
+      letter[wd.r+i][wd.c+j]=wd.text[fidx(i,j,wd.h,wd.w)];
+      owner[wd.r+i][wd.c+j]=idx;
+    }
+  });
+  board.style.gridTemplateColumns=`repeat(${W}, 1fr)`;
+  board.innerHTML=''; cells=[];
+  for(let r=0;r<H;r++)for(let c=0;c<W;c++){
+    const d=document.createElement('div'); d.className='cell'; d.dataset.r=r; d.dataset.c=c;
+    board.appendChild(d); cells.push(d);
+  }
+  board.appendChild(hand); // рука живёт внутри board, координаты — offsetLeft/Top клеток
+}
+const cellAt=(r,c)=>cells[r*W+c];
+
+function sizeBoard(){
+  const bw=Math.min(window.innerWidth-28, 560), gap=7;
+  const cw=(bw-gap*(W-1))/W;
+  board.style.width=bw+'px';
+  cells.forEach(c=>{ c.style.height=cw+'px'; c.style.fontSize=(cw*0.4)+'px'; });
+}
+
+function levelsBar(){
+  const box=document.getElementById('levels'); box.innerHTML='';
+  LEVELS.slice(-7).forEach((lv,ii)=>{
+    const i=LEVELS.length<=7?ii:LEVELS.length-7+ii;
+    const b=document.createElement('button'); b.textContent='L'+(i+1);
+    if(i===cur){ b.classList.add('cur'); b.style.background=lv.words[0].color; }
+    b.onclick=()=>loadLevel(i); box.appendChild(b);
+  });
+}
+function dots(){
+  const box=document.getElementById('dots'); box.innerHTML='';
+  L.words.forEach((wd,i)=>{ const d=document.createElement('div'); d.className='d';
+    if(solved.has(i)) d.style.background=wd.color; box.appendChild(d); });
+}
+function paint(){
+  for(let r=0;r<H;r++)for(let c=0;c<W;c++){
+    const cell=cellAt(r,c), idx=owner[r][c], wd=L.words[idx];
+    cell.className='cell'; cell.textContent=''; cell.style.removeProperty('--c');
+    if(idx<0) continue;
+    const isClue=(wd.r===r&&wd.c===c);
+    if(solved.has(idx)){ cell.classList.add('solved'); cell.style.setProperty('--c',wd.color); cell.textContent=letter[r][c]; }
+    else if(isClue){ cell.classList.add('clue'); cell.style.setProperty('--c',wd.color); cell.textContent=wd.text[0];
+      const b=document.createElement('div'); b.className='badge'; b.textContent=wd.h*wd.w; cell.appendChild(b); }
+  }
+  dots();
+}
+
+// ---- tutorial hand (из Math Solitaire playable): показывает жест на 1-м уровне ----
+const hand=document.getElementById('hand');
+let guideTimer=null;
+function stopGuide(){ clearTimeout(guideTimer); guideTimer=null; hand.classList.remove('tap'); hand.style.opacity=0; }
+function guide(){
+  stopGuide();
+  if(cur!==0) return;
+  const idx=L.words.findIndex((wd,i)=>!solved.has(i));
+  if(idx<0) return;
+  const wd=L.words[idx];
+  const ctr=(r,c)=>{ const el=cellAt(r,c); return {x:el.offsetLeft+el.offsetWidth*0.5-42.7, y:el.offsetTop+el.offsetHeight*0.55-2.1}; }; // палец арта в точке (42.7,2.1)
+  const A=ctr(wd.r,wd.c), B=ctr(wd.r+wd.h-1,wd.c+wd.w-1);
+  (function cycle(){
+    hand.style.transition='opacity .2s';
+    hand.style.left=A.x+'px'; hand.style.top=A.y+'px';
+    hand.style.opacity=1; hand.classList.add('tap');
+    guideTimer=setTimeout(()=>{
+      hand.classList.remove('tap');
+      hand.style.transition='left .9s ease, top .9s ease, opacity .2s';
+      hand.style.left=B.x+'px'; hand.style.top=B.y+'px';
+      guideTimer=setTimeout(()=>{ hand.style.opacity=0; guideTimer=setTimeout(cycle,600); },1050);
+    },800);
+  })();
+}
+
+// ---- drag ----
+let dragging=false, sr=0, sc=0;
+function pos(e){
+  // на touchend список e.touches пуст (палец поднят) → берём changedTouches
+  const t=(e.touches&&e.touches.length)?e.touches[0]
+        :(e.changedTouches&&e.changedTouches.length)?e.changedTouches[0]:e;
+  const rc=board.getBoundingClientRect();
+  const cw=rc.width/W, ch=rc.height/H;
+  let c=Math.floor((t.clientX-rc.left)/cw), r=Math.floor((t.clientY-rc.top)/ch);
+  return {r:Math.max(0,Math.min(H-1,r)), c:Math.max(0,Math.min(W-1,c))}; }
+function bbox(r,c){ return {r0:Math.min(sr,r),c0:Math.min(sc,c),r1:Math.max(sr,r),c1:Math.max(sc,c)}; }
+function showSel(bb){ paint();
+  for(let r=bb.r0;r<=bb.r1;r++)for(let c=bb.c0;c<=bb.c1;c++){ const cell=cellAt(r,c);
+    if(!cell.classList.contains('solved')){ cell.classList.add('sel'); if(owner[r][c]>=0) cell.textContent=letter[r][c]; } } }
+function start(e){ e.preventDefault(); stopGuide(); const p=pos(e); sr=p.r; sc=p.c; dragging=true; showSel(bbox(sr,sc)); }
+function move(e){ if(!dragging)return; e.preventDefault(); const p=pos(e); showSel(bbox(p.r,p.c)); }
+function end(e){ if(!dragging)return; dragging=false; e.preventDefault();
+  const p=pos(e), bb=bbox(p.r,p.c), h=bb.r1-bb.r0+1, w=bb.c1-bb.c0+1;
+  const idx=L.words.findIndex((wd,i)=>!solved.has(i)&&wd.r===bb.r0&&wd.c===bb.c0&&wd.h===h&&wd.w===w);
+  if(idx>=0){ solved.add(idx); paint(); document.getElementById('hint').textContent=`${L.words[idx].text} ✓`;
+    if(solved.size===L.words.length) setTimeout(showWin,350);
+  } else { for(let r=bb.r0;r<=bb.r1;r++)for(let c=bb.c0;c<=bb.c1;c++){ const cell=cellAt(r,c);
+      if(!cell.classList.contains('solved')) cell.classList.add('bad'); } setTimeout(paint,260); }
+  guide(); }
+board.addEventListener('mousedown',start); board.addEventListener('mousemove',move); window.addEventListener('mouseup',end);
+board.addEventListener('touchstart',start,{passive:false}); board.addEventListener('touchmove',move,{passive:false}); board.addEventListener('touchend',end,{passive:false});
+
+function showWin(){
+  document.getElementById('winlbl').textContent=L.name+' ✓';
+  document.getElementById('next').textContent='Дальше ▶';
+  document.getElementById('win').classList.add('show');
+}
+document.getElementById('next').onclick=()=>{
+  document.getElementById('win').classList.remove('show');
+  if(cur===LEVELS.length-1){ // конец списка — генерируем новый уровень
+    const lv=genLevel(LEVELS.length+1);
+    if(lv){ LEVELS.push(lv); loadLevel(LEVELS.length-1); return; }
+  }
+  loadLevel(cur+1);
+};
+document.getElementById('reset').onclick=()=>loadLevel(cur);
+
+function loadLevel(idx){
+  cur=idx; L=LEVELS[idx]; solved.clear();
+  document.getElementById('win').classList.remove('show');
+  document.getElementById('title').textContent='Word Shikaku — '+L.name;
+  document.getElementById('hint').textContent=L.theme?('Тема: '+L.theme):'Протяни прямоугольник от подсказки';
+  buildBoard(); levelsBar(); paint(); sizeBoard(); guide();
+}
+window.addEventListener('resize',()=>{ sizeBoard(); guide(); });
+loadLevel(0);
+</script>
+</body>
+</html>

@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Ball Lift — v2</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    height:100dvh;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;user-select:none;touch-action:none;
+    background:radial-gradient(120% 120% at 50% 0%,#222838,#10131c 80%);}
+
+  #phone{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;
+         background:linear-gradient(#bfe3f7 0%,#d8eefb 30%,#9fce7f 62%,#7db55e 100%);}
+  @media (max-aspect-ratio:1/1){ #phone{width:100vw;height:100dvh;border-radius:0;} }
+  @media (min-aspect-ratio:1/1){
+    #phone{height:96dvh;aspect-ratio:9/16;width:auto;
+           border-radius:32px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 8px #0c0e15;}
+  }
+
+  #hud{width:100%;padding:12px 14px 4px;z-index:3;display:flex;align-items:center;gap:10px;}
+  .pill{background:rgba(255,255,255,.88);border-radius:16px;padding:7px 14px;font-weight:800;
+        color:#3c5a40;font-size:15px;box-shadow:0 2px 6px rgba(30,70,40,.2);}
+  .hbtn{width:40px;height:40px;border-radius:14px;background:rgba(255,255,255,.88);border:none;
+        font-size:19px;font-weight:900;color:#3c5a40;box-shadow:0 2px 6px rgba(30,70,40,.2);cursor:pointer;
+        display:flex;align-items:center;justify-content:center;}
+  #stage{flex:1;width:100%;position:relative;z-index:2;min-height:0;}
+  #board{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);transform-origin:center;}
+  #board svg{display:block;}
+  .hint{width:100%;text-align:center;color:#fff;font-weight:700;padding:0 16px 10px;
+        font-size:13px;text-shadow:0 1px 3px rgba(0,0,0,.4);z-index:3;pointer-events:none;opacity:.9;}
+
+  .ov{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
+      background:rgba(20,45,25,.45);opacity:0;pointer-events:none;transition:opacity .25s;}
+  .ov.show{opacity:1;pointer-events:auto;}
+  .card{background:linear-gradient(#fff,#eef8ec);border-radius:26px;padding:28px 30px;width:min(78%,320px);
+        text-align:center;box-shadow:0 18px 50px rgba(10,40,15,.35);transform:scale(.85);transition:transform .25s;}
+  .ov.show .card{transform:scale(1);}
+  .card h2{margin:0 0 8px;color:#2d5934;font-size:26px;}
+  .card p{margin:0 0 18px;color:#5b7d60;font-weight:600;}
+  .bigbtn{display:block;width:100%;border:none;border-radius:18px;padding:14px;font-size:18px;font-weight:900;
+          color:#fff;background:linear-gradient(#7ed26a,#4aa63e);box-shadow:0 4px 0 #35802c;cursor:pointer;margin-top:10px;}
+  .bigbtn.gray{background:linear-gradient(#b8c8d6,#8fa5b8);box-shadow:0 4px 0 #74899c;}
+  .conf{position:absolute;width:10px;height:10px;border-radius:3px;z-index:25;pointer-events:none;}
+
+  #home{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;
+        justify-content:center;gap:10px;background:linear-gradient(#bfe3f7,#9fce7f);transition:opacity .3s;}
+  #home.hide{opacity:0;pointer-events:none;}
+  #home h1{color:#2d5934;font-size:44px;margin:0;text-shadow:0 3px 0 rgba(255,255,255,.6);}
+  #home .sub{color:#48684e;font-weight:700;margin-bottom:18px;text-align:center;padding:0 24px;line-height:1.45;}
+  .lvlrow{display:flex;gap:12px;}
+  .lvlbtn{width:58px;height:58px;border-radius:18px;border:none;font-size:22px;font-weight:900;color:#fff;
+          background:linear-gradient(#7ed26a,#4aa63e);box-shadow:0 4px 0 #35802c;cursor:pointer;}
+  .lvlbtn.lock{background:linear-gradient(#b8c8d6,#8fa5b8);box-shadow:0 4px 0 #74899c;}
+  .lvlbtn.done{background:linear-gradient(#ffd75e,#f0a72e);box-shadow:0 4px 0 #c07f18;}
+</style>
+</head>
+<body>
+<div id="phone">
+  <div id="hud">
+    <button class="hbtn" id="homeBtn">⌂</button>
+    <div class="pill" id="lvlPill">Уровень 1</div>
+    <div style="flex:1"></div>
+    <div class="pill" id="ballsPill">🎾🎾🎾</div>
+    <button class="hbtn" id="restartBtn">↻</button>
+  </div>
+  <div id="stage"><div id="board"></div></div>
+  <div class="hint">Один палец: вверх/вниз — рейка, влево/вправо — наклон. Два пальца — каждый свой конец</div>
+
+  <div class="ov" id="winOv"><div class="card">
+    <h2>Уровень пройден!</h2><p id="winTxt"></p>
+    <button class="bigbtn" id="nextBtn">Дальше</button>
+  </div></div>
+  <div class="ov" id="loseOv"><div class="card">
+    <h2>Не вышло…</h2><p id="loseTxt">Мячики закончились</p>
+    <button class="bigbtn" id="retryBtn">Ещё раз</button>
+    <button class="bigbtn gray" id="loseHomeBtn">Домой</button>
+  </div></div>
+
+  <div id="home">
+    <h1>Ball Lift</h1>
+    <div class="sub">Подними мячик на гибкой рейке через змейку.<br>Веди пальцем: вверх — подъём, вбок — наклон, мячик катится за пальцем.<br>Врезался в стену или укатился с края — мячик потерян.</div>
+    <div class="lvlrow" id="lvlRow"></div>
+  </div>
+</div>
+
+<script>
+/* ============ константы ============ */
+const BW=720, BH=1160;
+const POST_L=52, POST_R=668;              // x концов рейки
+const SPAN=POST_R-POST_L;
+const BAND_TOP=250, BAND_BOT=930;         // зона змейки
+const FINISH_Y=235;
+const START_Y=1010;                       // старт рейки
+const Y_MIN=180, Y_MAX=1015;
+const SAG=30;                             // провис (ямка в центре рейки)
+const R=17;                               // радиус мяча
+const MAX_TILT=280;
+const END_SPEED=460;                      // px/с — скорость следования конца за целью
+const GRAV_ROLL=1500;                     // сила ската
+const FRICTION=1.4;
+
+/* уровни: змейка = опорные точки {y,cx,hw} снизу вверх; balls = лимит мячей */
+const LEVELS=[
+ {balls:3, wp:[{y:960,cx:360,hw:170},{y:800,cx:250,hw:112},{y:640,cx:470,hw:112},{y:470,cx:250,hw:108},{y:330,cx:430,hw:116},{y:230,cx:430,hw:150}]},
+ {balls:3, wp:[{y:960,cx:360,hw:160},{y:820,cx:480,hw:100},{y:680,cx:230,hw:98},{y:540,cx:480,hw:96},{y:400,cx:240,hw:100},{y:290,cx:400,hw:110},{y:230,cx:400,hw:140}]},
+ {balls:3, wp:[{y:960,cx:360,hw:150},{y:840,cx:220,hw:90},{y:710,cx:500,hw:86},{y:580,cx:220,hw:86},{y:450,cx:500,hw:88},{y:330,cx:250,hw:92},{y:230,cx:250,hw:130}]},
+ {balls:3, wp:[{y:960,cx:360,hw:140},{y:830,cx:480,hw:84},{y:690,cx:220,hw:80},{y:550,cx:490,hw:78},{y:410,cx:230,hw:80},{y:300,cx:420,hw:88},{y:230,cx:420,hw:120}]},
+ {balls:2, wp:[{y:960,cx:360,hw:130},{y:840,cx:220,hw:70},{y:700,cx:500,hw:66},{y:560,cx:210,hw:64},{y:430,cx:500,hw:66},{y:310,cx:240,hw:70},{y:232,cx:360,hw:100},{y:225,cx:360,hw:110}]},
+];
+
+/* ============ канал змейки ============ */
+function smoothstep(t){return t*t*(3-2*t);}
+function channelAt(wp,y){
+  if(y<=wp[wp.length-1].y){const w=wp[wp.length-1];return {cx:w.cx,hw:w.hw};}
+  if(y>=wp[0].y){const w=wp[0];return {cx:w.cx,hw:w.hw};}
+  for(let i=0;i<wp.length-1;i++){
+    const a=wp[i], b=wp[i+1];
+    if(y<=a.y && y>=b.y){
+      const t=smoothstep((a.y-y)/(a.y-b.y));
+      return {cx:a.cx+(b.cx-a.cx)*t, hw:a.hw+(b.hw-a.hw)*t};
+    }
+  }
+  const w=wp[wp.length-1];return {cx:w.cx,hw:w.hw};
+}
+
+/* ============ состояние ============ */
+let curLevel=0, st=null, raf=null, lastT=0;
+let progress=JSON.parse(localStorage.getItem('balllift_v1')||'{"done":0}');
+const board=document.getElementById('board');
+board.style.width=BW+'px'; board.style.height=BH+'px';
+
+function startLevel(li){
+  curLevel=li;
+  const L=LEVELS[li];
+  st={
+    wp:L.wp, balls:L.balls,
+    yL:START_Y, yR:START_Y, tL:START_Y, tR:START_Y,
+    s:.5, v:0,                    // мяч: доля вдоль рейки, скорость (px/с)
+    over:false, dropAnim:null,
+  };
+  document.getElementById('lvlPill').textContent='Уровень '+(li+1);
+  updBalls();
+  buildBoard();
+  document.getElementById('home').classList.add('hide');
+  hideOv();
+  if(raf) cancelAnimationFrame(raf);
+  lastT=performance.now();
+  raf=requestAnimationFrame(loop);
+  requestAnimationFrame(fit);
+}
+function resetBall(){
+  st.yL=START_Y; st.yR=START_Y; st.tL=START_Y; st.tR=START_Y;
+  st.s=.5; st.v=0; st.dropAnim=null;
+}
+function updBalls(){
+  document.getElementById('ballsPill').textContent = st.balls>0 ? '🎾'.repeat(st.balls) : '—';
+}
+
+/* ============ отрисовка ============ */
+let beamEl, edgeEl, ballG, ropeL, ropeR;
+function buildBoard(){
+  const wp=st.wp;
+  let leftPts=[], rightPts=[];
+  for(let y=BAND_TOP;y<=BAND_BOT;y+=12){
+    const c=channelAt(wp,y);
+    leftPts.push([c.cx-c.hw,y]); rightPts.push([c.cx+c.hw,y]);
+  }
+  const lPath='M0,'+BAND_TOP+' '+leftPts.map(p=>'L'+p[0].toFixed(1)+','+p[1]).join(' ')+' L0,'+BAND_BOT+' Z';
+  const rPath='M'+BW+','+BAND_TOP+' '+rightPts.map(p=>'L'+p[0].toFixed(1)+','+p[1]).join(' ')+' L'+BW+','+BAND_BOT+' Z';
+
+  board.innerHTML=`
+  <svg viewBox="0 0 ${BW} ${BH}" width="${BW}" height="${BH}">
+    <defs>
+      <linearGradient id="post" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#e5484d"/><stop offset=".5" stop-color="#c22c34"/><stop offset="1" stop-color="#8f1e24"/>
+      </linearGradient>
+      <linearGradient id="obst" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#6b7180"/><stop offset="1" stop-color="#4a4f5c"/>
+      </linearGradient>
+      <linearGradient id="beamg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cfd6da"/>
+      </linearGradient>
+    </defs>
+    <line x1="${POST_L}" y1="${FINISH_Y}" x2="${POST_R}" y2="${FINISH_Y}" stroke="#ffd75e" stroke-width="6" stroke-dasharray="18 12" opacity=".9"/>
+    <text x="${BW/2}" y="${FINISH_Y-16}" text-anchor="middle" font-size="26" font-weight="800" fill="#fff" opacity=".85">ФИНИШ</text>
+    <path d="${lPath}" fill="url(#obst)" stroke="#3a3f4a" stroke-width="3"/>
+    <path d="${rPath}" fill="url(#obst)" stroke="#3a3f4a" stroke-width="3"/>
+    <rect x="${POST_L-16}" y="150" width="22" height="910" rx="8" fill="url(#post)"/>
+    <rect x="${POST_R-6}" y="150" width="22" height="910" rx="8" fill="url(#post)"/>
+    <rect x="${POST_L-26}" y="1048" width="${SPAN+52}" height="20" rx="9" fill="#8f5a2e"/>
+    <line id="ropeL" x1="${POST_L}" y1="158" x2="${POST_L}" y2="${START_Y}" stroke="#f4e6c0" stroke-width="4"/>
+    <line id="ropeR" x1="${POST_R}" y1="158" x2="${POST_R}" y2="${START_Y}" stroke="#f4e6c0" stroke-width="4"/>
+    <path id="beam" d="" fill="none" stroke="url(#beamg)" stroke-width="13" stroke-linecap="round"/>
+    <path id="beamEdge" d="" fill="none" stroke="#9aa4aa" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+    <g id="ballG">
+      <circle r="${R}" fill="#d9e94a" stroke="#a8b83a" stroke-width="2.5"/>
+      <path d="M${-R*.7},${-R*.5} Q0,0 ${-R*.7},${R*.5} M${R*.7},${-R*.5} Q0,0 ${R*.7},${R*.5}" fill="none" stroke="#fff" stroke-width="2.5" opacity=".9"/>
+    </g>
+  </svg>`;
+  beamEl=board.querySelector('#beam');
+  edgeEl=board.querySelector('#beamEdge');
+  ballG=board.querySelector('#ballG');
+  ropeL=board.querySelector('#ropeL'); ropeR=board.querySelector('#ropeR');
+  drawDynamic();
+}
+
+function beamY(t){ return st.yL+(st.yR-st.yL)*t + SAG*4*t*(1-t); }
+function ballPos(){ return {x:POST_L+SPAN*st.s, y:beamY(st.s)-R-6}; }
+
+function drawDynamic(){
+  const N=24; let d='';
+  for(let i=0;i<=N;i++){
+    const t=i/N;
+    d+=(i?'L':'M')+(POST_L+SPAN*t).toFixed(1)+','+beamY(t).toFixed(1)+' ';
+  }
+  beamEl.setAttribute('d',d); edgeEl.setAttribute('d',d);
+  ropeL.setAttribute('y2',Math.max(158,st.yL)); ropeR.setAttribute('y2',Math.max(158,st.yR));
+  const b=st.dropAnim||ballPos();
+  ballG.setAttribute('transform',`translate(${b.x.toFixed(1)},${b.y.toFixed(1)}) rotate(${(st.s*720).toFixed(0)})`);
+}
+
+/* ============ физика ============ */
+function loop(now){
+  raf=requestAnimationFrame(loop);
+  let dt=(now-lastT)/1000; lastT=now;
+  dt=Math.min(dt,.05);
+  if(!st||st.over) return;
+
+  if(st.dropAnim){
+    st.dropAnim.vy+=2600*dt;
+    st.dropAnim.y+=st.dropAnim.vy*dt;
+    st.dropAnim.x+=st.dropAnim.vx*dt;
+    drawDynamic();
+    if(st.dropAnim.y>BH+60) afterDrop();
+    return;
+  }
+
+  // концы рейки идут к целям с ограниченной скоростью
+  const step=END_SPEED*dt;
+  st.yL+=Math.max(-step,Math.min(step,st.tL-st.yL));
+  st.yR+=Math.max(-step,Math.min(step,st.tR-st.yR));
+  if(st.yR-st.yL>MAX_TILT) st.yR=st.yL+MAX_TILT;
+  if(st.yL-st.yR>MAX_TILT) st.yL=st.yR+MAX_TILT;
+
+  // мяч: скат по наклону
+  const eps=.01;
+  const t0=Math.max(0,st.s-eps), t1=Math.min(1,st.s+eps);
+  const slope=(beamY(t1)-beamY(t0))/(SPAN*(t1-t0));   // dy/dx
+  const acc=GRAV_ROLL*slope - FRICTION*st.v;          // y растёт вниз: положительный наклон гонит мяч влево? нет:
+  // slope>0 значит справа ниже → мяч катится вправо (в сторону роста y на рейке)
+  st.v+=acc*dt;
+  st.s+=st.v*dt/SPAN;
+  drawDynamic();
+  checkBall();
+}
+
+function checkBall(){
+  const b=ballPos();
+  // скатился с конца рейки
+  if(st.s<-0.005||st.s>1.005){ dropBall(st.v>0?1:-1); return; }
+  // столкновение со змейкой (в зоне препятствий)
+  if(b.y>BAND_TOP-R&&b.y<BAND_BOT+R){
+    const c=channelAt(st.wp,Math.max(BAND_TOP,Math.min(BAND_BOT,b.y)));
+    if(b.x-R+3<c.cx-c.hw || b.x+R-3>c.cx+c.hw){ dropBall(b.x<c.cx?-1:1); return; }
+  }
+  // победа
+  if(b.y<FINISH_Y){
+    st.over=true;
+    setTimeout(()=>{ // пауза ~1с перед win-попапом
+      if(curLevel+1>progress.done){progress.done=curLevel+1;localStorage.setItem('balllift_v1',JSON.stringify(progress));}
+      confetti();
+      document.getElementById('winTxt').textContent=curLevel<4?'Мячик наверху!':'Все уровни пройдены!';
+      document.getElementById('nextBtn').textContent=curLevel<4?'Дальше':'Домой';
+      document.getElementById('winOv').classList.add('show');
+    },1000);
+  }
+}
+
+function dropBall(dir){
+  const b=ballPos();
+  st.balls--; updBalls();
+  st.dropAnim={x:b.x,y:b.y,vx:dir*120,vy:-60};
+}
+function afterDrop(){
+  if(st.balls<=0){
+    st.over=true;
+    document.getElementById('loseTxt').textContent='Мячики закончились';
+    document.getElementById('loseOv').classList.add('show'); // проигрыш — сразу
+    return;
+  }
+  resetBall();
+}
+
+/* ============ управление ============
+   ОДИН палец (одной рукой): вверх/вниз — вся рейка, влево/вправо — наклон
+   (мяч катится в сторону движения пальца).
+   ДВА пальца: каждый рулит своим концом (лево/право экрана), как раньше. */
+const TILT_K=1.35;                     // чувствительность наклона к горизонтали пальца
+const stage=document.getElementById('stage');
+const drags=new Map(); // pointerId -> {x,y}
+const clampY=v=>Math.max(Y_MIN,Math.min(Y_MAX,v));
+
+stage.addEventListener('pointerdown',e=>{
+  if(!st||st.over||st.dropAnim) return;
+  drags.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  stage.setPointerCapture(e.pointerId);
+});
+stage.addEventListener('pointermove',e=>{
+  const d=drags.get(e.pointerId); if(!d||!st||st.over||st.dropAnim) return;
+  const sc=boardScale();
+  const dx=(e.clientX-d.x)/sc, dy=(e.clientY-d.y)/sc;
+  d.x=e.clientX; d.y=e.clientY;
+
+  if(drags.size===1){
+    // одна рука: dy двигает оба конца, dx наклоняет (палец вправо → правый конец ниже → мяч вправо)
+    let tL=st.tL+dy-dx*TILT_K/2;
+    let tR=st.tR+dy+dx*TILT_K/2;
+    // не давать целям разъезжаться сильнее лимита наклона
+    if(tR-tL>MAX_TILT){const m=(tL+tR)/2; tL=m-MAX_TILT/2; tR=m+MAX_TILT/2;}
+    if(tL-tR>MAX_TILT){const m=(tL+tR)/2; tL=m+MAX_TILT/2; tR=m-MAX_TILT/2;}
+    st.tL=clampY(tL); st.tR=clampY(tR);
+  }else{
+    // две руки: палец рулит концом своей половины экрана
+    const r=stage.getBoundingClientRect();
+    const side=(e.clientX-r.left)<r.width/2?'L':'R';
+    if(side==='L') st.tL=clampY(st.tL+dy); else st.tR=clampY(st.tR+dy);
+  }
+});
+const endDrag=e=>{drags.delete(e.pointerId);};
+stage.addEventListener('pointerup',endDrag);
+stage.addEventListener('pointercancel',endDrag);
+
+function boardScale(){
+  const m=board.style.transform.match(/scale\(([\d.]+)\)/);
+  return m?+m[1]:1;
+}
+
+/* ============ попапы/дом ============ */
+function hideOv(){document.querySelectorAll('.ov').forEach(o=>o.classList.remove('show'));}
+function confetti(){
+  const phone=document.getElementById('phone');
+  const cols=['#e5484d','#5b8def','#58b368','#f5c531','#8f5fd6','#ef6bb1'];
+  for(let i=0;i<24;i++){
+    const c=document.createElement('div'); c.className='conf';
+    c.style.background=cols[i%cols.length];
+    c.style.left=(10+Math.random()*80)+'%'; c.style.top='-4%';
+    phone.appendChild(c);
+    c.animate([
+      {transform:'translateY(0) rotate(0)',opacity:1},
+      {transform:`translateY(${phone.clientHeight*.9}px) rotate(${360+Math.random()*360}deg)`,opacity:.2}
+    ],{duration:1400+Math.random()*900,delay:Math.random()*250,easing:'ease-in',fill:'forwards'}).onfinish=()=>c.remove();
+  }
+}
+function buildHome(){
+  const row=document.getElementById('lvlRow'); row.innerHTML='';
+  for(let i=0;i<5;i++){
+    const b=document.createElement('button');
+    b.className='lvlbtn'+(i<progress.done?' done':(i>progress.done?' lock':''));
+    b.textContent=i<progress.done?'★':(i+1);
+    if(i<=progress.done) b.addEventListener('pointerdown',()=>startLevel(i));
+    row.appendChild(b);
+  }
+}
+function goHome(){
+  if(raf){cancelAnimationFrame(raf);raf=null;}
+  st=null; buildHome(); hideOv();
+  document.getElementById('home').classList.remove('hide');
+}
+document.getElementById('homeBtn').addEventListener('pointerdown',goHome);
+document.getElementById('restartBtn').addEventListener('pointerdown',()=>{if(st)startLevel(curLevel);});
+document.getElementById('retryBtn').addEventListener('pointerdown',()=>startLevel(curLevel));
+document.getElementById('loseHomeBtn').addEventListener('pointerdown',goHome);
+document.getElementById('nextBtn').addEventListener('pointerdown',()=>{
+  if(curLevel<4)startLevel(curLevel+1); else goHome();
+});
+
+/* ============ масштаб ============ */
+function fit(){
+  if(!board.offsetWidth) return;
+  const sw=stage.clientWidth-8, sh=stage.clientHeight-8;
+  const s=Math.max(.2,Math.min(sw/BW,sh/BH,1.5));
+  board.style.transform=`translate(-50%,-50%) scale(${s})`;
+}
+window.addEventListener('resize',fit);
+
+/* хук для авто-теста */
+window.__test={
+  startLevel,
+  getState:()=>st?{s:st.s,v:st.v,yL:st.yL,yR:st.yR,balls:st.balls,over:st.over,drop:!!st.dropAnim,
+                   ball:st.dropAnim||ballPos()}:null,
+  setTargets:(l,r)=>{if(st){st.tL=Math.max(Y_MIN,Math.min(Y_MAX,l));st.tR=Math.max(Y_MIN,Math.min(Y_MAX,r));}},
+  channelAt:(y)=>st?channelAt(st.wp,y):null,
+  consts:{POST_L,POST_R,SPAN,BAND_TOP,BAND_BOT,FINISH_Y,START_Y,Y_MIN,Y_MAX,R,SAG},
+};
+
+buildHome();
+requestAnimationFrame(fit);
+</script>
+</body>
+</html>

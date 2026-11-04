@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Nika · Bubble Tea v2</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    height:100dvh;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;user-select:none;touch-action:none;
+    background:radial-gradient(120% 120% at 50% 0%,#222838,#10131c 80%);}
+
+  #phone{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;
+         background:linear-gradient(#f6ecd9,#eedbbc);}
+  @media (max-aspect-ratio:1/1){ #phone{width:100vw;height:100dvh;border-radius:0;} }
+  @media (min-aspect-ratio:1/1){
+    #phone{height:96dvh;aspect-ratio:9/16;width:auto;
+           border-radius:32px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 8px #0c0e15;}
+  }
+  #stage{flex:1;width:100%;position:relative;z-index:2;min-height:0;}
+  #board{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);transform-origin:center;
+         width:720px;height:1300px;}
+
+  /* ---------- HUD ---------- */
+  .hudbtn{position:absolute;top:10px;width:56px;height:56px;border-radius:18px;border:none;
+    background:#fff8ea;box-shadow:0 3px 0 #d8c39c;font-size:26px;cursor:pointer;color:#7a5c33;}
+  #btnHome{left:14px;} #btnRetry{right:14px;}
+  #lvlName{position:absolute;top:18px;left:0;right:0;text-align:center;
+    font-size:30px;font-weight:800;color:#8a6335;}
+  #pill{position:absolute;top:66px;left:50%;transform:translateX(-50%);
+    background:#8a6a41;color:#fff;border-radius:16px;padding:6px 22px 6px 14px;
+    font-size:26px;font-weight:800;box-shadow:inset 0 -3px 0 rgba(0,0,0,.2);}
+  #pill b{color:#c8f27e;margin-right:8px;}
+
+  /* ---------- рамка-конвейер ---------- */
+  #frame{position:absolute;left:10px;top:118px;width:700px;height:590px;border-radius:96px;
+    background:linear-gradient(#f0c07e,#d99a55);
+    box-shadow:0 10px 0 #b97c40,0 16px 26px rgba(122,80,30,.35),inset 0 3px 0 #ffe0ae;}
+  #hole{position:absolute;left:88px;top:196px;width:544px;height:434px;border-radius:56px;
+    background:linear-gradient(#f8eed9,#f2e2c4);
+    box-shadow:inset 0 6px 14px rgba(122,80,30,.4),inset 0 -2px 0 #ffe9c4;}
+  .beltItem{position:absolute;width:52px;height:52px;margin:-26px 0 0 -26px;
+    font-size:44px;line-height:52px;text-align:center;pointer-events:none;
+    filter:drop-shadow(0 3px 2px rgba(90,50,10,.35));}
+
+  /* ---------- жемчужины-баблы (тапиока) ---------- */
+  .pearl{position:relative;display:inline-block;width:44px;height:44px;border-radius:50%;vertical-align:middle;
+    background:radial-gradient(circle at 33% 28%, var(--hi), var(--c) 55%, var(--dk) 100%);
+    box-shadow:inset -4px -6px 8px rgba(0,0,0,.22),inset 3px 4px 6px rgba(255,255,255,.3),
+      0 3px 3px rgba(90,50,10,.28);}
+  .pearl:after{content:'';position:absolute;width:12px;height:9px;margin:8px 0 0 9px;
+    border-radius:50%;background:rgba(255,255,255,.55);transform:rotate(-20deg);}
+
+  /* ---------- стакан bubble tea ---------- */
+  #blender{position:absolute;left:238px;top:226px;width:244px;height:300px;pointer-events:none;
+    transition:transform .12s;}
+  #straw{position:absolute;left:128px;top:-18px;width:26px;height:118px;border-radius:12px;
+    background:linear-gradient(90deg,#f78fb0,#e05c86);transform:rotate(13deg);
+    box-shadow:inset -4px 0 5px rgba(0,0,0,.15);}
+  #cup{position:absolute;left:47px;top:38px;width:150px;height:244px;
+    border-radius:12px 12px 34px 34px;
+    background:linear-gradient(rgba(255,255,255,.5),rgba(235,242,250,.35));
+    border:4px solid rgba(255,255,255,.9);
+    box-shadow:inset -12px 0 18px rgba(255,255,255,.5),0 6px 14px rgba(120,90,40,.25);}
+  #tea{position:absolute;left:8px;top:30px;right:8px;bottom:8px;border-radius:6px 6px 26px 26px;
+    background:linear-gradient(#f0d7b2,#cf9f66);overflow:hidden;}
+  #lid{position:absolute;left:36px;top:24px;width:172px;height:26px;border-radius:13px;
+    background:linear-gradient(#ffffff,#dfe7f1);box-shadow:0 3px 5px rgba(120,90,40,.22);}
+  #juice{position:absolute;inset:0;}
+  .float{position:absolute;font-size:30px;animation:bob 2.4s ease-in-out infinite alternate;}
+  @keyframes bob{from{transform:translateY(-4px) rotate(-12deg);}to{transform:translateY(6px) rotate(14deg);}}
+  .pilePearl{position:absolute;width:26px;height:26px;border-radius:50%;
+    background:radial-gradient(circle at 33% 28%, var(--hi), var(--c) 55%, var(--dk) 100%);
+    box-shadow:inset -2px -3px 4px rgba(0,0,0,.25);}
+  #blender.pulse{transform:scale(1.06);}
+
+  /* ---------- карточки целей ---------- */
+  .goal{position:absolute;width:112px;height:106px;border-radius:20px;background:#fffaf0;
+    box-shadow:0 5px 0 #ddc9a4,0 8px 14px rgba(122,80,30,.22);text-align:center;z-index:5;
+    animation:pop .25s;}
+  @keyframes pop{from{transform:scale(.4);}to{transform:scale(1);}}
+  .goal .em{font-size:52px;line-height:66px;display:block;}
+  .goal .em .pearl{width:48px;height:48px;margin-top:9px;}
+  .goal .cnt{font-size:26px;font-weight:800;color:#7a5c33;line-height:22px;}
+  .goal.done{background:#d9f4c0;}
+  .goal.empty .em{opacity:.25;font-size:40px;}
+
+  /* ---------- полоса конвейера ---------- */
+  #barWrap{position:absolute;left:110px;top:726px;width:500px;height:44px;border-radius:22px;
+    background:#8a6a41;box-shadow:inset 0 4px 6px rgba(0,0,0,.3);}
+  #barFill{position:absolute;left:4px;top:4px;bottom:4px;width:0;border-radius:18px;
+    background:#9fb433;transition:width .25s,background .25s;}
+  #barText{position:absolute;inset:0;text-align:center;line-height:44px;color:#fff;
+    font-size:24px;font-weight:800;text-shadow:0 2px 2px rgba(0,0,0,.3);}
+  #hint{position:absolute;left:0;right:0;top:782px;text-align:center;font-size:20px;color:#9c7a49;white-space:nowrap;}
+
+  /* ---------- очереди ---------- */
+  .lane{position:absolute;top:820px;width:120px;height:466px;border-radius:16px;cursor:pointer;
+    background:linear-gradient(#c9905a,#b97c44);
+    box-shadow:inset 4px 0 6px rgba(255,220,160,.35),inset -4px 0 6px rgba(90,50,10,.35),0 6px 10px rgba(122,80,30,.25);
+    overflow:hidden;}
+  .lane:active{filter:brightness(1.08);}
+  .laneItem{position:absolute;left:50%;width:56px;height:56px;margin-left:-28px;
+    font-size:46px;line-height:56px;text-align:center;pointer-events:none;
+    transition:top .16s;filter:drop-shadow(0 3px 2px rgba(90,50,10,.35));}
+  .laneCnt{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);pointer-events:none;
+    background:rgba(90,50,10,.45);color:#ffe9c4;font-size:19px;font-weight:700;
+    border-radius:10px;padding:1px 10px;white-space:nowrap;}
+
+  .flyer{position:absolute;width:56px;height:56px;margin:-28px 0 0 -28px;font-size:46px;
+    line-height:56px;text-align:center;pointer-events:none;z-index:9;
+    filter:drop-shadow(0 3px 3px rgba(90,50,10,.4));}
+
+  /* ---------- оверлеи ---------- */
+  .ov{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
+    background:rgba(40,26,10,.55);}
+  .card{background:#fff8ea;border-radius:28px;padding:34px 40px;text-align:center;
+    box-shadow:0 16px 40px rgba(0,0,0,.4);min-width:64%;}
+  .card h2{margin:0 0 6px;font-size:8cqw;color:#7a5c33;}
+  .card .big{font-size:15cqw;line-height:1.2;}
+  .card p{margin:4px 0 18px;font-size:4.6cqw;color:#9c7a49;}
+  .btn{display:inline-block;border:none;border-radius:18px;padding:14px 30px;margin:0 8px;
+    font-size:5.4cqw;font-weight:800;cursor:pointer;background:#7fbf3f;color:#fff;
+    box-shadow:0 5px 0 #5e9427;}
+  .btn.sec{background:#c9ae83;box-shadow:0 5px 0 #a5906c;}
+  .conf{position:absolute;top:-30px;width:12px;height:18px;border-radius:3px;z-index:25;
+    animation:fall 1.6s linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(115dvh) rotate(560deg);opacity:.6;}}
+
+  /* ---------- home ---------- */
+  #home{position:absolute;inset:0;z-index:30;background:linear-gradient(#fdf3df,#f3ddb4);
+    display:flex;flex-direction:column;align-items:center;container-type:size;}
+  #home h1{margin:9cqh 0 0;font-size:13cqw;color:#8a6335;letter-spacing:1px;}
+  #home .sub{font-size:4.6cqw;color:#b08c56;margin:6px 0 0;}
+  #map{position:relative;width:100%;flex:1;}
+  .node{position:absolute;width:15cqw;height:15cqw;margin:-7.5cqw;border-radius:50%;
+    background:linear-gradient(#ffd98d,#f0b054);box-shadow:0 6px 0 #c98a35,0 10px 16px rgba(140,90,30,.3);
+    border:none;font-size:6.5cqw;font-weight:800;color:#7a4f1d;cursor:pointer;}
+  .node small{display:block;font-size:2.6cqw;font-weight:700;color:#a4732f;}
+  .dot{position:absolute;width:1.8cqw;height:1.8cqw;margin:-0.9cqw;border-radius:50%;background:#d9b276;}
+  .deco{position:absolute;font-size:9cqw;opacity:.5;pointer-events:none;}
+</style>
+</head>
+<body>
+<div id="phone">
+  <div id="stage">
+    <div id="board">
+      <button class="hudbtn" id="btnHome">⌂</button>
+      <button class="hudbtn" id="btnRetry">↻</button>
+      <div id="lvlName">Уровень 1</div>
+      <div id="pill"><b>✓</b><span id="pillTxt">0/20</span></div>
+
+      <div id="frame"></div>
+      <div id="hole"></div>
+      <div id="blender">
+        <div id="straw"></div>
+        <div id="cup"><div id="tea"><div id="juice"></div></div></div>
+        <div id="lid"></div>
+      </div>
+      <div id="goals"></div>
+      <div id="beltLayer"></div>
+
+      <div id="barWrap"><div id="barFill"></div><div id="barText">0/10</div></div>
+      <div id="hint"></div>
+      <div id="lanes"></div>
+      <div id="fx"></div>
+    </div>
+  </div>
+
+  <div class="ov" id="ovWin" style="display:none">
+    <div class="card">
+      <div class="big">🧋✨</div>
+      <h2>Bubble tea готов!</h2>
+      <p id="winTxt">Уровень пройден</p>
+      <button class="btn sec" id="wMap">Карта</button>
+      <button class="btn" id="wNext">Дальше</button>
+    </div>
+  </div>
+  <div class="ov" id="ovLose" style="display:none">
+    <div class="card">
+      <div class="big">🫠</div>
+      <h2>Конвейер переполнен!</h2>
+      <p>Не заваливай ленту лишним</p>
+      <button class="btn sec" id="lMap">Карта</button>
+      <button class="btn" id="lRetry">Ещё раз</button>
+    </div>
+  </div>
+
+  <div id="home">
+    <h1>NIKA</h1>
+    <div class="sub">Bubble Tea — тапай по очередям и собери рецепт стакана</div>
+    <div id="map"></div>
+  </div>
+</div>
+
+<script>
+/* ================= данные уровней (из tools/gen.mjs, лимиты калиброваны ботом) ================= */
+const LEVELS = [{"cap":10,"slots":2,"total":20,"deck":[{"type":"D","count":4},{"type":"D","count":4},{"type":"P","count":6},{"type":"P","count":6}],"lanes":[["D","P","P","P","P","D","P"],["P","D","s","D","P","P","D"],["s","i","D","D","D","P","D"],["P","s","P","P","P","P","s"],["P","P","D","P","s","P","i"]]},{"cap":11,"slots":3,"total":28,"deck":[{"type":"l","count":3},{"type":"k","count":3},{"type":"D","count":4},{"type":"k","count":4},{"type":"P","count":3},{"type":"D","count":4},{"type":"k","count":5},{"type":"P","count":2}],"lanes":[["k","D","k","k","l","k","i","P","k"],["D","l","k","l","k","l","D","k","D"],["D","D","k","k","P","D","k","P","P"],["D","l","k","k","P","i","k","k","l"],["i","i","D","P","l","l","l","D","l"]]},{"cap":13,"slots":4,"total":34,"deck":[{"type":"s","count":5},{"type":"D","count":3},{"type":"D","count":3},{"type":"s","count":3},{"type":"l","count":6},{"type":"G","count":5},{"type":"P","count":3},{"type":"P","count":3},{"type":"G","count":3}],"lanes":[["i","P","i","D","G","s","P","D","s","l","D"],["s","D","s","D","D","D","G","i","G","s","P"],["l","P","l","D","l","i","l","D","G","s","G"],["s","l","G","P","G","P","s","P","i","D","l"],["s","s","s","G","i","G","s","s","P","l","P"]]},{"cap":13,"slots":4,"total":40,"deck":[{"type":"u","count":4},{"type":"P","count":6},{"type":"P","count":6},{"type":"G","count":6},{"type":"k","count":5},{"type":"Y","count":4},{"type":"u","count":3},{"type":"G","count":4},{"type":"P","count":2}],"lanes":[["Y","P","k","u","P","k","G","P","i","G","i","Y"],["P","u","u","k","i","Y","P","u","i","P","G","G"],["G","G","P","P","Y","u","k","i","P","G","k","G"],["u","u","G","k","i","P","G","G","G","i","i","P"],["P","P","i","P","u","P","P","P","u","u","k","P"]]},{"cap":17,"slots":4,"total":52,"deck":[{"type":"D","count":4},{"type":"u","count":4},{"type":"D","count":4},{"type":"g","count":5},{"type":"Y","count":3},{"type":"s","count":3},{"type":"Y","count":3},{"type":"D","count":5},{"type":"Y","count":4},{"type":"Y","count":4},{"type":"G","count":5},{"type":"m","count":5},{"type":"Y","count":3}],"lanes":[["i","i","u","D","Y","D","i","P","i","Y","Y","D","g","Y"],["m","D","g","i","g","Y","u","D","m","m","g","s","Y","s"],["Y","g","D","i","Y","D","D","g","D","Y","D","m","D","D"],["Y","G","G","Y","m","i","Y","Y","G","g","P","s","G","D"],["Y","g","Y","m","Y","u","i","u","g","G","m","i","Y","Y"]]}];
+// D/P/G/Y — жемчужины-баблы, остальное — слайсы фруктов / лёд / топпинги
+const PEARL = {D:['#8a6a52','#4a3328','#241710'], P:['#ffbdd3','#f27fa5','#c04a76'],
+               G:['#cdeaa6','#93c96a','#5e8f3e'], Y:['#ffe3a3','#f0b954','#bf8526']};
+const EMO = {s:'🍓',k:'🥝',l:'🍋',g:'🥭',u:'🍮',m:'🌿',i:'🧊'};
+function icon(t){
+  if(PEARL[t]) return `<i class="pearl" style="--hi:${PEARL[t][0]};--c:${PEARL[t][1]};--dk:${PEARL[t][2]}"></i>`;
+  return EMO[t];
+}
+
+/* ================= рамка 9:16 ================= */
+function fit(){
+  const stage=document.getElementById('stage'), board=document.getElementById('board');
+  if(!board.offsetWidth) return;
+  const sw=stage.clientWidth-8, sh=stage.clientHeight-8;
+  const s=Math.max(.2, Math.min(sw/720, sh/1300));
+  board.style.transform=`translate(-50%,-50%) scale(${s})`;
+}
+window.addEventListener('resize',fit);
+
+/* ================= путь конвейера (скруглённый прямоугольник) ================= */
+function makePath(x,y,w,h,r){
+  const sw=w-2*r, sh=h-2*r, arc=Math.PI*r/2, P=2*(sw+sh)+4*arc;
+  return {P, point(u){
+    let d=((u%1)+1)%1*P;
+    if(d<sw) return [x+r+d,y]; d-=sw;
+    if(d<arc){const a=d/r;return [x+w-r+Math.sin(a)*r, y+r-Math.cos(a)*r];} d-=arc;
+    if(d<sh) return [x+w,y+r+d]; d-=sh;
+    if(d<arc){const a=d/r;return [x+w-r+Math.cos(a)*r, y+h-r+Math.sin(a)*r];} d-=arc;
+    if(d<sw) return [x+w-r-d,y+h]; d-=sw;
+    if(d<arc){const a=d/r;return [x+r-Math.sin(a)*r, y+h-r+Math.cos(a)*r];} d-=arc;
+    if(d<sh) return [x,y+h-r-d]; d-=sh;
+    const a=d/r; return [x+r-Math.cos(a)*r, y+r-Math.sin(a)*r];
+  }};
+}
+const PATH = makePath(49,157,622,512,70);   // центр дорожки рамки #frame
+const BLEND_T = {x:360,y:400};              // куда улетают фрукты
+const SPEED = 0.022;                        // оборотов/сек
+
+const GOAL_POS = {
+  2:[[100,376],[508,376]],
+  3:[[100,222],[508,222],[100,530]],
+  4:[[100,222],[508,222],[100,530],[508,530]]
+};
+
+/* ================= состояние ================= */
+let S=null, cur=0, holdT=null, holdI=null;
+const $=id=>document.getElementById(id);
+
+function startLevel(n){
+  cur=n;
+  const L=LEVELS[n];
+  S={lanes:L.lanes.map(a=>a.slice()), deck:L.deck.map(g=>({...g})),
+     goals:new Array(L.slots).fill(null), belt:new Array(L.cap).fill(null),
+     cap:L.cap, total:L.total, collected:0, occ:0, over:false, off:0};
+  $('lvlName').textContent='Уровень '+(n+1);
+  $('hint').textContent = n===0 ? 'Тап — топпинг едет на конвейер · держи палец — подряд' : '';
+  $('ovWin').style.display='none'; $('ovLose').style.display='none';
+  $('home').style.display='none';
+  $('juice').innerHTML=''; pileN=0; floatN=0;
+  buildGoals(); buildLanes();
+  $('beltLayer').innerHTML=''; $('fx').innerHTML='';
+  for(let i=0;i<S.goals.length;i++) takeDeck(i,true);
+  updHud();
+  fit();
+}
+
+/* ---------- цели ---------- */
+function buildGoals(){
+  const g=$('goals'); g.innerHTML='';
+  const pos=GOAL_POS[S.goals.length];
+  for(let i=0;i<S.goals.length;i++){
+    const d=document.createElement('div'); d.className='goal'; d.id='goal'+i;
+    d.style.left=pos[i][0]+'px'; d.style.top=pos[i][1]+'px';
+    g.appendChild(d);
+  }
+}
+function renderGoal(i){
+  const d=$('goal'+i), g=S.goals[i];
+  if(!g){ d.className='goal empty'; d.innerHTML='<span class="em">✓</span>'; return; }
+  d.className='goal';
+  d.innerHTML=`<span class="em">${icon(g.type)}</span><div class="cnt">×${g.count}</div>`;
+}
+function takeDeck(i,silent){
+  while(true){
+    if(!S.deck.length){ S.goals[i]=null; renderGoal(i); return; }
+    const g=S.deck.shift(); S.goals[i]=g;
+    renderGoal(i);
+    sweepBelt(g,i);
+    if(g.count>0) return;          // цель осталась активной
+    flashGoal(i);                  // цель закрылась предметами с ленты — берём следующую
+  }
+}
+function flashGoal(i){
+  const d=$('goal'+i); d.classList.add('done');
+  setTimeout(()=>d.classList.remove('done'),260);
+}
+function sweepBelt(g,gi){
+  let delay=0;
+  for(let i=0;i<S.belt.length && g.count>0;i++){
+    const it=S.belt[i];
+    if(it && it.type===g.type){
+      g.count--; S.collected++;
+      let [sx,sy]=PATH.point(i/S.cap+S.off);
+      if(it.fly){ // предмет ещё летит на ленту — стартуем с его текущей точки
+        const p=Math.min(1,(performance.now()-it.fly.t0)/340), e=1-(1-p)*(1-p);
+        sx=it.fly.sx+(sx-it.fly.sx)*e; sy=it.fly.sy+(sy-it.fly.sy)*e;
+      }
+      S.belt[i]=null; S.occ--;
+      it.el.remove();
+      setTimeout(()=>flyer(it.type,sx,sy,BLEND_T.x,BLEND_T.y,()=>consumeFx(it.type)),delay);
+      delay+=90;
+    }
+  }
+  renderGoal(gi); updHud(); checkWin();
+}
+
+/* ---------- очереди ---------- */
+function buildLanes(){
+  const box=$('lanes'); box.innerHTML='';
+  for(let l=0;l<5;l++){
+    const d=document.createElement('div'); d.className='lane'; d.id='lane'+l;
+    d.style.left=(12+l*144)+'px';
+    d.addEventListener('pointerdown',e=>{e.preventDefault(); startHold(l);});
+    box.appendChild(d);
+    renderLane(l);
+  }
+  ['pointerup','pointercancel','pointerleave'].forEach(ev=>
+    window.addEventListener(ev,stopHold));
+}
+function renderLane(l){
+  const d=$('lane'+l); if(!d) return;
+  const arr=S.lanes[l];
+  d.querySelectorAll('.laneItem,.laneCnt').forEach(e=>e.remove());
+  arr.slice(0,7).forEach((t,i)=>{
+    const it=document.createElement('div'); it.className='laneItem';
+    it.style.top=(14+i*62)+'px'; it.innerHTML=icon(t);
+    d.appendChild(it);
+  });
+  if(arr.length>7){
+    const c=document.createElement('div'); c.className='laneCnt';
+    c.textContent='ещё '+(arr.length-7); d.appendChild(c);
+  }
+}
+function startHold(l){
+  if(S.over) return;
+  pushLane(l);
+  stopHold();
+  holdI=l;
+  holdT=setTimeout(function rep(){ if(holdI!=null){ pushLane(holdI); holdT=setTimeout(rep,240);} },380);
+}
+function stopHold(){ if(holdT){clearTimeout(holdT);holdT=null;} holdI=null; }
+
+/* ---------- пуш на конвейер / в блендер ---------- */
+function lanePos(l){ return [72+l*144, 834]; }
+function pushLane(l){
+  if(S.over || !S.lanes[l].length) return false;
+  const type=S.lanes[l].shift();
+  renderLane(l);
+  const [sx,sy]=lanePos(l);
+  const g=S.goals.find(g=>g && g.type===type && g.count>0);
+  if(g){
+    g.count--; S.collected++;
+    const gi=S.goals.indexOf(g);
+    renderGoal(gi);
+    flyer(type,sx,sy,BLEND_T.x,BLEND_T.y,()=>consumeFx(type));
+    if(g.count===0){ flashGoal(gi); takeDeck(gi); }
+    updHud(); checkWin();
+  }else{
+    // ближайший свободный слот ленты
+    let best=-1,bd=1e9;
+    for(let i=0;i<S.cap;i++){
+      if(S.belt[i]) continue;
+      const [x,y]=PATH.point(i/S.cap+S.off);
+      const dd=(x-sx)**2+(y-sy)**2;
+      if(dd<bd){bd=dd;best=i;}
+    }
+    const el=document.createElement('div'); el.className='beltItem'; el.innerHTML=icon(type);
+    $('beltLayer').appendChild(el);
+    S.belt[best]={type,el,fly:{sx,sy,t0:performance.now()}};
+    S.occ++;
+    updHud();
+    if(S.occ>=S.cap){ S.over=true; stopHold(); setTimeout(showLose,500); }
+  }
+  return true;
+}
+let pileN=0, floatN=0;
+function consumeFx(type){
+  const b=$('blender'); b.classList.add('pulse');
+  setTimeout(()=>b.classList.remove('pulse'),140);
+  const j=$('juice');
+  if(PEARL[type]){                    // жемчужина — ложится на дно стакана
+    if(pileN>=15) return;
+    const p=document.createElement('div'); p.className='pilePearl';
+    p.style.setProperty('--hi',PEARL[type][0]); p.style.setProperty('--c',PEARL[type][1]);
+    p.style.setProperty('--dk',PEARL[type][2]);
+    const row=Math.floor(pileN/5), col=pileN%5;
+    p.style.left=(6+col*24+(row%2?6:0)+Math.random()*4)+'px';
+    p.style.bottom=(4+row*21)+'px';
+    j.appendChild(p); pileN++;
+  }else if(type!=='i' && floatN<8){   // фрукт/топпинг — плавает в чае
+    const f=document.createElement('div'); f.className='float'; f.innerHTML=icon(type);
+    f.style.left=(8+Math.random()*92)+'px'; f.style.top=(8+Math.random()*90)+'px';
+    f.style.animationDelay=(-Math.random()*2)+'s';
+    j.appendChild(f); floatN++;
+  }
+}
+
+/* ---------- полёты ---------- */
+const flyers=[];
+function flyer(type,sx,sy,tx,ty,onDone){
+  const el=document.createElement('div'); el.className='flyer'; el.innerHTML=icon(type);
+  $('fx').appendChild(el);
+  flyers.push({el,sx,sy,tx,ty,t0:performance.now(),dur:380,onDone});
+}
+
+/* ---------- HUD / win / lose ---------- */
+function updHud(){
+  $('pillTxt').textContent=S.collected+'/'+S.total;
+  $('barText').textContent=S.occ+'/'+S.cap;
+  const r=S.occ/S.cap;
+  $('barFill').style.width=Math.max(0,(r*100-1.6))+'%';
+  $('barFill').style.background = r<0.6? '#9fb433' : r<0.85? '#e0a13a' : '#e05c3a';
+}
+function checkWin(){
+  if(!S.over && S.collected>=S.total){
+    S.over=true; stopHold();
+    setTimeout(()=>{ confetti(); $('winTxt').textContent='Уровень '+(cur+1)+' пройден';
+      $('wNext').style.display = cur<4 ? '' : 'none';
+      $('ovWin').style.display='flex'; },1000);   // пауза ~1с перед win-попапом
+  }
+}
+function showLose(){ $('ovLose').style.display='flex'; }
+function confetti(){
+  const ph=document.getElementById('phone');
+  const cols=['#f66','#fc6','#6c6','#6cf','#c6f','#f9c'];
+  for(let i=0;i<22;i++){
+    const c=document.createElement('div'); c.className='conf';
+    c.style.left=(5+Math.random()*90)+'%';
+    c.style.background=cols[i%cols.length];
+    c.style.animationDelay=(Math.random()*.3)+'s';
+    ph.appendChild(c); setTimeout(()=>c.remove(),2100);
+  }
+}
+
+/* ---------- home ---------- */
+function buildHome(){
+  const m=$('map'); m.innerHTML='';
+  const pos=[[30,84],[62,68],[34,52],[64,36],[38,18]];
+  for(let i=0;i<4;i++){
+    const [x1,y1]=pos[i],[x2,y2]=pos[i+1];
+    for(let k=1;k<5;k++){
+      const d=document.createElement('div'); d.className='dot';
+      d.style.left=(x1+(x2-x1)*k/5)+'%'; d.style.top=(y1+(y2-y1)*k/5)+'%';
+      m.appendChild(d);
+    }
+  }
+  pos.forEach(([x,y],i)=>{
+    const b=document.createElement('button'); b.className='node';
+    b.style.left=x+'%'; b.style.top=y+'%';
+    b.innerHTML=(i+1)+(i===4?'<small>спайк</small>':'');
+    b.addEventListener('pointerdown',()=>startLevel(i));
+    m.appendChild(b);
+  });
+  [['🧋',8,80],['🍓',80,88],['🥭',14,34],['🍮',82,20],['🍋',10,10],['🧋',85,55]].forEach(([e,x,y])=>{
+    const d=document.createElement('div'); d.className='deco';
+    d.style.left=x+'%'; d.style.top=y+'%'; d.textContent=e; m.appendChild(d);
+  });
+}
+
+/* ---------- цикл ---------- */
+let lastT=performance.now();
+function tick(now){
+  const dt=Math.min(0.05,(now-lastT)/1000); lastT=now;
+  if(S){
+    S.off=(S.off+dt*SPEED)%1;
+    for(let i=0;i<S.cap;i++){
+      const it=S.belt[i]; if(!it) continue;
+      const [tx,ty]=PATH.point(i/S.cap+S.off);
+      let x=tx,y=ty;
+      if(it.fly){
+        const p=Math.min(1,(now-it.fly.t0)/340);
+        const e=1-(1-p)*(1-p);
+        x=it.fly.sx+(tx-it.fly.sx)*e; y=it.fly.sy+(ty-it.fly.sy)*e;
+        if(p>=1) it.fly=null;
+      }
+      it.el.style.transform=`translate(${x}px,${y}px)`;
+    }
+  }
+  for(let i=flyers.length-1;i>=0;i--){
+    const f=flyers[i], p=Math.min(1,(now-f.t0)/f.dur);
+    const e=p*p*(3-2*p);
+    const x=f.sx+(f.tx-f.sx)*e, y=f.sy+(f.ty-f.sy)*e - Math.sin(p*Math.PI)*90;
+    f.el.style.transform=`translate(${x}px,${y}px) scale(${1-0.25*p})`;
+    if(p>=1){ f.el.remove(); flyers.splice(i,1); f.onDone&&f.onDone(); }
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ---------- кнопки ---------- */
+$('btnHome').addEventListener('pointerdown',()=>{ $('home').style.display='flex'; });
+$('btnRetry').addEventListener('pointerdown',()=>startLevel(cur));
+$('wNext').addEventListener('pointerdown',()=>startLevel(Math.min(cur+1,4)));
+$('wMap').addEventListener('pointerdown',()=>{ $('ovWin').style.display='none'; $('home').style.display='flex'; });
+$('lRetry').addEventListener('pointerdown',()=>startLevel(cur));
+$('lMap').addEventListener('pointerdown',()=>{ $('ovLose').style.display='none'; $('home').style.display='flex'; });
+
+/* ---------- бот для авто-проверки (тот же, что в gen.mjs) ---------- */
+function greedyStep(){
+  if(!S || S.over) return false;
+  let best=null,bs=1e9;
+  for(let l=0;l<5;l++){
+    if(!S.lanes[l].length) continue;
+    const front=S.lanes[l][0];
+    let sc;
+    if(S.goals.some(g=>g&&g.type===front&&g.count>0)) sc=-100+Math.random();
+    else{
+      let depth=99;
+      for(let i=1;i<S.lanes[l].length;i++)
+        if(S.goals.some(g=>g&&g.type===S.lanes[l][i]&&g.count>0)){depth=i;break;}
+      sc=depth*10+(S.deck.some(g=>g.type===front)?0:5)+Math.random()*3;
+    }
+    if(sc<bs){bs=sc;best=l;}
+  }
+  if(best==null) return false;
+  return pushLane(best);
+}
+window.__game={
+  get S(){return S;}, startLevel, pushLane, greedyStep,
+  auto(cb){ const t=setInterval(()=>{ if(!greedyStep()||S.over){clearInterval(t);cb&&cb(S);} },50); },
+  state(){ return S && {collected:S.collected,total:S.total,occ:S.occ,cap:S.cap,over:S.over,
+    win:$('ovWin').style.display!=='none', lose:$('ovLose').style.display!=='none',
+    home:$('home').style.display!=='none'}; }
+};
+
+buildHome();
+startLevel(0); $('home').style.display='flex';
+requestAnimationFrame(tick);
+requestAnimationFrame(fit);
+</script>
+</body>
+</html>

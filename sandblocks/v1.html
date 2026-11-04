@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Sand Blocks — proto v1</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    height:100dvh;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;user-select:none;touch-action:none;
+    background:radial-gradient(120% 120% at 50% 0%,#222838,#10131c 80%);}
+
+  #phone{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;
+         background:linear-gradient(180deg,#3b2f74 0%,#2e2560 55%,#241c4e 100%);}
+  @media (max-aspect-ratio:1/1){ #phone{width:100vw;height:100dvh;border-radius:0;} }
+  @media (min-aspect-ratio:1/1){
+    #phone{height:96dvh;aspect-ratio:9/16;width:auto;
+           border-radius:32px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 8px #0c0e15;}
+  }
+
+  #hud{width:100%;padding:10px 12px;z-index:3;display:flex;align-items:center;gap:8px;}
+  .pill{background:#1d1745;color:#fff;border-radius:16px;padding:7px 14px;font-weight:800;
+        font-size:15px;box-shadow:inset 0 -2px 0 rgba(0,0,0,.35),0 2px 4px rgba(0,0,0,.25);}
+  #timer{font-variant-numeric:tabular-nums;font-size:18px;min-width:86px;text-align:center;
+         background:linear-gradient(180deg,#241b56,#1a1440);}
+  .ibtn{width:38px;height:38px;border-radius:12px;background:#1d1745;color:#cfc8ff;border:0;
+        font-size:18px;font-weight:900;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  #stage{flex:1;width:100%;position:relative;z-index:2;min-height:0;}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+
+  .ov{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;gap:14px;background:rgba(20,14,50,.86);backdrop-filter:blur(3px);}
+  .ov h1{color:#fff;font-size:34px;margin:0;text-shadow:0 3px 0 rgba(0,0,0,.35);}
+  .ov .sub{color:#b9b0ea;font-size:15px;margin:0 28px;text-align:center;line-height:1.45;}
+  .btn{background:linear-gradient(180deg,#ffd54d,#f4a825);border:0;border-radius:18px;padding:14px 34px;
+       font-size:19px;font-weight:900;color:#5b3a00;cursor:pointer;box-shadow:0 5px 0 #b97b12;}
+  .btn:active{transform:translateY(3px);box-shadow:0 2px 0 #b97b12;}
+  .btn.sec{background:linear-gradient(180deg,#6a5ad6,#4f41b0);color:#fff;box-shadow:0 5px 0 #322876;}
+  #lvls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;max-width:300px;}
+  .lv{width:52px;height:52px;border-radius:14px;font-size:20px;font-weight:900;border:0;cursor:pointer;
+      background:linear-gradient(180deg,#6a5ad6,#4f41b0);color:#fff;box-shadow:0 4px 0 #322876;}
+  .lv.lock{background:#2a2358;color:#5d54a0;box-shadow:0 4px 0 #1c173e;cursor:default;}
+  .hidden{display:none!important;}
+</style>
+</head>
+<body>
+<div id="phone">
+  <div id="hud">
+    <button class="ibtn" id="btnHome">⌂</button>
+    <div style="flex:1"></div>
+    <div class="pill" id="timer">0:00</div>
+    <div style="flex:1"></div>
+    <div class="pill" id="lvlLab">Level 1</div>
+    <button class="ibtn" id="btnRetry">⟳</button>
+  </div>
+  <div id="stage"><canvas id="cv"></canvas></div>
+
+  <div class="ov" id="home">
+    <h1>SAND BLOCKS</h1>
+    <p class="sub">Подвинь контейнер вплотную к верху — решётка откроется,<br>и в него потечёт песок <b>его цвета</b>. Заполни все контейнеры!</p>
+    <div id="lvls"></div>
+  </div>
+  <div class="ov hidden" id="win">
+    <h1>LEVEL DONE!</h1>
+    <button class="btn" id="btnNext">Next level</button>
+    <button class="btn sec" id="btnWinHome">Home</button>
+  </div>
+  <div class="ov hidden" id="lose">
+    <h1>TIME'S UP</h1>
+    <button class="btn" id="btnRetryOv">Retry</button>
+    <button class="btn sec" id="btnLoseHome">Home</button>
+  </div>
+</div>
+
+<script>
+/* ================= Sand Blocks proto v1 =================
+   Бак песка сверху + лоток контейнеров-полимино снизу.
+   Контейнер у верхней кромки лотка открывает решётку и
+   принимает песок СВОЕГО цвета из нижнего ряда бака.
+   ======================================================== */
+/*CORE-BEGIN*/
+const GP=4, TW=84, TH=60;            // зерно 4px, бак 84x60 зёрен
+const BC=6, BR=7, CELL=56, GPC=14;   // лоток 6x7, клетка 56px = 14 зёрен
+const CAPC=168;                      // ёмкость клетки контейнера, зёрен (14x12)
+const DR=8;                          // слив: 1 зерно/колонку каждые DR тиков
+const LW=396, LH=672;                // логический размер сцены
+const TX=30, TY=10, TANKH=TH*GP;     // бак: x,y,h(240)
+const BX=30, BY=TY+TANKH+14;         // лоток
+
+const PAL=[
+  {n:'white', a:'#efe9dc', b:'#d9d2c2', f:'#f6f2e8'},
+  {n:'dark',  a:'#4a4a55', b:'#38383f', f:'#5b5b68'},
+  {n:'green', a:'#43c46d', b:'#33a458', f:'#5fd685'},
+  {n:'red',   a:'#e05548', b:'#c04336', f:'#ef6f62'},
+  {n:'blue',  a:'#4f8fe0', b:'#3d74c0', f:'#6ba4ec'},
+];
+const SH={
+  S1:[[0,0]], H2:[[0,0],[1,0]], V2:[[0,0],[0,1]],
+  H3:[[0,0],[1,0],[2,0]], L3:[[0,0],[0,1],[1,1]],
+  O4:[[0,0],[1,0],[0,1],[1,1]], T4:[[0,0],[1,0],[2,0],[1,1]],
+};
+// уровень: c=[цвет,форма,x,y]; strata снизу вверх; kx наклон, amp волна; pockets раньше страт
+const LEVELS=[
+ {t:45, strata:[1,0], kx:.45, amp:3, pockets:[],
+  c:[[1,'O4',2,1],[0,'O4',0,4],[0,'H3',3,5]]},
+ {t:60, strata:[0,1,2], kx:-.4, amp:4, pockets:[],
+  c:[[0,'O4',0,2],[1,'H3',2,4],[2,'L3',4,1],[0,'H2',1,6]]},
+ {t:75, strata:[4,3,2], kx:0, amp:6, frq:2, pockets:[],
+  c:[[4,'T4',1,1],[3,'O4',4,2],[3,'V2',3,3],[2,'L3',0,4],[4,'H2',2,5],[2,'V2',5,5]]},
+ {t:150, strata:[1,4,0,2], kx:.3, amp:5,
+  pockets:[{col:2, type:'blob', cx:60, cy:34, r:14}],
+  c:[[0,'O4',0,1],[4,'T4',2,2],[1,'O4',4,4],[2,'L3',0,4],[2,'S1',5,1],[0,'H3',1,6],[4,'H2',2,4]]},
+ {t:180, strata:[1,3,4,0,2], kx:.35, amp:4,
+  pockets:[{col:2, type:'blob', cx:42, cy:48, r:11},{col:1, type:'col', gx:42, w:8}],
+  c:[[0,'O4',0,1],[1,'O4',2,1],[4,'H2',4,1],[3,'H2',4,2],[2,'S1',0,3],[0,'H3',2,3],
+     [1,'V2',5,3],[3,'V2',0,4],[4,'T4',1,5],[3,'S1',4,6],[2,'S1',5,6]]},
+];
+
+let tank, conts, parts, tick=0, timeLeft=0, level=0, playing=false;
+let winFlag=false, loseFlag=false, winAt=0, clearedAll=false;
+let ffMult=1, botOn=false, botCd=0;
+
+const idx=(x,y)=>y*TW+x;
+function mkCont(col,shape,x,y,id){
+  const cells=SH[shape].map(c=>c.slice());
+  return {id,col,cells,x,y,cap:cells.length*CAPC,fill:0,pending:0,
+          state:'idle',popT:0,lastGain:-9};
+}
+function occMap(skip){ // занятость лотка
+  const m=new Array(BC*BR).fill(0);
+  for(const c of conts){ if(c.state!=='idle'||c===skip) continue;
+    for(const[dx,dy]of c.cells) m[(c.y+dy)*BC+(c.x+dx)]=1; }
+  return m;
+}
+function canPlace(c,nx,ny,m){
+  for(const[dx,dy]of c.cells){ const x=nx+dx,y=ny+dy;
+    if(x<0||x>=BC||y<0||y>=BR) return false; if(m[y*BC+x]) return false; }
+  return true;
+}
+function buildLevel(n){
+  const L=LEVELS[n];
+  conts=L.c.map((d,i)=>mkCont(d[0],d[1],d[2],d[3],i));
+  parts=[]; tick=0; timeLeft=L.t; winFlag=loseFlag=false; winAt=0; clearedAll=false; botHist=[];
+  // --- реверс-генерация бака: зёрен цвета = ёмкость его контейнеров ---
+  const quota=new Array(PAL.length).fill(0);
+  for(const c of conts) quota[c.col]+=c.cap;
+  const total=quota.reduce((a,b)=>a+b,0);
+  const frq=L.frq||1;
+  const all=[];
+  for(let y=0;y<TH;y++)for(let x=0;x<TW;x++)
+    all.push({x,y,k:y + L.kx*x + L.amp*Math.sin(x/TW*Math.PI*2*frq)});
+  all.sort((a,b)=>b.k-a.k);            // снизу вверх по «волновой» высоте
+  const sel=all.slice(0,total);
+  tank=new Uint8Array(TW*TH);
+  const used=new Set();
+  for(const p of (L.pockets||[])){     // карманы забирают позиции первыми
+    let q=quota[p.col]; if(q<=0) continue;
+    const fit=sel.filter(s=>{
+      if(used.has(s.y*TW+s.x)) return false;
+      if(p.type==='blob') return (s.x-p.cx)**2+(s.y-(TH-p.cy))**2 <= p.r*p.r;
+      return Math.abs(s.x-p.gx)<=p.w;
+    });
+    if(p.type==='blob') fit.sort((a,b)=>((a.x-p.cx)**2+(a.y-(TH-p.cy))**2)-((b.x-p.cx)**2+(b.y-(TH-p.cy))**2));
+    else fit.sort((a,b)=>b.y-a.y);     // колонна: с самого низа
+    for(const s of fit){ if(q<=0)break; tank[idx(s.x,s.y)]=p.col+1; used.add(s.y*TW+s.x); q--; }
+    quota[p.col]=q;
+  }
+  let si=0;
+  for(const col of L.strata){ let q=quota[col];
+    while(q>0&&si<sel.length){ const s=sel[si++]; if(used.has(s.y*TW+s.x))continue;
+      tank[idx(s.x,s.y)]=col+1; q--; }
+    quota[col]=0;
+  }
+}
+function settle(){ // автомат падающего песка, 1 подшаг
+  const dir=tick&1?1:-1;
+  for(let y=TH-2;y>=0;y--){
+    for(let i=0;i<TW;i++){ const x=dir>0?i:TW-1-i;
+      const v=tank[idx(x,y)]; if(!v) continue;
+      if(!tank[idx(x,y+1)]){ tank[idx(x,y+1)]=v; tank[idx(x,y)]=0; continue; }
+      const x1=x+dir,x2=x-dir;
+      if(x1>=0&&x1<TW&&!tank[idx(x1,y+1)]&&!tank[idx(x1,y)]){ tank[idx(x1,y+1)]=v; tank[idx(x,y)]=0; }
+      else if(x2>=0&&x2<TW&&!tank[idx(x2,y+1)]&&!tank[idx(x2,y)]){ tank[idx(x2,y+1)]=v; tank[idx(x,y)]=0; }
+    }
+  }
+}
+function fillH(c){ // высота засыпки от низа bbox, px
+  const maxdy=Math.max(...c.cells.map(k=>k[1]));
+  return (c.fill/c.cap)*(maxdy+1)*CELL;
+}
+function drain(){ // решётка: приёмник колонки = самая верхняя клетка пристыкованного контейнера
+  for(let col=0;col<BC;col++){
+    let best=null;
+    for(const c of conts){ if(c.state!=='idle'||c.y!==0) continue;
+      for(const[dx,dy]of c.cells){ if(c.x+dx!==col) continue;
+        if(!best||dy<best.row) best={c,row:dy}; }
+    }
+    if(!best) continue;
+    const c=best.c;
+    if(c.fill+c.pending>=c.cap) continue;
+    const gx0=col*GPC;
+    for(let g=0;g<GPC;g++){ const gx=gx0+g;
+      if((tick+gx)%DR!==0) continue;
+      if(c.fill+c.pending>=c.cap) break;
+      const v=tank[idx(gx,TH-1)];
+      if(v===c.col+1){
+        tank[idx(gx,TH-1)]=0; c.pending++;
+        parts.push({x:TX+(gx+.5)*GP,y:TY+TANKH-2,vx:(Math.random()-.5)*30,
+                    vy:40+Math.random()*80,col:c.col,tc:c});
+      }
+    }
+  }
+}
+function updParts(dt){
+  for(let i=parts.length-1;i>=0;i--){ const p=parts[i];
+    p.vy+=1300*dt; p.x+=p.vx*dt; p.y+=p.vy*dt;
+    const c=p.tc, maxdy=Math.max(...c.cells.map(k=>k[1]));
+    const surf=BY+(c.y+maxdy+1)*CELL-4-fillH(c);
+    if(p.y>=surf||p.y>=BY+BR*CELL){
+      parts.splice(i,1); c.pending--; c.fill=Math.min(c.cap,c.fill+1); c.lastGain=tick/60;
+      if(c.fill>=c.cap&&c.state==='idle'){ c.state='clear'; c.popT=0; }
+    }
+  }
+}
+function step(dt){ // один тик 1/60
+  tick++;
+  settle(); settle();
+  drain(); updParts(dt);
+  for(const c of conts){ if(c.state==='clear'){ c.popT+=dt; if(c.popT>.45) c.state='gone'; } }
+  if(!winFlag&&!loseFlag){
+    timeLeft-=dt;
+    if(conts.every(c=>c.state==='gone')&&!clearedAll){ clearedAll=true; winAt=tick/60+1; }
+    if(clearedAll&&tick/60>=winAt){ winFlag=true; playing=false; showWin(); }
+    else if(timeLeft<=0){ timeLeft=0; loseFlag=true; playing=false; showLose(); }
+  }
+}
+/*CORE-END*/
+
+/* ================= рендер ================= */
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+let scale=1, offX=0, offY=0;
+function fit(){
+  const st=document.getElementById('stage');
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  cv.width=st.clientWidth*dpr; cv.height=st.clientHeight*dpr;
+  scale=Math.min(st.clientWidth/LW, st.clientHeight/LH);
+  offX=(st.clientWidth-LW*scale)/2; offY=(st.clientHeight-LH*scale)/2;
+  ctx.setTransform(dpr*scale,0,0,dpr*scale,dpr*offX,dpr*offY);
+}
+window.addEventListener('resize',fit);
+
+const noise=new Float32Array(TW*TH);
+for(let i=0;i<noise.length;i++) noise[i]=Math.random();
+function shade(hex,f){ // затемнение/осветление
+  const n=parseInt(hex.slice(1),16);
+  let r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+  r=Math.min(255,r*f)|0; g=Math.min(255,g*f)|0; b=Math.min(255,b*f)|0;
+  return `rgb(${r},${g},${b})`;
+}
+const grainCol=PAL.map(p=>[shade(p.a,1),shade(p.a,.9),shade(p.a,1.07),shade(p.b,1)]);
+
+function rr(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);}
+function draw(){
+  ctx.clearRect(-offX/scale,-offY/scale,LW+2*offX/scale,LH+2*offY/scale);
+  // --- бак ---
+  rr(TX-8,TY-8,TW*GP+16,TANKH+14,14); ctx.fillStyle='#4a3f8f'; ctx.fill();
+  rr(TX-3,TY-3,TW*GP+6,TANKH+6,8); ctx.fillStyle='#1c1544'; ctx.fill();
+  for(let y=0;y<TH;y++)for(let x=0;x<TW;x++){ const v=tank[idx(x,y)];
+    if(!v) continue;
+    ctx.fillStyle=grainCol[v-1][(noise[idx(x,y)]*4)|0];
+    ctx.fillRect(TX+x*GP,TY+y*GP,GP,GP);
+  }
+  // решётка-полоска под баком
+  ctx.fillStyle='#141034'; ctx.fillRect(TX-3,TY+TANKH+1,TW*GP+6,4);
+  // --- лоток ---
+  for(let y=0;y<BR;y++)for(let x=0;x<BC;x++){
+    ctx.fillStyle=(x+y)&1?'#332a6b':'#2f2764';
+    ctx.fillRect(BX+x*CELL+1,BY+y*CELL+1,CELL-2,CELL-2);
+  }
+  // --- частицы ---
+  for(const p of parts){ ctx.fillStyle=PAL[p.col].a; ctx.fillRect(p.x-2,p.y-2,4,4); }
+  // --- контейнеры ---
+  for(const c of conts){
+    if(c.state==='gone') continue;
+    ctx.save();
+    const maxdx=Math.max(...c.cells.map(k=>k[0])),maxdy=Math.max(...c.cells.map(k=>k[1]));
+    const px=BX+c.x*CELL, py=BY+c.y*CELL;
+    if(c.state==='clear'){ const f=c.popT/.45;
+      ctx.globalAlpha=1-f;
+      const cx=px+(maxdx+1)*CELL/2, cy=py+(maxdy+1)*CELL/2;
+      ctx.translate(cx,cy); ctx.scale(1+f*.25,1+f*.25); ctx.translate(-cx,-cy);
+    }
+    // тело: тёмный низ + песок
+    const fh=fillH(c), bot=py+(maxdy+1)*CELL;
+    for(const[dx,dy]of c.cells){
+      const x=px+dx*CELL, y=py+dy*CELL;
+      ctx.fillStyle='#221b4e'; ctx.fillRect(x+3,y+3,CELL-6,CELL-6);
+      ctx.globalAlpha=.22; ctx.fillStyle=PAL[c.col].a;
+      ctx.fillRect(x+3,y+3,CELL-6,CELL-6); ctx.globalAlpha=c.state==='clear'?1-c.popT/.45:1;
+      const top=Math.max(y+4, bot-4-fh), bh=(y+CELL-4)-top;
+      if(bh>0){ ctx.fillStyle=PAL[c.col].a; ctx.fillRect(x+4,top,CELL-8,bh);
+        ctx.fillStyle=PAL[c.col].b;
+        for(let i=0;i<6;i++){ const rx=x+4+((noise[(i*37+dx*7+dy*13)%noise.length]*(CELL-12))|0);
+          const ry=top+((noise[(i*61+dx*11+dy*3)%noise.length]*Math.max(1,bh-4))|0);
+          ctx.fillRect(rx,ry,4,4); }
+      }
+    }
+    // рамка: белая + цветная внутренняя
+    ctx.lineWidth=5; ctx.strokeStyle='#f4f2fb'; strokeShape(c,px,py);
+    ctx.lineWidth=3; ctx.strokeStyle=PAL[c.col].f; strokeShape(c,px,py,4);
+    // бейдж %
+    const pct=Math.floor(100*c.fill/c.cap);
+    const bx=px+(maxdx+1)*CELL-30, by=bot-16;
+    rr(bx-16,by-9,44,18,9); ctx.fillStyle='#fff'; ctx.fill();
+    ctx.fillStyle='#3a2f7a'; ctx.font='800 11px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(pct+'%',bx+6,by+1);
+    // стрелка-подсказка если пристыкован и течёт
+    ctx.restore();
+  }
+  drawConfetti();
+}
+function strokeShape(c,px,py,inset=0){
+  ctx.beginPath();
+  for(const[dx,dy]of c.cells){
+    const has=(ax,ay)=>c.cells.some(k=>k[0]===ax&&k[1]===ay);
+    const x=px+dx*CELL,y=py+dy*CELL,i=inset;
+    if(!has(dx,dy-1)){ctx.moveTo(x+2+i,y+2+i);ctx.lineTo(x+CELL-2-i,y+2+i);}
+    if(!has(dx,dy+1)){ctx.moveTo(x+2+i,y+CELL-2-i);ctx.lineTo(x+CELL-2-i,y+CELL-2-i);}
+    if(!has(dx-1,dy)){ctx.moveTo(x+2+i,y+2+i);ctx.lineTo(x+2+i,y+CELL-2-i);}
+    if(!has(dx+1,dy)){ctx.moveTo(x+CELL-2-i,y+2+i);ctx.lineTo(x+CELL-2-i,y+CELL-2-i);}
+  }
+  ctx.stroke();
+}
+
+/* ================= конфетти (умеренно) ================= */
+let confetti=[];
+function popConfetti(){ confetti=[];
+  for(let i=0;i<60;i++) confetti.push({x:LW/2,y:LH*.4,vx:(Math.random()-.5)*420,
+    vy:-Math.random()*420-80,c:PAL[(Math.random()*PAL.length)|0].a,r:3+Math.random()*4,l:1.6});
+}
+function drawConfetti(){ if(!confetti.length) return;
+  for(let i=confetti.length-1;i>=0;i--){ const p=confetti[i];
+    p.vy+=800/60; p.x+=p.vx/60; p.y+=p.vy/60; p.l-=1/60;
+    if(p.l<=0){confetti.splice(i,1);continue;}
+    ctx.globalAlpha=Math.min(1,p.l); ctx.fillStyle=p.c;
+    ctx.fillRect(p.x,p.y,p.r,p.r); ctx.globalAlpha=1; }
+}
+
+/* ================= управление (драг) ================= */
+let grab=null;
+function toLocal(e){ const r=cv.getBoundingClientRect();
+  return {x:(e.clientX-r.left-offX)/scale, y:(e.clientY-r.top-offY)/scale}; }
+function contAt(p){
+  const cx=Math.floor((p.x-BX)/CELL), cy=Math.floor((p.y-BY)/CELL);
+  for(const c of conts){ if(c.state!=='idle') continue;
+    for(const[dx,dy]of c.cells) if(c.x+dx===cx&&c.y+dy===cy) return c; }
+  return null;
+}
+cv.addEventListener('pointerdown',e=>{ if(!playing) return;
+  const p=toLocal(e), c=contAt(p); if(!c) return;
+  grab={c, ox:p.x-(BX+c.x*CELL), oy:p.y-(BY+c.y*CELL)};
+  cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener('pointermove',e=>{ if(!grab||!playing) return;
+  const p=toLocal(e);
+  const txc=Math.round((p.x-grab.ox-BX)/CELL), tyc=Math.round((p.y-grab.oy-BY)/CELL);
+  moveToward(grab.c,txc,tyc);
+});
+cv.addEventListener('pointerup',()=>{grab=null;});
+cv.addEventListener('pointercancel',()=>{grab=null;});
+function moveToward(c,txc,tyc){
+  const m=occMap(c);
+  for(let s=0;s<12;s++){
+    const dx=Math.sign(txc-c.x), dy=Math.sign(tyc-c.y);
+    if(!dx&&!dy) break;
+    const tryX=Math.abs(txc-c.x)>=Math.abs(tyc-c.y);
+    let moved=false;
+    const seq=tryX?[[dx,0],[0,dy]]:[[0,dy],[dx,0]];
+    for(const[mx,my]of seq){ if(!mx&&!my) continue;
+      if(canPlace(c,c.x+mx,c.y+my,m)){ c.x+=mx; c.y+=my; moved=true; break; } }
+    if(!moved) break;
+  }
+}
+
+/* ================= бот (для верификации/лимитов) ================= */
+function bfsAll(c){ // все достижимые позиции контейнера: 'x,y' → путь
+  const m=occMap(c), seen=new Map([[c.x+','+c.y,[]]]), q=[[c.x,c.y]];
+  while(q.length){ const[x,y]=q.shift(); const path=seen.get(x+','+y);
+    for(const[mx,my]of[[0,-1],[1,0],[-1,0],[0,1]]){
+      const nx=x+mx,ny=y+my,k=nx+','+ny;
+      if(seen.has(k)||!canPlace(c,nx,ny,m)) continue;
+      seen.set(k,path.concat([[nx,ny]])); q.push([nx,ny]);
+    }
+  } return seen;
+}
+function bfsPath(c,gx,gy){ const p=bfsAll(c).get(gx+','+gy); return p===undefined?null:p; }
+let botHist=[];
+function botStep(){
+  if(!playing) return 'stopped';
+  const now=tick/60;
+  const flowing=c=>c.state==='idle'&&c.y===0&&c.fill+c.pending<c.cap&&(c.pending>0||now-c.lastGain<0.8);
+  // счёт: сколько зёрен цвета в нижних 4 рядах над колонками контейнера
+  let best=null, bestAny=null;
+  for(const c of conts){ if(c.state!=='idle'||c.fill+c.pending>=c.cap) continue;
+    if(flowing(c)) continue;
+    const tops=[...new Set(c.cells.map(k=>k[0]))];
+    for(let x=0;x<=BC-1-Math.max(...c.cells.map(k=>k[0]));x++){
+      let sc=0;
+      for(const dx of tops){
+        const minRow=Math.min(...c.cells.filter(k=>k[0]===dx).map(k=>k[1]));
+        if(minRow>0){ // колонку перехватит чужой пристыкованный контейнер ряда 0
+          const col=x+dx;
+          if(conts.some(o=>o!==c&&o.state==='idle'&&o.y===0&&
+             o.cells.some(([ax,ay])=>o.x+ax===col&&ay===0))) continue;
+        }
+        const g0=(x+dx)*GPC;
+        for(let g=0;g<GPC;g++)for(let ry=1;ry<=6;ry++){
+          const v=tank[idx(g0+g,TH-ry)];
+          if(v===c.col+1) sc++; else break; // чужой/пусто снизу — колонка не сливается
+        }
+      }
+      if(sc>0){
+        if(!bestAny||sc>bestAny.sc) bestAny={c,x,sc};
+        if(!best||sc>best.sc){ const path=bfsPath(c,x,0); if(path) best={c,x,sc,path}; }
+      }
+    }
+  }
+  if(best){ for(const[nx,ny]of best.path){ best.c.x=nx; best.c.y=ny; } return 'docked'; }
+  if(bestAny){ // расчистка: найти ОДИН сдвиг, открывающий путь кандидату к стыковке
+    const cand=bestAny.c;
+    const region=cand.cells.map(([dx,dy])=>[bestAny.x+dx,dy]);
+    const corr=new Set(region.map(r=>r[0]));
+    const others=conts.filter(o=>o!==cand&&o.state==='idle'&&!flowing(o))
+      .sort((a,b)=>{const ai=a.cells.some(([dx])=>corr.has(a.x+dx))?0:1;
+                    const bi=b.cells.some(([dx])=>corr.has(b.x+dx))?0:1; return ai-bi;});
+    const spotsOf=o=>[...bfsAll(o).entries()].map(([k,path])=>{
+        const[x,y]=k.split(',').map(Number); return {x,y,path}; })
+      .filter(s=>(s.x!==o.x||s.y!==o.y)&&
+        !o.cells.some(([dx,dy])=>region.some(r=>r[0]===s.x+dx&&r[1]===s.y+dy)))
+      .map(s=>{ const dcol=Math.min(...o.cells.map(([dx])=>{
+          let m=99; for(const cc of corr) m=Math.min(m,Math.abs(s.x+dx-cc)); return m;}));
+        s.score=dcol*3+s.y; return s; })
+      .sort((a,b)=>b.score-a.score);
+    for(const o of others){ // lookahead: временно ставим и проверяем путь кандидата
+      for(const s of spotsOf(o)){
+        const ox=o.x,oy=o.y; o.x=s.x; o.y=s.y;
+        const p=bfsPath(cand,bestAny.x,0);
+        o.x=ox; o.y=oy;
+        if(p){ for(const[nx,ny]of s.path){o.x=nx;o.y=ny;} return 'shuffle'; }
+      }
+    }
+    for(const o of others){ // ни один ход не открыл путь: лучший нерецентный сдвиг
+      const s=spotsOf(o).find(s=>!botHist.includes(o.id+'@'+s.x+','+s.y));
+      if(s){ for(const[nx,ny]of s.path){o.x=nx;o.y=ny;}
+        botHist.push(o.id+'@'+s.x+','+s.y); if(botHist.length>10) botHist.shift();
+        return 'shuffle2'; }
+    }
+    return 'stuck';
+  }
+  // эвакуация: убрать застрявший у верха контейнер вглубь
+  for(const c of conts){ if(c.state!=='idle'||c.y!==0||flowing(c)) continue;
+    for(let y=BR-1;y>=2;y--)for(let x=0;x<BC;x++){
+      const path=bfsPath(c,x,y); if(path){ for(const[nx,ny]of path){c.x=nx;c.y=ny;} return 'evac'; } }
+  }
+  return 'idle';
+}
+
+/* ================= экраны/цикл ================= */
+const $=s=>document.querySelector(s);
+const PKEY='sandblocks_v1_progress';
+let unlocked=+(localStorage.getItem(PKEY)||1);
+function renderHome(){
+  const d=$('#lvls'); d.innerHTML='';
+  for(let i=1;i<=LEVELS.length;i++){
+    const b=document.createElement('button');
+    b.className='lv'+(i>unlocked?' lock':''); b.textContent=i>unlocked?'🔒':i;
+    if(i<=unlocked) b.onclick=()=>startLevel(i-1);
+    d.appendChild(b);
+  }
+}
+function startLevel(n){
+  level=n; buildLevel(n); playing=true;
+  $('#home').classList.add('hidden'); $('#win').classList.add('hidden'); $('#lose').classList.add('hidden');
+  $('#lvlLab').textContent='Level '+(n+1);
+}
+function showWin(){ popConfetti();
+  unlocked=Math.max(unlocked,Math.min(LEVELS.length,level+2));
+  localStorage.setItem(PKEY,unlocked);
+  $('#btnNext').style.display=level+1<LEVELS.length?'':'none';
+  setTimeout(()=>$('#win').classList.remove('hidden'),150);
+}
+function showLose(){ $('#lose').classList.remove('hidden'); }
+$('#btnHome').onclick=()=>{playing=false;renderHome();$('#home').classList.remove('hidden');};
+$('#btnWinHome').onclick=$('#btnHome').onclick;
+$('#btnLoseHome').onclick=$('#btnHome').onclick;
+$('#btnRetry').onclick=()=>startLevel(level);
+$('#btnRetryOv').onclick=()=>startLevel(level);
+$('#btnNext').onclick=()=>startLevel(level+1);
+
+function fmt(t){ t=Math.max(0,Math.ceil(t)); return Math.floor(t/60)+':'+String(t%60).padStart(2,'0'); }
+let last=0;
+function loop(ts){
+  requestAnimationFrame(loop);
+  if(!last) last=ts;
+  let dt=Math.min(.1,(ts-last)/1000); last=ts;
+  if(playing){
+    let steps=Math.round(dt*60*ffMult);
+    for(let i=0;i<Math.max(1,steps);i++) step(1/60);
+    if(botOn&&--botCd<=0){ botStep(); botCd=Math.max(3,18/ffMult); }
+  }
+  $('#timer').textContent=fmt(timeLeft);
+  draw();
+}
+buildLevel(0); renderHome();
+requestAnimationFrame(loop); fit();
+
+/* ================= тест-хуки ================= */
+window.__game={
+  start:n=>startLevel(n),
+  snap:()=>({level:level+1,time:+timeLeft.toFixed(1),win:winFlag,lose:loseFlag,playing,
+    tankLeft:tank.reduce((a,v)=>a+(v?1:0),0),
+    conts:conts.map(c=>({col:PAL[c.col].n,x:c.x,y:c.y,fill:c.fill,cap:c.cap,state:c.state}))}),
+  ff:m=>{ffMult=m;},
+  bot:on=>{botOn=on;},
+  botStep,
+  setTime:s=>{timeLeft=s;},
+};
+</script>
+</body>
+</html>

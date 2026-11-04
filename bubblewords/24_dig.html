@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Dig Words — Restore the Relics</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;overflow:hidden;background:#1a120a;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;}
+  #wrap{
+    position:relative;width:430px;max-width:100vw;height:900px;max-height:100vh;
+    margin:0 auto;overflow:hidden;
+    background:
+      radial-gradient(120% 80% at 50% 18%, rgba(255,220,140,.35) 0%, rgba(255,200,110,0) 55%),
+      radial-gradient(130% 100% at 50% 60%, #d8b277 0%, #c79a58 38%, #a97c3e 72%, #835f2c 100%);
+    touch-action:none;user-select:none;
+  }
+  /* sandy grain texture overlay */
+  #sand{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:.5;}
+  /* HUD — explorer's notebook */
+  #hud{position:absolute;top:0;left:0;right:0;z-index:40;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;
+    background:linear-gradient(180deg,rgba(60,40,18,.78),rgba(60,40,18,0));pointer-events:none;}
+  #title{font-size:15px;font-weight:800;letter-spacing:.5px;color:#fff3d6;text-shadow:0 1px 2px rgba(70,40,10,.9),0 0 10px rgba(255,200,90,.4);}
+  #stats{display:flex;gap:8px;align-items:center;}
+  .chip{font-size:12px;font-weight:700;color:#3a2710;background:rgba(247,229,190,.9);border:1px solid rgba(120,80,30,.5);
+    padding:5px 9px;border-radius:7px;box-shadow:0 1px 3px rgba(60,40,10,.35);}
+  .chip b{color:#8a4a12;}
+  #restart{pointer-events:auto;cursor:pointer;width:34px;height:34px;border-radius:8px;border:1px solid rgba(120,80,30,.6);
+    background:rgba(247,229,190,.92);color:#6a4012;font-size:18px;display:flex;align-items:center;justify-content:center;}
+  #restart:active{transform:scale(.9);}
+  /* stage */
+  #stage{position:absolute;inset:0;z-index:10;}
+  /* shard objects */
+  .shard{position:absolute;z-index:20;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:800;text-align:center;cursor:grab;touch-action:none;
+    border-radius:14% 38% 16% 40% / 40% 16% 44% 18%;
+    transition:box-shadow .15s;will-change:transform;}
+  .shard .lbl{padding:0 6px;line-height:1.05;pointer-events:none;}
+  .shard .badge{position:absolute;top:-7px;right:-7px;background:#3a2710;border:1px solid rgba(255,230,180,.7);
+    border-radius:11px;font-size:10px;font-weight:800;padding:2px 5px;color:#ffd98a;box-shadow:0 1px 4px rgba(0,0,0,.5);}
+  .shard.drag{cursor:grabbing;z-index:60;}
+  .shard.hot{box-shadow:0 0 0 4px rgba(120,230,150,.85),0 0 22px rgba(120,230,150,.55) !important;}
+  /* covered (sand mound) state */
+  .shard.covered{
+    color:transparent;cursor:pointer;
+    background:radial-gradient(circle at 38% 30%, #e6c688 0%, #cda35e 50%, #a87d3c 100%) !important;
+    box-shadow:0 5px 10px rgba(70,45,15,.45), inset -4px -6px 10px rgba(80,50,15,.35), inset 4px 5px 9px rgba(255,240,200,.45) !important;
+    border-radius:46% 54% 50% 50% / 60% 58% 42% 40% !important;
+  }
+  .shard.covered .lbl,.shard.covered .badge{display:none;}
+  .shard.covered .digmark{position:absolute;font-size:18px;opacity:.55;pointer-events:none;}
+  .shard .digmark{display:none;}
+  /* toast */
+  #toast{position:absolute;left:50%;top:62%;transform:translate(-50%,-50%);z-index:70;pointer-events:none;
+    font-size:22px;font-weight:900;color:#fff;text-shadow:0 0 14px rgba(255,200,90,.95),0 2px 6px rgba(70,40,10,.8);
+    opacity:0;transition:opacity .3s, top .5s;white-space:nowrap;}
+  #toast.show{opacity:1;}
+  /* dust puff */
+  .puff{position:absolute;z-index:55;pointer-events:none;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,240,205,.95),rgba(220,185,120,0));}
+  /* overlay */
+  #over{position:absolute;inset:0;z-index:90;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+    background:radial-gradient(70% 60% at 50% 42%,rgba(90,60,25,.94),rgba(40,26,10,.97));text-align:center;padding:30px;}
+  #over.show{display:flex;}
+  #over h1{font-size:30px;color:#ffe39a;text-shadow:0 0 18px rgba(255,200,90,.6);}
+  #over p{font-size:15px;color:#f3e2c2;line-height:1.5;}
+  .btn{cursor:pointer;pointer-events:auto;font-size:16px;font-weight:800;color:#3a2710;padding:12px 26px;border-radius:12px;
+    border:none;background:linear-gradient(180deg,#ffe6a8,#e0b35e);box-shadow:0 4px 16px rgba(120,80,20,.55);}
+  .btn:active{transform:scale(.95);}
+  .btn.gold{background:linear-gradient(180deg,#ffe39a,#ffc14d);}
+  #hint{position:absolute;bottom:14px;left:0;right:0;z-index:30;text-align:center;font-size:11px;color:rgba(60,40,15,.7);pointer-events:none;font-weight:600;}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="sand"></canvas>
+  <div id="stage"></div>
+  <div id="hud">
+    <div id="title">🏺 DIG WORDS</div>
+    <div id="stats">
+      <div class="chip">Moves <b id="moves">0</b></div>
+      <div class="chip">Relics <b id="prog">0/0</b></div>
+      <div id="restart">↻</div>
+    </div>
+  </div>
+  <div id="toast"></div>
+  <div id="hint">Brush sand off a mound to reveal its word · drag matching shards together to restore a relic</div>
+  <div id="over">
+    <h1 id="overTitle"></h1>
+    <p id="overText"></p>
+    <button class="btn" id="overBtn"></button>
+  </div>
+</div>
+<script>
+"use strict";
+(function(){
+  // ===== CONTENT (verbatim from SHARED.md) =====
+  const CATS = [
+   {name:'Planets',     emoji:'🪐', color:'#7a5cf6', words:['MERCURY','VENUS','MARS','SATURN']},
+   {name:'Royalty',     emoji:'👑', color:'#e6a33f', words:['KING','QUEEN','PRINCE','PRINCESS']},
+   {name:'Writing',     emoji:'✏️', color:'#36c6c0', words:['PEN','PENCIL','CRAYON','MARKER']},
+   {name:'Boats',       emoji:'⛵', color:'#3f8fe6', words:['BOAT','SHIP','BARGE','RAFT']},
+   {name:'Organs',      emoji:'🫀', color:'#e8563f', words:['HEART','LIVER','LUNG','KIDNEY']},
+   {name:'Weather',     emoji:'🌪️', color:'#5b7cf5', words:['STORM','TORNADO','CYCLONE','BLIZZARD']},
+   {name:'Veggies',     emoji:'🥕', color:'#7da04a', words:['CARROT','CELERY','ONION','PEPPER']},
+   {name:'Reptiles',    emoji:'🦎', color:'#2ea49a', words:['GECKO','IGUANA','SNAKE','LIZARD']},
+   {name:'Birds',       emoji:'🦜', color:'#ef6aa0', words:['CROW','EAGLE','PARROT','ROBIN']},
+   {name:'Continents',  emoji:'🌍', color:'#4aa6a0', words:['EUROPE','AFRICA','ASIA','AMERICA']},
+   {name:'Pastry',      emoji:'🥐', color:'#d99b3f', words:['DONUT','BAGEL','MUFFIN','PRETZEL']},
+   {name:'Temperature', emoji:'🌡️', color:'#e07a3f', words:['HOT','WARM','COLD','COOL']},
+  ];
+
+  const W=430, H=900;
+  const stage=document.getElementById('stage');
+  const cv=document.getElementById('sand');
+  const ctx=cv.getContext('2d');
+  const movesEl=document.getElementById('moves');
+  const progEl=document.getElementById('prog');
+  const toastEl=document.getElementById('toast');
+  const over=document.getElementById('over');
+  const overTitle=document.getElementById('overTitle');
+  const overText=document.getElementById('overText');
+  const overBtn=document.getElementById('overBtn');
+  const wrap=document.getElementById('wrap');
+
+  // ===== SAND GRAIN TEXTURE (static, drawn once) =====
+  function initSand(){
+    const dpr=Math.min(2,window.devicePixelRatio||1);
+    cv.width=W*dpr; cv.height=H*dpr; cv.style.width=W+'px'; cv.style.height=H+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,W,H);
+    // scattered grains / pebbles for a dig-pit feel
+    for(let i=0;i<900;i++){
+      const x=Math.random()*W, y=Math.random()*H, r=Math.random()*1.6+0.3;
+      const dark=Math.random()<0.5;
+      ctx.globalAlpha=0.10+Math.random()*0.18;
+      ctx.fillStyle=dark?'#6e4d22':'#fff0cf';
+      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+
+  // ===== GAME STATE =====
+  let level=0;          // 0-based; drives number of categories
+  let groups=[];        // active shard groups
+  let moves=0;
+  let totalCats=0, doneCats=0;
+  let uid=0;
+
+  function levelCatCount(){ return 4+level; }
+
+  function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+  function startLevel(){
+    stage.querySelectorAll('.shard').forEach(n=>n.remove());
+    groups=[];
+    const n=levelCatCount();
+    const chosen=shuffle(CATS.slice()).slice(0,n);
+    totalCats=chosen.length;
+    doneCats=0;
+    // moves budget (core rule 4): minimum needed = 3 merges per category = 3*n; small cushion
+    moves = totalCats*3 + Math.max(2, Math.round(totalCats));
+    // build one single-word object per word, scatter
+    let objs=[];
+    chosen.forEach((cat,ci)=>{
+      cat.words.forEach(w=>{
+        objs.push({cat:ci, color:cat.color, words:[w], total:cat.words.length});
+      });
+    });
+    shuffle(objs);
+    objs.forEach((o,i)=>{
+      const g={id:++uid, cat:o.cat, color:o.color, words:o.words, total:o.total, covered:true};
+      const p=spreadPos(i, objs.length);
+      g.x=p.x; g.y=p.y;
+      makeShard(g);
+      groups.push(g);
+    });
+    updateHUD();
+    hideOver();
+  }
+
+  function spreadPos(i,total){
+    const cols=4;
+    const rows=Math.ceil(total/cols);
+    const col=i%cols, row=Math.floor(i/cols);
+    const padX=64, padTop=150, padBot=70;
+    const usableW=W-padX*2, usableH=H-padTop-padBot;
+    const cellW=usableW/cols, cellH=usableH/Math.max(1,rows);
+    const jx=(Math.random()*2-1)*cellW*0.16;
+    const jy=(Math.random()*2-1)*cellH*0.16;
+    return {
+      x: padX + cellW*(col+0.5) + jx,
+      y: padTop + cellH*(row+0.5) + jy
+    };
+  }
+
+  function shardSize(g){
+    return 56 + (g.words.length-1)*12; // grows as fragments fuse
+  }
+
+  function makeShard(g){
+    const el=document.createElement('div');
+    el.className='shard';
+    el.dataset.id=g.id;
+    el.dataset.cat=g.cat;
+    g.el=el;
+    paintShard(g);
+    stage.appendChild(el);
+    layoutShard(g);
+    attachInput(g);
+  }
+
+  function paintShard(g){
+    const sz=shardSize(g);
+    const el=g.el;
+    el.style.width=sz+'px';
+    el.style.height=sz+'px';
+    const fs = g.words.length>1 ? Math.max(10, 15 - g.words.length) : Math.max(10, 17 - Math.floor(g.words[0].length/2));
+    el.style.fontSize=fs+'px';
+    if(g.covered){
+      el.classList.add('covered');
+      el.innerHTML='<div class="digmark">⛏️</div><div class="lbl"></div><div class="badge"></div>';
+    } else {
+      el.classList.remove('covered');
+      // carved terracotta look, tinted by category colour
+      el.style.background='radial-gradient(circle at 36% 28%, '+lighten(g.color,50)+' 0%, '+g.color+' 58%, '+darken(g.color,42)+' 100%)';
+      el.style.boxShadow='0 4px 9px rgba(60,38,12,.5), inset -5px -7px 12px rgba(40,22,5,.45), inset 5px 6px 11px '+hexA(lighten(g.color,55),.5);
+      const label = g.words.length===1 ? g.words[0] : g.words[g.words.length-1];
+      el.innerHTML='<div class="lbl">'+label+'</div><div class="badge">'+g.words.length+'/'+g.total+'</div>';
+    }
+  }
+
+  function layoutShard(g){
+    if(!g.el) return;
+    const sz=shardSize(g);
+    g.el.style.left=(g.x - sz/2)+'px';
+    g.el.style.top =(g.y - sz/2)+'px';
+  }
+
+  // ===== color helpers =====
+  function hx(h){h=h.replace('#','');return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)];}
+  function clamp(v){return Math.max(0,Math.min(255,Math.round(v)));}
+  function lighten(h,amt){const[r,g,b]=hx(h);return `rgb(${clamp(r+amt)},${clamp(g+amt)},${clamp(b+amt)})`;}
+  function darken(h,amt){const[r,g,b]=hx(h);return `rgb(${clamp(r-amt)},${clamp(g-amt)},${clamp(b-amt)})`;}
+  function hexA(h,a){const[r,g,b]=hx(h);return `rgba(${r},${g},${b},${a})`;}
+
+  // ===== HUD =====
+  function updateHUD(){
+    movesEl.textContent=moves;
+    progEl.textContent=doneCats+'/'+totalCats;
+  }
+
+  let toastTimer=null;
+  function toast(msg){
+    toastEl.textContent=msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer=setTimeout(()=>toastEl.classList.remove('show'),1100);
+  }
+
+  // dust puff effect at a screen point
+  function puff(x,y){
+    const p=document.createElement('div');
+    p.className='puff';
+    const sz=46;
+    p.style.width=sz+'px'; p.style.height=sz+'px';
+    p.style.left=(x-sz/2)+'px'; p.style.top=(y-sz/2)+'px';
+    wrap.appendChild(p);
+    p.animate([
+      {transform:'scale(.4)',opacity:.9},
+      {transform:'scale(1.8)',opacity:0}
+    ],{duration:480,easing:'ease-out'}).onfinish=()=>p.remove();
+  }
+
+  // ===== REVEAL (cosmetic twist — FREE, costs no move) =====
+  function reveal(g){
+    if(!g.covered) return;
+    g.covered=false;
+    paintShard(g);
+    layoutShard(g);
+    const sz=shardSize(g);
+    puff(g.x, g.y);
+    g.el.animate([{transform:'scale(.85)'},{transform:'scale(1)'}],{duration:240,easing:'cubic-bezier(.3,1.6,.5,1)'});
+  }
+
+  // ===== INPUT (pointer: tap/brush to reveal, drag to merge) =====
+  let drag=null; // {g, offX, offY, sz, moved, downX, downY}
+
+  function attachInput(g){
+    g.el.addEventListener('pointerdown',(e)=>{
+      e.stopPropagation();
+      startDrag(g,e);
+    });
+  }
+
+  function toWrap(e){
+    const r=wrap.getBoundingClientRect();
+    return { x:e.clientX-r.left, y:e.clientY-r.top };
+  }
+
+  function startDrag(g,e){
+    if(over.classList.contains('show')) return;
+    const sz=shardSize(g);
+    const p=toWrap(e);
+    drag={ g:g, offX:p.x-g.x, offY:p.y-g.y, sz:sz, moved:false, downX:p.x, downY:p.y };
+    g.el.classList.add('drag');
+    if(g.el.setPointerCapture){ try{ g.el.setPointerCapture(e.pointerId); }catch(_){} }
+  }
+
+  // brushing over covered shards while moving the pointer (drag-to-uncover)
+  function brushAt(x,y){
+    for(const g of groups){
+      if(!g.covered) continue;
+      const d=Math.hypot(g.x-x,g.y-y);
+      if(d < shardSize(g)/2){ reveal(g); }
+    }
+  }
+
+  window.addEventListener('pointermove',(e)=>{
+    if(!drag) return;
+    const p=toWrap(e);
+    const dist=Math.hypot(p.x-drag.downX,p.y-drag.downY);
+    // a covered shard being dragged = brushing; reveal whatever the pointer sweeps over
+    if(dist>4){
+      drag.moved=true;
+      brushAt(p.x,p.y);
+    }
+    if(drag.g.covered){
+      // covered shards aren't carried — they only get brushed; keep them in place
+      return;
+    }
+    // revealed shard: carry it for merging
+    const nx=p.x-drag.offX, ny=p.y-drag.offY;
+    drag.g.el.style.left=(nx-drag.sz/2)+'px';
+    drag.g.el.style.top =(ny-drag.sz/2)+'px';
+    const target=findTargetUnder(nx,ny,drag.g);
+    groups.forEach(gg=>{ if(gg!==drag.g) gg.el.classList.remove('hot'); });
+    if(target && target.cat===drag.g.cat) target.el.classList.add('hot');
+  },{passive:false});
+
+  window.addEventListener('pointerup',(e)=>{
+    if(!drag) return;
+    const g=drag.g;
+    g.el.classList.remove('drag');
+    groups.forEach(gg=>gg.el.classList.remove('hot'));
+    const p=toWrap(e);
+
+    if(g.covered){
+      // a tap (no real movement) on a covered mound reveals it (free)
+      if(!drag.moved){ reveal(g); }
+      drag=null; return;
+    }
+
+    // revealed shard released: attempt merge
+    const nx=p.x-drag.offX, ny=p.y-drag.offY;
+    const target=findTargetUnder(nx,ny,g);
+    if(drag.moved && target && target.cat===g.cat && !target.covered){
+      doMerge(g,target);
+      drag=null; return;
+    }
+    // wrong category / no target → snap back, no move spent (core rule 2)
+    layoutShard(g);
+    drag=null;
+  });
+
+  function findTargetUnder(x,y,self){
+    let best=null,bd=1e9;
+    for(const g of groups){
+      if(g===self) continue;
+      if(g.covered) continue; // can only merge onto a revealed shard
+      const d=Math.hypot(g.x-x,g.y-y);
+      const reach=shardSize(g)/2 + 26;
+      if(d<reach && d<bd){bd=d;best=g;}
+    }
+    return best;
+  }
+
+  // ===== MERGE (core rules 2 & 3) =====
+  function doMerge(a, b){
+    b.words=b.words.concat(a.words);
+    groups=groups.filter(g=>g!==a);
+    a.el.remove();
+    moves--; // only a successful merge costs a move (core rule 4)
+    paintShard(b);
+    layoutShard(b);
+    b.el.animate([{transform:'scale(1.18)'},{transform:'scale(1)'}],{duration:220,easing:'cubic-bezier(.3,1.6,.5,1)'});
+    if(b.words.length>=b.total){
+      completeCategory(b);
+    } else {
+      toast('Fragment joined '+b.words.length+'/'+b.total);
+    }
+    updateHUD();
+    checkEnd();
+  }
+
+  function completeCategory(g){
+    doneCats++;
+    const el=g.el;
+    el.style.zIndex=65;
+    puff(g.x,g.y);
+    // restored relic shipped to the museum: sparkle + rise away
+    el.animate([
+      {transform:'scale(1) translateY(0)',opacity:1, offset:0},
+      {transform:'scale(1.35) translateY(-10px)',opacity:1, offset:0.3},
+      {transform:'scale(0.2) translateY(-160px)',opacity:0, offset:1}
+    ],{duration:720,easing:'cubic-bezier(.5,0,.85,.3)'}).onfinish=()=>el.remove();
+    groups=groups.filter(x=>x!==g);
+    toast('🏺 Relic restored!');
+    updateHUD();
+  }
+
+  // ===== END CHECK (core rule 5) =====
+  function checkEnd(){
+    if(doneCats>=totalCats){
+      showOver(true);
+    } else if(moves<=0){
+      showOver(false);
+    }
+  }
+
+  function showOver(win){
+    over.classList.add('show');
+    if(win){
+      overTitle.textContent='🏛️ Dig Complete!';
+      overText.textContent='Every relic restored and sent to the museum. Ready for a deeper, richer site?';
+      overBtn.textContent='Next Site (+1 relic)';
+      overBtn.className='btn gold';
+      overBtn.onclick=()=>{ level++; startLevel(); };
+    } else {
+      overTitle.textContent='⛏️ Out of Moves';
+      overText.textContent='The dig ran dry before the relics were whole. Re-survey the pit and try again.';
+      overBtn.textContent='Retry Dig';
+      overBtn.className='btn';
+      overBtn.onclick=()=>{ startLevel(); };
+    }
+  }
+  function hideOver(){ over.classList.remove('show'); }
+
+  document.getElementById('restart').addEventListener('click',()=>{ level=0; startLevel(); });
+
+  // ===== INIT =====
+  function init(){
+    initSand();
+    startLevel();
+  }
+  window.addEventListener('resize',initSand);
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init);
+  else init();
+
+  // helpers for automated recording (showreel)
+  window.bw24_revealSome = function(n){
+    const covered=groups.filter(g=>g.covered);
+    covered.slice(0,n).forEach(g=>reveal(g));
+    return covered.length;
+  };
+  window.bw24_getMergePair = function(){
+    const open=groups.filter(g=>!g.covered&&!g.done);
+    const bycat={}; open.forEach(g=>{(bycat[g.cat]=bycat[g.cat]||[]).push(g);});
+    const grp=Object.values(bycat).find(a=>a.length>=2);
+    if(!grp) return null;
+    const a=grp[0], b=grp[1];
+    const ra=a.el.getBoundingClientRect(), rb=b.el.getBoundingClientRect();
+    return {sx:ra.left+ra.width/2,sy:ra.top+ra.height/2,tx:rb.left+rb.width/2,ty:rb.top+rb.height/2};
+  };
+})();
+</script>
+</body>
+</html>

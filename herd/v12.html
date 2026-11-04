@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Пастушья собака — Тайкун v12 (резкое управление)</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+      html, body { height: 100%; overflow: hidden; background: #2a3a1a; }
+      body {
+        font-family: "Trebuchet MS", system-ui, sans-serif;
+        color: #2b2620; touch-action: none; -webkit-user-select: none; user-select: none;
+      }
+      #game { position: fixed; inset: 0; display: block; cursor: crosshair; }
+
+      /* ---- play HUD ---- */
+      #hud { position: fixed; top: 0; left: 0; right: 0; z-index: 5; display: none; justify-content: center; padding: 10px 12px 0; pointer-events: none; }
+      #hud.on { display: flex; }
+      .bar {
+        display: flex; align-items: center; gap: 14px;
+        background: #fbf3df; border: 3px solid #4d3a22; border-radius: 16px;
+        box-shadow: 0 4px 0 rgba(43,38,32,.3), 0 8px 18px rgba(0,0,0,.18);
+        padding: 8px 15px; max-width: 96vw;
+      }
+      .item { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 15px; white-space: nowrap; }
+      .label { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; opacity: .55; }
+      .num { font-size: 19px; font-weight: 900; line-height: 1; }
+      #penned { color: #3c7a2e; }
+      #coinsRun { color: #c8881e; }
+      #sky { position: relative; width: 96px; height: 16px; border: 2px solid #4d3a22; border-radius: 9px; overflow: hidden;
+        background: linear-gradient(90deg, #ffce7a 0%, #bfe6ff 35%, #aed1ff 55%, #ffb066 80%, #3a3f6e 100%); }
+      #sun { position: absolute; top: 50%; left: 0%; transform: translate(-50%, -50%); font-size: 14px; line-height: 1; filter: drop-shadow(0 0 3px rgba(255,200,80,.9)); transition: left .15s linear; }
+      button.ui { pointer-events: auto; cursor: pointer; border: 3px solid #4d3a22; background: #fbf3df; border-radius: 11px; font-size: 14px; height: 32px; padding: 0 11px; font-weight: 800; color: #4d3a22; }
+      button.ui:active { transform: translateY(1px); }
+
+      #hint { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 5; background: rgba(43,38,32,.82); color: #f6efdf; font-size: 13px; font-weight: 600; padding: 8px 17px; border-radius: 99px; pointer-events: none; opacity: 0; transition: opacity .5s; }
+      #hint.on { opacity: 1; }
+
+      /* ---- floating joystick ---- */
+      #joy, #joyKnob { position: fixed; z-index: 6; pointer-events: none; display: none; border-radius: 50%; transform: translate(-50%, -50%); }
+      #joy { width: 144px; height: 144px; border: 3px solid rgba(255,255,255,.45); background: rgba(43,38,32,.16); box-shadow: 0 0 0 2px rgba(43,38,32,.18) inset; }
+      #joyKnob { width: 64px; height: 64px; background: rgba(246,239,223,.9); border: 3px solid rgba(77,58,34,.85); box-shadow: 0 3px 8px rgba(0,0,0,.25); }
+      #joy.on, #joyKnob.on { display: block; }
+
+      /* ===================== HUB (главный экран) ===================== */
+      #hub { position: fixed; inset: 0; z-index: 20; display: none; flex-direction: column;
+        background: linear-gradient(170deg,#bfe6ff 0%, #cfe9a8 28%, #8cb255 55%, #719a41 100%);
+        overflow-y: auto; }
+      #hub.on { display: flex; }
+      #hubTop { padding: 16px 16px 6px; display: flex; justify-content: space-between; align-items: center; }
+      .chip { display:flex; align-items:center; gap:7px; background:#fbf3df; border:3px solid #4d3a22; border-radius:14px;
+        padding:7px 13px; font-weight:900; box-shadow:0 3px 0 rgba(43,38,32,.3); }
+      .chip .c1 { font-size:13px; opacity:.6; font-weight:800; }
+      .chip .c2 { font-size:20px; }
+      #hubHero { text-align:center; padding: 4px 16px 8px; }
+      #hubHero .title { font-size: 30px; font-weight: 900; color:#3a2a16; text-shadow:0 2px 0 rgba(255,255,255,.4); letter-spacing:.01em; }
+      #hubHero .sub { font-size: 14px; color:#3a4a22; font-weight:700; opacity:.8; margin-top:2px; }
+      #hubScene { font-size: 58px; line-height:1; margin: 6px 0 2px; filter: drop-shadow(0 6px 6px rgba(0,0,0,.18)); }
+      #playBtn { display:block; margin: 6px auto 14px; font-weight: 900; font-size: 24px; cursor: pointer;
+        background: #f0a93c; color: #4d3a22; border: 4px solid #4d3a22; border-radius: 20px; padding: 14px 52px;
+        box-shadow: 0 6px 0 rgba(43,38,32,.35); }
+      #playBtn:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(43,38,32,.35); }
+
+      #ups { padding: 0 12px 24px; }
+      .upsHead { font-size:12px; font-weight:900; letter-spacing:.1em; text-transform:uppercase; color:#3a4a22; opacity:.7; margin: 8px 6px 8px; }
+      .row3 { display:grid; grid-template-columns: repeat(3,1fr); gap: 9px; margin-bottom: 4px; }
+      .card { background:#fbf3df; border:3px solid #4d3a22; border-radius:16px; padding:10px 8px 9px; text-align:center;
+        box-shadow:0 4px 0 rgba(43,38,32,.28); display:flex; flex-direction:column; align-items:center; gap:3px; }
+      .card .ic { font-size: 26px; line-height:1; }
+      .card .nm { font-size: 13px; font-weight:900; color:#3a2a16; }
+      .card .vl { font-size: 11px; font-weight:800; color:#3c7a2e; }
+      .card .nx { font-size: 10px; font-weight:700; opacity:.6; }
+      .buy { margin-top:5px; width:100%; cursor:pointer; border:3px solid #4d3a22; border-radius:11px; padding:6px 4px;
+        font-weight:900; font-size:13px; background:#f0c33c; color:#4d3a22; display:flex; align-items:center; justify-content:center; gap:4px; }
+      .buy:active { transform: translateY(1px); }
+      .buy.off { background:#d8cdb6; color:#8a8472; border-color:#9a917c; cursor:default; }
+      .card.small .ic { font-size: 22px; }
+      .card.small .nm { font-size: 12px; }
+
+      /* ===================== RESULTS ===================== */
+      #results { position: fixed; inset: 0; z-index: 25; display:none; align-items:center; justify-content:center; padding:20px; }
+      #results.on { display:flex; }
+      #results::before { content:""; position:absolute; inset:0; background: rgba(28,32,18,.5); }
+      .panel { position: relative; background:#fbf3df; border:4px solid #4d3a22; border-radius:24px;
+        box-shadow:0 10px 0 rgba(43,38,32,.3), 0 18px 40px rgba(0,0,0,.3); padding: 26px 30px; text-align:center; max-width: 380px; width:100%; }
+      .panel h2 { font-size: 30px; font-weight: 900; margin-bottom: 4px; color:#4d3a22; }
+      .panel .psub { font-size: 14px; opacity:.78; margin-bottom: 14px; }
+      .rrow { display:flex; justify-content:space-between; font-size:15px; font-weight:700; padding:5px 2px; border-bottom:1px dashed rgba(77,58,34,.25); }
+      .rrow .rv { font-weight:900; }
+      .rtot { display:flex; justify-content:space-between; font-size:20px; font-weight:900; color:#c8881e; padding:9px 2px 2px; }
+      .btn { font-weight:900; font-size:18px; cursor:pointer; background:#f0a93c; color:#4d3a22; border:4px solid #4d3a22; border-radius:16px; padding:12px 30px; margin-top:14px; box-shadow:0 5px 0 rgba(43,38,32,.35); }
+      .btn:active { transform: translateY(3px); box-shadow:0 2px 0 rgba(43,38,32,.35); }
+
+      .hand{position:absolute;width:48px;height:42px;z-index:160;pointer-events:none;opacity:0;
+        background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABCAYAAACzZ5RvAAAA+0lEQVR4nO3UMUoDQRTG8X92E0WwsLCw0EILCwsLG0FBEAUv4Ak8gCfwBJ7AE3gCT2BhYWFjYWFhY2FhcWuMzKbZJ9JdrPRwsIPHsPMmzfvm5n3RkSESt0M3Ad6QA2ogQqQBwpgBuSAOlAFKkAOyAB5oAYUQAEoAnmgAGSBHJADakAOyANZIAvkgQyQAdJABkgBSSAOJIA4EAdiQAyIAlEgAoSBEBAEAoAfAfh/9wG9XwXqQA2ogQqQBwpgBuSAOlAFKkAOyAB5oAYUQAEoAnmgAGSBHJADakAOyANZIAvkgQyQAdJABkgBSSAOJIA4EAdiQAyIAlEgAoSBEBAEAoAfAcj/dx/Q+xVjLgAAAABJRU5ErkJggg==) center/contain no-repeat;
+        transition:left .35s ease,top .35s ease,opacity .2s;filter:drop-shadow(0 3px 4px rgba(0,0,0,.45))}
+    </style>
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+
+    <!-- play HUD -->
+    <div id="hud">
+      <div class="bar">
+        <div class="item"><span class="label">Овцы</span><span class="num"><span id="penned">0</span>/<span id="need">0</span></span></div>
+        <div class="item"><span class="label">💰</span><span class="num" id="coinsRun">0</span></div>
+        <div class="item"><div id="sky"><div id="sun">☀️</div></div></div>
+        <button class="ui" id="toHub">⌂</button>
+      </div>
+    </div>
+
+    <div id="hint">Держи палец внизу — веди им собаку. Загоняй овец в ворота!</div>
+    <div id="joy"></div>
+    <div id="joyKnob"></div>
+    <div class="hand" id="hand"></div>
+
+    <!-- HUB -->
+    <div id="hub">
+      <div id="hubTop">
+        <div class="chip"><span class="c1">УРОВЕНЬ</span><span class="c2" id="hubLvl">1</span></div>
+        <div class="chip"><span class="c2">💰</span><span class="c2" id="hubCoins">0</span></div>
+      </div>
+      <div id="hubHero">
+        <div id="hubScene">🐕🐑🐑</div>
+        <div class="title">Пастушья ферма</div>
+        <div class="sub">Загони стадо — заработай монеты — прокачай ферму</div>
+      </div>
+      <button id="playBtn">ИГРАТЬ ▶</button>
+      <div id="ups">
+        <div class="upsHead">Главные апгрейды</div>
+        <div class="row3" id="rowMain"></div>
+        <div class="upsHead">Дополнительные</div>
+        <div class="row3" id="rowExtra"></div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="results">
+      <div class="panel">
+        <h2 id="rTitle">Стадо дома! 🐕</h2>
+        <div class="psub" id="rSub"></div>
+        <div id="rBreak"></div>
+        <button class="btn" id="rNext">Продолжить ▶</button>
+      </div>
+    </div>
+
+    <script>
+      "use strict";
+      /* =======================================================
+         Пастушья собака — БЕСКОНЕЧНЫЙ ТАЙКУН, v11
+         Основа: v10 (флокинг стада + собака-стик + волк).
+         Новое:
+          - ХАБ с прокачкой (6 апгрейдов), экономика монет, прогресс уровней
+          - волк с HP: собака бьёт его «присутствием» (как в Archero),
+            утащил овцу за край = овца потеряна (не game over)
+          - загон — отдельный «ящик» с воротами, ставится в разных
+            местах / формах / поворотах
+          - препятствия: деревья, камни, горы, озёра (оббегаем)
+         ======================================================= */
+
+      const W = 1080, H = 1920, TAU = Math.PI * 2;
+      const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const hyp = Math.hypot;
+      const rand = (a, b) => a + Math.random() * (b - a);
+      function lerpAngle(a, b, t) { let d = (b - a) % TAU; if (d > Math.PI) d -= TAU; if (d < -Math.PI) d += TAU; return a + d * t; }
+
+      /* ---------- сохранение ---------- */
+      const SAVE_KEY = "herd_tycoon_v11";
+      let save = loadSave();
+      function loadSave() {
+        try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.up) return s; } catch (e) {}
+        return { coins: 0, levelNum: 1, seenTut: 0, up: { sheep: 1, speed: 1, dmg: 1, time: 1, radius: 1, gold: 1 } };
+      }
+      function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} }
+
+      /* ---------- апгрейды ---------- */
+      const UPS = {
+        sheep:  { icon: "🐑", name: "Стадо",    base: 40, grow: 1.55, val: l => 2 + l,        fmt: l => `${2 + l} овец` },
+        speed:  { icon: "🐕", name: "Скорость",  base: 35, grow: 1.50, val: l => 330 + l * 30, fmt: l => `${Math.round((330 + l * 30) / 10)} ед` },
+        dmg:    { icon: "⚔️", name: "Урон",      base: 35, grow: 1.50, val: l => 20 + l * 16,  fmt: l => `${20 + l * 16}/с` },
+        time:   { icon: "⏱️", name: "Время",     base: 45, grow: 1.50, val: l => 25 + l * 5,   fmt: l => `${25 + l * 5} с` },
+        radius: { icon: "🧲", name: "Влияние",   base: 45, grow: 1.55, val: l => 210 + l * 22, fmt: l => `${Math.round((210 + l * 22) / 10)} ед` },
+        gold:   { icon: "💰", name: "Доход",     base: 70, grow: 1.70, val: l => 1 + (l - 1) * 0.15, fmt: l => `×${(1 + (l - 1) * 0.15).toFixed(2)}` },
+      };
+      const upCost = (key) => Math.round(UPS[key].base * Math.pow(UPS[key].grow, save.up[key] - 1));
+      const upVal = (key) => UPS[key].val(save.up[key]);
+
+      /* ---------- DOM ---------- */
+      const canvas = document.getElementById("game");
+      const ctx = canvas.getContext("2d");
+      const $ = (id) => document.getElementById(id);
+      const elHud = $("hud"), elPenned = $("penned"), elNeed = $("need"), elCoinsRun = $("coinsRun");
+      const elSun = $("sun"), elHint = $("hint"), elJoy = $("joy"), elKnob = $("joyKnob"), elHand = $("hand");
+      const elHub = $("hub"), elResults = $("results");
+
+      /* ---------- состояние игры ---------- */
+      let state = "hub"; // hub | play | done
+      let sheep = [], wolves = [], obstacles = [], floaters = [];
+      let dog = { x: 0, y: 0, vx: 0, vy: 0, dir: 0 };
+      let penned = 0, elapsed = 0, winDelay = 0, nowT = 0, barks = 0;
+      let walls = [], gate = null;
+      let stolen = 0, wolfKills = 0, sheepTotal = 0, nextWolfAt = 0, maxWolves = 1;
+      let DOG_R = 232, par = 30, levelNum = 1;
+      let LEVELSPAWN = { x: 540, y: 1300, r: 200 };
+      let joy = { active: false, ox: 0, oy: 0, vx: 0, vy: 0 };
+      const JOY_R = 72;
+      let tut = false;
+
+      /* =======================================================
+         ЗАГОН — отдельный «ящик» с воротами на одной из сторон
+         ======================================================= */
+      let PEN = { x: 330, y: 150, w: 420, h: 380, t: 18, gate: 240, gateSide: "bottom" };
+      function penWalls() {
+        const { x, y, w, h, t, gate, gateSide } = PEN;
+        const top = { x, y, w, h: t }, bottom = { x, y: y + h - t, w, h: t };
+        const left = { x, y, w: t, h }, right = { x: x + w - t, y, w: t, h };
+        const splitH = (s) => { const stub = (w - gate) / 2; return [{ x: s.x, y: s.y, w: stub, h: s.h }, { x: s.x + w - stub, y: s.y, w: stub, h: s.h }]; };
+        const splitV = (s) => { const stub = (h - gate) / 2; return [{ x: s.x, y: s.y, w: s.w, h: stub }, { x: s.x, y: s.y + h - stub, w: s.w, h: stub }]; };
+        if (gateSide === "top") return [...splitH(top), bottom, left, right];
+        if (gateSide === "bottom") return [top, ...splitH(bottom), left, right];
+        if (gateSide === "left") return [top, bottom, ...splitV(left), right];
+        return [top, bottom, left, ...splitV(right)];
+      }
+      function gateBar() {
+        const { x, y, w, h, t, gate, gateSide } = PEN;
+        if (gateSide === "top") return { x: x + (w - gate) / 2, y, w: gate, h: t };
+        if (gateSide === "bottom") return { x: x + (w - gate) / 2, y: y + h - t, w: gate, h: t };
+        if (gateSide === "left") return { x, y: y + (h - gate) / 2, w: t, h: gate };
+        return { x: x + w - t, y: y + (h - gate) / 2, w: t, h: gate };
+      }
+      function inPen(px, py, inset) {
+        const i = inset || 0;
+        return px > PEN.x + PEN.t + i && px < PEN.x + PEN.w - PEN.t - i &&
+               py > PEN.y + PEN.t + i && py < PEN.y + PEN.h - PEN.t - i;
+      }
+      const MARGIN = 110;
+
+      /* =======================================================
+         ГЕНЕРАЦИЯ УРОВНЯ (сид по номеру → стабильная раскладка)
+         ======================================================= */
+      function makeRng(seed) {
+        let a = seed >>> 0 || 1;
+        return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+      }
+      function distSeg(px, py, x1, y1, x2, y2) {
+        const dx = x2 - x1, dy = y2 - y1, l2 = dx * dx + dy * dy;
+        let t = l2 ? ((px - x1) * dx + (py - y1) * dy) / l2 : 0; t = clamp(t, 0, 1);
+        return hyp(px - (x1 + t * dx), py - (y1 + t * dy));
+      }
+      function pickWeighted(rng, arr) {
+        let sum = 0; for (const a of arr) sum += a.w; let r = rng() * sum;
+        for (const a of arr) { r -= a.w; if (r <= 0) return a; } return arr[arr.length - 1];
+      }
+      function generateLevel(n) {
+        const rng = makeRng((n * 2654435761) >>> 0);
+        const shapes = [[440, 340], [380, 420], [470, 310], [360, 360], [420, 380]];
+        const [pw, ph] = shapes[Math.floor(rng() * shapes.length)];
+        const styles = [
+          { gateSide: "bottom", x: (W - pw) / 2, y: 150 },
+          { gateSide: "bottom", x: 150, y: 200 },
+          { gateSide: "bottom", x: W - 150 - pw, y: 200 },
+          { gateSide: "right", x: 120, y: 300 },
+          { gateSide: "left", x: W - 120 - pw, y: 300 },
+          { gateSide: "bottom", x: (W - pw) / 2, y: 240 },
+        ];
+        const st = styles[Math.floor(rng() * styles.length)];
+        PEN = { x: st.x, y: st.y, w: pw, h: ph, t: 18, gate: 240, gateSide: st.gateSide };
+        walls = penWalls(); gate = gateBar();
+
+        LEVELSPAWN = { x: clamp(540 + (rng() * 2 - 1) * 200, 300, W - 300), y: 1180 + rng() * 200, r: 200 };
+        const gc = { x: gate.x + gate.w / 2, y: gate.y + gate.h / 2 };
+
+        obstacles = [];
+        const count = clamp(2 + Math.floor(n / 2), 2, 8);
+        const types = [
+          { type: "tree", r: 42, w: 0.38 }, { type: "rock", r: 32, w: 0.30 },
+          { type: "mountain", r: 74, w: 0.16 }, { type: "lake", r: 80, w: 0.16 },
+        ];
+        let tries = 0;
+        while (obstacles.length < count && tries < 500) {
+          tries++;
+          const t = pickWeighted(rng, types);
+          const r = Math.round(t.r * (0.85 + rng() * 0.4));
+          const x = 150 + rng() * (W - 300), y = 280 + rng() * (H - 480);
+          if (x > PEN.x - r - 70 && x < PEN.x + PEN.w + r + 70 && y > PEN.y - r - 70 && y < PEN.y + PEN.h + r + 70) continue;
+          if (hyp(x - LEVELSPAWN.x, y - LEVELSPAWN.y) < LEVELSPAWN.r + r + 100) continue;
+          if (hyp(x - LEVELSPAWN.x, y - (LEVELSPAWN.y + 360)) < r + 130) continue; // старт собаки
+          if (distSeg(x, y, LEVELSPAWN.x, LEVELSPAWN.y, gc.x, gc.y) < r + 120) continue; // коридор к воротам
+          let ok = true; for (const o of obstacles) if (hyp(x - o.x, y - o.y) < o.r + r + 70) { ok = false; break; }
+          if (!ok) continue;
+          obstacles.push({ x, y, r, type: t.type });
+        }
+      }
+
+      /* =======================================================
+         СТАДО (boids + страх) — из v10, + обход препятствий
+         ======================================================= */
+      const SEP_R = 42, ALI_R = 88, COH_R = 178, COH_R2 = COH_R * COH_R;
+      const WOLF_R = 240, SHEEP_BODY = 28;
+      const sheepRad = (s) => SHEEP_BODY * s.size;
+      function makeSheep(x, y) {
+        return { x, y, vx: rand(-6, 6), vy: rand(-6, 6), dir: rand(0, TAU), fear: 0, penned: false, carried: false,
+          size: rand(0.9, 1.12), gx: x, gy: y, gT: rand(0, 4), phase: rand(0, TAU), tone: rand(-1, 1), wDir: rand(0, TAU), wT: rand(0, 3) };
+      }
+
+      function updateSheep(dt) {
+        const flock = sheep.filter((s) => !s.penned && !s.carried);
+        let cX = 0, cY = 0;
+        for (const s of flock) { cX += s.x; cY += s.y; }
+        if (flock.length) { cX /= flock.length; cY /= flock.length; }
+
+        for (const s of sheep) {
+          if (s.penned) { updatePenned(s, dt); continue; }
+          if (s.carried) continue;
+          let fx = 0, fy = 0, sepX = 0, sepY = 0, aliX = 0, aliY = 0, nAli = 0, cohX = 0, cohY = 0, nCoh = 0;
+          for (const o of flock) {
+            if (o === s) continue;
+            const dx = o.x - s.x, dy = o.y - s.y, d2 = dx * dx + dy * dy;
+            if (d2 > COH_R2) continue;
+            const d = Math.sqrt(d2) || 0.001;
+            if (d < SEP_R) { const w = (SEP_R - d) / SEP_R; sepX -= (dx / d) * w; sepY -= (dy / d) * w; }
+            if (d < ALI_R) { aliX += o.vx; aliY += o.vy; nAli++; }
+            cohX += o.x; cohY += o.y; nCoh++;
+          }
+          const fear = s.fear;
+          const cohFactor = fear < 0.5 ? fear * 2.6 : Math.max(0, (0.95 - fear) / 0.45);
+          const sepW = 95 + 70 * fear, aliW = 1.4 * (1 - fear * 0.4), cohW = 17 * cohFactor;
+          fx += sepX * sepW; fy += sepY * sepW;
+          if (nAli) { fx += (aliX / nAli - s.vx) * aliW; fy += (aliY / nAli - s.vy) * aliW; }
+          if (nCoh) { const mx = cohX / nCoh - s.x, my = cohY / nCoh - s.y, m = hyp(mx, my) || 0.001; fx += (mx / m) * cohW; fy += (my / m) * cohW; }
+
+          const ddx = s.x - dog.x, ddy = s.y - dog.y, dd = hyp(ddx, ddy) || 0.001;
+          if (dd < DOG_R) { const w = 1 - dd / DOG_R; s.fear = Math.min(1, s.fear + w * 3.9 * dt); const push = w * w * 650 + 80; fx += (ddx / dd) * push; fy += (ddy / dd) * push; }
+          for (const wf of wolves) {
+            const wx = s.x - wf.x, wy = s.y - wf.y, wd = hyp(wx, wy) || 0.001;
+            if (wd < WOLF_R) { const w = 1 - wd / WOLF_R; s.fear = Math.min(1, s.fear + w * 6 * dt + 0.06); const push = w * w * 860 + 120; fx += (wx / wd) * push; fy += (wy / wd) * push; }
+          }
+          if (fear < 0.3) {
+            s.wT -= dt; if (s.wT <= 0) { s.wDir += rand(-1.2, 1.2); s.wT = rand(1.0, 2.8); }
+            const wanderW = 26 * (1 - fear / 0.3);
+            fx += Math.cos(s.wDir) * wanderW; fy += Math.sin(s.wDir) * wanderW;
+            if (nCoh) { const ax = s.x - cohX / nCoh, ay = s.y - cohY / nCoh, ad = hyp(ax, ay) || 0.001; fx += (ax / ad) * 11; fy += (ay / ad) * 11; }
+          }
+          if (fear > 0.12 && fear < 0.72 && flock.length > 1) {
+            const rx = cX - s.x, ry = cY - s.y, rd = hyp(rx, ry) || 0.001;
+            if (rd > 70) { const w = clamp((rd - 70) / 220, 0, 1) * 95 * Math.min(1, fear * 2.2); fx += (rx / rd) * w; fy += (ry / rd) * w; }
+          }
+          const av = avoidWalls(s.x, s.y, 12, 55); fx += av.x; fy += av.y;
+          const ao = avoidObstacles(s.x, s.y, 12, 40); fx += ao.x; fy += ao.y;
+          if (s.x < MARGIN) fx += (MARGIN - s.x) * 9;
+          if (s.x > W - MARGIN) fx -= (s.x - (W - MARGIN)) * 9;
+          if (s.y < MARGIN) fy += (MARGIN - s.y) * 9;
+          if (s.y > H - MARGIN) fy -= (s.y - (H - MARGIN)) * 9;
+
+          s.vx += fx * dt; s.vy += fy * dt;
+          const maxS = 26 + 175 * Math.pow(fear, 0.82), sp = hyp(s.vx, s.vy);
+          if (sp > maxS) { s.vx *= maxS / sp; s.vy *= maxS / sp; }
+          s.vx *= Math.exp(-dt * 0.9); s.vy *= Math.exp(-dt * 0.9);
+          s.x += s.vx * dt; s.y += s.vy * dt;
+          s.x = clamp(s.x, MARGIN, W - MARGIN); s.y = clamp(s.y, MARGIN, H - MARGIN);
+          s.fear = Math.max(0, s.fear - dt * 0.28);
+          resolveCollisions(s, 10);
+          if (hyp(s.vx, s.vy) > 6) s.dir = lerpAngle(s.dir, Math.atan2(s.vy, s.vx), 1 - Math.exp(-dt * 7));
+
+          if (state === "play" && inPen(s.x, s.y, 4)) {
+            s.penned = true; s.fear = 0;
+            s.gx = rand(PEN.x + PEN.t + 36, PEN.x + PEN.w - PEN.t - 36);
+            s.gy = rand(PEN.y + PEN.t + 36, PEN.y + PEN.h * 0.55 + PEN.t);
+            s.gT = rand(1.5, 4);
+            penned++; updateHud();
+            checkWin();
+          }
+        }
+      }
+      function checkWin() {
+        const alive = sheep.length;
+        if (state === "play" && penned > 0 && penned >= alive && winDelay === 0) winDelay = 0.8;
+      }
+      function updatePenned(s, dt) {
+        s.gT -= dt;
+        if (s.gT <= 0) { s.gx = rand(PEN.x + PEN.t + 30, PEN.x + PEN.w - PEN.t - 30); s.gy = rand(PEN.y + PEN.t + 30, PEN.y + PEN.h - PEN.t - 30); s.gT = rand(2, 6); }
+        const gx = s.gx - s.x, gy = s.gy - s.y, gd = hyp(gx, gy);
+        if (gd > 10) { s.vx += (gx / gd) * 300 * dt; s.vy += (gy / gd) * 300 * dt; }
+        const sp = hyp(s.vx, s.vy), mx = 22; if (sp > mx) { s.vx *= mx / sp; s.vy *= mx / sp; }
+        s.vx *= Math.exp(-dt * 2); s.vy *= Math.exp(-dt * 2); s.x += s.vx * dt; s.y += s.vy * dt;
+        s.x = clamp(s.x, PEN.x + PEN.t + 18, PEN.x + PEN.w - PEN.t - 18);
+        s.y = clamp(s.y, PEN.y + PEN.t + 18, PEN.y + PEN.h - PEN.t - 18);
+        if (hyp(s.vx, s.vy) > 4) s.dir = lerpAngle(s.dir, Math.atan2(s.vy, s.vx), 1 - Math.exp(-dt * 6));
+      }
+      function resolveBodies() {
+        const n = sheep.length;
+        for (let pass = 0; pass < 2; pass++) {
+          for (let i = 0; i < n; i++) {
+            const a = sheep[i]; if (a.carried) continue;
+            for (let j = i + 1; j < n; j++) {
+              const b = sheep[j]; if (b.carried) continue;
+              const dx = b.x - a.x, dy = b.y - a.y, d = hyp(dx, dy) || 0.001, min = sheepRad(a) + sheepRad(b);
+              if (d < min) { const o = (min - d) / 2, nx = dx / d, ny = dy / d; a.x -= nx * o; a.y -= ny * o; b.x += nx * o; b.y += ny * o; }
+            }
+          }
+        }
+        for (const s of sheep) {
+          if (s.carried) continue;
+          resolveCollisions(s, 10);
+          if (s.penned) { s.x = clamp(s.x, PEN.x + PEN.t + 18, PEN.x + PEN.w - PEN.t - 18); s.y = clamp(s.y, PEN.y + PEN.t + 18, PEN.y + PEN.h - PEN.t - 18); }
+          else { s.x = clamp(s.x, MARGIN, W - MARGIN); s.y = clamp(s.y, MARGIN, H - MARGIN); }
+        }
+      }
+      function avoidWalls(px, py, bodyR, look) {
+        let ax = 0, ay = 0;
+        for (const wl of walls) {
+          const nx = clamp(px, wl.x, wl.x + wl.w), ny = clamp(py, wl.y, wl.y + wl.h);
+          const dx = px - nx, dy = py - ny, d = hyp(dx, dy) || 0.001, lim = bodyR + look * 0.7;
+          if (d < lim && d > 0.01) { const w = (lim - d) / lim; ax += (dx / d) * w * w * 460; ay += (dy / d) * w * w * 460; }
+        }
+        return { x: ax, y: ay };
+      }
+      function avoidObstacles(px, py, bodyR, look) {
+        let ax = 0, ay = 0;
+        for (const ob of obstacles) {
+          const dx = px - ob.x, dy = py - ob.y, d = hyp(dx, dy) || 0.001, lim = ob.r + bodyR + look;
+          if (d < lim) { const w = (lim - d) / lim; ax += (dx / d) * w * w * 520; ay += (dy / d) * w * w * 520; }
+        }
+        return { x: ax, y: ay };
+      }
+      function resolveCollisions(e, bodyR) {
+        for (const wl of walls) {
+          const nx = clamp(e.x, wl.x, wl.x + wl.w), ny = clamp(e.y, wl.y, wl.y + wl.h);
+          let dx = e.x - nx, dy = e.y - ny, d = hyp(dx, dy);
+          if (d < bodyR) {
+            if (d < 0.01) {
+              const l = e.x - wl.x, r = wl.x + wl.w - e.x, t = e.y - wl.y, b = wl.y + wl.h - e.y, m = Math.min(l, r, t, b);
+              if (m === l) e.x = wl.x - bodyR; else if (m === r) e.x = wl.x + wl.w + bodyR; else if (m === t) e.y = wl.y - bodyR; else e.y = wl.y + wl.h + bodyR;
+            } else { e.x = nx + (dx / d) * bodyR; e.y = ny + (dy / d) * bodyR; }
+          }
+        }
+        for (const ob of obstacles) {
+          const dx = e.x - ob.x, dy = e.y - ob.y, d = hyp(dx, dy) || 0.001, min = ob.r + bodyR;
+          if (d < min) { e.x = ob.x + (dx / d) * min; e.y = ob.y + (dy / d) * min; }
+        }
+        e.x = clamp(e.x, 14, W - 14); e.y = clamp(e.y, 14, H - 14);
+      }
+      function blockGate(e, bodyR) {
+        const wl = gate;
+        const nx = clamp(e.x, wl.x, wl.x + wl.w), ny = clamp(e.y, wl.y, wl.y + wl.h);
+        let dx = e.x - nx, dy = e.y - ny, d = hyp(dx, dy);
+        if (d < bodyR) {
+          if (d < 0.01) {
+            const l = e.x - wl.x, r = wl.x + wl.w - e.x, t = e.y - wl.y, b = wl.y + wl.h - e.y, m = Math.min(l, r, t, b);
+            if (m === l) e.x = wl.x - bodyR; else if (m === r) e.x = wl.x + wl.w + bodyR; else if (m === t) e.y = wl.y - bodyR; else e.y = wl.y + wl.h + bodyR;
+          } else { e.x = nx + (dx / d) * bodyR; e.y = ny + (dy / d) * bodyR; }
+        }
+      }
+
+      // v12: резкое управление.
+      // - курс собаки идёт ПРЯМО за вектором джойстика (без ожидания скорости),
+      //   развороты ощущаются мгновенно и независимо от текущего движения;
+      // - ускорение/торможение почти вдвое отзывчивее (k·22 vs k·13);
+      // - стоп на отпускание джойстика гасит инерцию быстрее.
+      function updateDog(dt) {
+        const maxSp = upVal("speed");
+        const dvx = joy.active ? joy.vx * maxSp : 0, dvy = joy.active ? joy.vy * maxSp : 0;
+        const k = 1 - Math.exp(-dt * (joy.active ? 22 : 28));
+        dog.vx = lerp(dog.vx, dvx, k); dog.vy = lerp(dog.vy, dvy, k);
+        dog.x += dog.vx * dt; dog.y += dog.vy * dt;
+        resolveCollisions(dog, 13); blockGate(dog, 13);
+        if (joy.active && (joy.vx * joy.vx + joy.vy * joy.vy) > 0.01) {
+          // поворот по интенту: цель — направление стика, lerp быстрый (k·24)
+          dog.dir = lerpAngle(dog.dir, Math.atan2(joy.vy, joy.vx), 1 - Math.exp(-dt * 24));
+        } else if (hyp(dog.vx, dog.vy) > 4) {
+          // джойстик отпущен — добиваем поворот по остаточной скорости
+          dog.dir = lerpAngle(dog.dir, Math.atan2(dog.vy, dog.vx), 1 - Math.exp(-dt * 14));
+        }
+      }
+
+      /* =======================================================
+         ВОЛК — теперь с HP. Собака рядом → урон (как Archero).
+         Утащил овцу за край = овца потеряна (не game over).
+         ======================================================= */
+      const WOLF_FLEE_R = 300, WOLF_FIGHT_R = 150;
+      const wolfSpeed = () => 200 + Math.min(levelNum * 4, 90);
+      function spawnWolf() {
+        const fromLeft = Math.random() < 0.5;
+        wolves.push({ x: fromLeft ? 30 : W - 30, y: rand(H * 0.45, H * 0.85), vx: 0, vy: 0, dir: fromLeft ? 0 : Math.PI,
+          carry: null, hp: 36 + levelNum * 10, hpMax: 36 + levelNum * 10, hit: 0 });
+      }
+      function killWolf(wi) {
+        const wf = wolves[wi];
+        if (wf.carry) { wf.carry.carried = false; wf.carry = null; }
+        wolfKills++;
+        addFloater(wf.x, wf.y, "+" + 15 + " 💰", "#ffd34d");
+        wolves.splice(wi, 1);
+        nextWolfAt = elapsed + Math.max(6, 15 - levelNum * 0.4);
+      }
+      function loseSheep(s) {
+        const i = sheep.indexOf(s); if (i >= 0) sheep.splice(i, 1);
+        stolen++; addFloater(s.x, s.y, "−1 🐑", "#e23b2e"); updateHud(); checkWin();
+      }
+      function updateWolves(dt) {
+        for (let wi = wolves.length - 1; wi >= 0; wi--) {
+          const wf = wolves[wi];
+          const ddx = wf.x - dog.x, ddy = wf.y - dog.y, dd = hyp(ddx, ddy) || 0.001;
+          if (dd < WOLF_FIGHT_R) { wf.hp -= upVal("dmg") * dt; wf.hit = 0.12; }
+          if (wf.hp <= 0) { killWolf(wi); continue; }
+
+          let tx, ty, sp;
+          if (wf.carry) {
+            const toLeft = wf.x < W / 2;
+            tx = toLeft ? -220 : W + 220; ty = wf.y; sp = 300;
+            wf.carry.x = wf.x; wf.carry.y = wf.y;
+            if (wf.x < -150 || wf.x > W + 150) { loseSheep(wf.carry); wolves.splice(wi, 1); nextWolfAt = elapsed + Math.max(6, 15 - levelNum * 0.4); continue; }
+          } else if (dd < WOLF_FLEE_R) {
+            tx = wf.x + (ddx / dd) * 260; ty = wf.y + (ddy / dd) * 260; sp = 255;
+          } else {
+            let prey = null, pd = 1e9;
+            for (const s of sheep) { if (s.penned || s.carried) continue; const d = hyp(s.x - wf.x, s.y - wf.y); if (d < pd) { pd = d; prey = s; } }
+            if (!prey) { tx = wf.x; ty = wf.y; sp = 0; }
+            else { tx = prey.x; ty = prey.y; sp = wolfSpeed(); if (pd < 34) { prey.carried = true; wf.carry = prey; } }
+          }
+          const dx = tx - wf.x, dy = ty - wf.y, d = hyp(dx, dy) || 0.001, k = 1 - Math.exp(-dt * 5);
+          wf.vx = lerp(wf.vx, (dx / d) * sp, k); wf.vy = lerp(wf.vy, (dy / d) * sp, k);
+          wf.x += wf.vx * dt; wf.y += wf.vy * dt;
+          if (!wf.carry) { resolveCollisions(wf, 16); blockGate(wf, 16); }
+          else { wf.x = clamp(wf.x, -200, W + 200); wf.y = clamp(wf.y, 40, H - 40); }
+          wf.hit = Math.max(0, wf.hit - dt);
+          if (hyp(wf.vx, wf.vy) > 8) wf.dir = lerpAngle(wf.dir, Math.atan2(wf.vy, wf.vx), 1 - Math.exp(-dt * 6));
+        }
+      }
+
+      function addFloater(x, y, text, color) { floaters.push({ x, y, text, color, life: 1.1 }); }
+      function updateFloaters(dt) {
+        for (let i = floaters.length - 1; i >= 0; i--) { const f = floaters[i]; f.y -= 46 * dt; f.life -= dt; if (f.life <= 0) floaters.splice(i, 1); }
+      }
+
+      /* =======================================================
+         ОБНОВЛЕНИЕ
+         ======================================================= */
+      function update(dt) {
+        nowT += dt; updateFloaters(dt);
+        if (state !== "play") return;
+        elapsed += dt;
+        const free = sheep.filter((s) => !s.penned && !s.carried).length;
+        if (elapsed >= nextWolfAt && wolves.length < maxWolves && free > 0) { spawnWolf(); nextWolfAt = elapsed + Math.max(6, 15 - levelNum * 0.4); }
+        updateDog(dt); updateSheep(dt); updateWolves(dt); resolveBodies();
+        elSun.style.left = clamp(elapsed / par, 0, 1) * 100 + "%";
+        if (winDelay > 0) { winDelay -= dt; if (winDelay <= 0) endLevel(true); }
+        if (state === "play" && elapsed >= par) endLevel(false);
+      }
+
+      /* =======================================================
+         КОНЕЦ УРОВНЯ + НАГРАДА
+         ======================================================= */
+      function endLevel(cleared) {
+        if (state !== "play") return;
+        state = "done";
+        elHint.classList.remove("on"); hideJoy(); endTutorial();
+        const COIN_PER_SHEEP = 8, WOLF_BOUNTY = 15;
+        const base = penned * COIN_PER_SHEEP;
+        const timeBonus = cleared ? Math.round(Math.max(0, par - elapsed) * 2) : 0;
+        const killBonus = wolfKills * WOLF_BOUNTY;
+        const mult = upVal("gold");
+        const total = Math.round((base + timeBonus + killBonus) * mult);
+        save.coins += total;
+        if (cleared) { levelNum++; save.levelNum = levelNum; }
+        save.seenTut = 1; persist();
+        showResults(cleared, { base, timeBonus, killBonus, mult, total });
+      }
+
+      function showResults(cleared, r) {
+        $("rTitle").textContent = cleared ? "Стадо дома! 🐕" : "Время вышло ⏱️";
+        $("rSub").textContent = cleared
+          ? `Уровень пройден за ${elapsed.toFixed(0)} с${stolen ? ` · волк украл ${stolen}` : ""}`
+          : `Загнано ${penned} из ${penned + sheep.filter(s => !s.penned).length + stolen}${stolen ? ` · украдено ${stolen}` : ""}`;
+        const rows = [];
+        rows.push(["🐑 Овцы загнаны", `${penned} × 8 = ${r.base}`]);
+        if (r.killBonus) rows.push(["⚔️ Волки повержены", `${wolfKills} × 15 = ${r.killBonus}`]);
+        if (cleared) rows.push(["⏱️ Бонус за скорость", `+${r.timeBonus}`]);
+        if (r.mult > 1) rows.push(["💰 Множитель дохода", `×${r.mult.toFixed(2)}`]);
+        $("rBreak").innerHTML = rows.map(([a, b]) => `<div class="rrow"><span>${a}</span><span class="rv">${b}</span></div>`).join("")
+          + `<div class="rtot"><span>Получено</span><span>+${r.total} 💰</span></div>`;
+        elResults.classList.add("on");
+      }
+
+      /* =======================================================
+         ЗАПУСК УРОВНЯ / ХАБ
+         ======================================================= */
+      function startLevel() {
+        levelNum = save.levelNum;
+        generateLevel(levelNum);
+        buildMeadow();
+        sheepTotal = upVal("sheep");
+        DOG_R = upVal("radius");
+        par = upVal("time");
+        const sp = LEVELSPAWN;
+        sheep = [];
+        for (let i = 0; i < sheepTotal; i++) { const a = rand(0, TAU), rr = Math.sqrt(Math.random()) * sp.r; sheep.push(makeSheep(sp.x + Math.cos(a) * rr, sp.y + Math.sin(a) * rr * 0.9)); }
+        dog.x = sp.x; dog.y = clamp(sp.y + 360, 220, H - 160); dog.vx = dog.vy = 0;
+        penned = 0; elapsed = 0; winDelay = 0; stolen = 0; wolfKills = 0; wolves = []; floaters = [];
+        maxWolves = 1 + Math.floor(levelNum / 4);
+        nextWolfAt = 8;
+        hideJoy();
+        tut = save.seenTut !== 1; barks = 0;
+        elSun.style.left = "0%";
+        updateHud();
+        state = "play";
+        elResults.classList.remove("on"); elHub.classList.remove("on"); elHud.classList.add("on");
+        elHint.classList.add("on");
+      }
+      function updateHud() {
+        elPenned.textContent = penned; elNeed.textContent = sheep.length;
+        const mult = upVal("gold");
+        elCoinsRun.textContent = Math.round((penned * 8 + wolfKills * 15) * mult);
+      }
+
+      function showHub() {
+        state = "hub";
+        elHud.classList.remove("on"); elResults.classList.remove("on");
+        $("hubLvl").textContent = save.levelNum;
+        $("hubCoins").textContent = save.coins;
+        renderUps();
+        elHub.classList.add("on");
+      }
+      function renderUps() {
+        const mk = (key, small) => {
+          const u = UPS[key], lvl = save.up[key], cost = upCost(key), can = save.coins >= cost;
+          return `<div class="card${small ? " small" : ""}">
+            <div class="ic">${u.icon}</div>
+            <div class="nm">${u.name}</div>
+            <div class="vl">${u.fmt(lvl)}</div>
+            <div class="nx">ур.${lvl} → ${u.fmt(lvl + 1)}</div>
+            <button class="buy ${can ? "" : "off"}" data-up="${key}">${cost} 💰</button>
+          </div>`;
+        };
+        $("rowMain").innerHTML = ["sheep", "speed", "dmg"].map(k => mk(k, false)).join("");
+        $("rowExtra").innerHTML = ["time", "radius", "gold"].map(k => mk(k, true)).join("");
+        document.querySelectorAll(".buy[data-up]").forEach(b => b.addEventListener("click", () => buyUp(b.dataset.up)));
+      }
+      function buyUp(key) {
+        const cost = upCost(key);
+        if (save.coins < cost) return;
+        save.coins -= cost; save.up[key]++; persist();
+        $("hubCoins").textContent = save.coins; renderUps();
+      }
+
+      /* =======================================================
+         MEADOW + RENDER
+         ======================================================= */
+      let meadow = null;
+      function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+      function tuft(g, x, y, s, col) { g.strokeStyle = col; g.lineWidth = 3 * s; g.lineCap = "round"; for (let i = -1; i <= 1; i++) { g.beginPath(); g.moveTo(x + i * 5 * s, y); g.quadraticCurveTo(x + i * 7 * s, y - 12 * s, x + i * 9 * s, y - 17 * s); g.stroke(); } }
+      function flower(g, x, y, s, petal, center) { g.fillStyle = petal; for (let i = 0; i < 5; i++) { const a = (i / 5) * TAU; g.beginPath(); g.ellipse(x + Math.cos(a) * 4.4 * s, y + Math.sin(a) * 4.4 * s, 3.1 * s, 3.1 * s, 0, 0, TAU); g.fill(); } g.fillStyle = center; g.beginPath(); g.arc(x, y, 2.7 * s, 0, TAU); g.fill(); }
+      function buildMeadow() {
+        meadow = document.createElement("canvas"); meadow.width = W; meadow.height = H;
+        const g = meadow.getContext("2d");
+        const grad = g.createLinearGradient(0, 0, 0, H);
+        grad.addColorStop(0, "#8cb255"); grad.addColorStop(0.5, "#7ea64a"); grad.addColorStop(1, "#719a41");
+        g.fillStyle = grad; g.fillRect(0, 0, W, H);
+        for (let i = 0; i < 70; i++) { const x = rand(0, W), y = rand(0, H), r = rand(60, 200); g.globalAlpha = rand(0.05, 0.13); g.fillStyle = Math.random() < 0.5 ? "#a6c96b" : "#5f8533"; g.beginPath(); g.ellipse(x, y, r, r * 0.7, 0, 0, TAU); g.fill(); }
+        g.globalAlpha = 1;
+        // тропа от спавна к воротам
+        const gc = { x: gate.x + gate.w / 2, y: gate.y + gate.h / 2 };
+        g.lineCap = "round";
+        g.strokeStyle = "rgba(196,170,120,.5)"; g.lineWidth = 120; g.beginPath(); g.moveTo(LEVELSPAWN.x, H - 80); g.quadraticCurveTo(LEVELSPAWN.x, (LEVELSPAWN.y + gc.y) / 2, gc.x, gc.y); g.stroke();
+        g.strokeStyle = "rgba(214,191,143,.5)"; g.lineWidth = 66; g.beginPath(); g.moveTo(LEVELSPAWN.x, H - 80); g.quadraticCurveTo(LEVELSPAWN.x, (LEVELSPAWN.y + gc.y) / 2, gc.x, gc.y); g.stroke();
+        const blocked = (x, y) => {
+          if (x > PEN.x - 40 && x < PEN.x + PEN.w + 40 && y > PEN.y - 40 && y < PEN.y + PEN.h + 30) return true;
+          for (const ob of obstacles) if (hyp(x - ob.x, y - ob.y) < ob.r + 30) return true;
+          return false;
+        };
+        for (let i = 0; i < 150; i++) { const x = rand(20, W - 20), y = rand(40, H - 20); if (blocked(x, y)) continue; tuft(g, x, y, rand(0.7, 1.3), Math.random() < 0.5 ? "#6b9636" : "#5c8730"); }
+        const palettes = [["#ffffff", "#f4c430"], ["#f6d743", "#c8881e"], ["#ff8fa3", "#c64f6a"], ["#b69cff", "#6f53c4"]];
+        for (let c = 0; c < 24; c++) { const cx = rand(40, W - 40), cy = rand(60, H - 40); if (blocked(cx, cy)) continue; const pal = palettes[(Math.random() * palettes.length) | 0]; const n = 2 + ((Math.random() * 4) | 0); for (let k = 0; k < n; k++) flower(g, cx + rand(-26, 26), cy + rand(-22, 22), rand(0.8, 1.25), pal[0], pal[1]); }
+      }
+
+      let view = { s: 1, ox: 0, oy: 0 }, dpr = 1;
+      function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr;
+        canvas.style.width = innerWidth + "px"; canvas.style.height = innerHeight + "px";
+        const s = Math.min(innerWidth / W, innerHeight / H);
+        view = { s, ox: (innerWidth - W * s) / 2, oy: (innerHeight - H * s) / 2 };
+      }
+      addEventListener("resize", resize); resize();
+
+      function draw() {
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.fillStyle = "#2a3a1a"; ctx.fillRect(0, 0, innerWidth, innerHeight);
+        if (state === "hub") return; // хаб — это DOM поверх
+        ctx.save(); ctx.translate(view.ox, view.oy); ctx.scale(view.s, view.s);
+        if (meadow) ctx.drawImage(meadow, 0, 0);
+        for (const ob of obstacles) drawObstacle(ob);
+        drawPen();
+        for (const s of sheep) if (!s.penned) drawSheep(s);
+        for (const s of sheep) if (s.penned) drawSheep(s);
+        for (const wf of wolves) drawWolf(wf);
+        drawDog();
+        for (const f of floaters) {
+          ctx.globalAlpha = clamp(f.life, 0, 1); ctx.fillStyle = f.color; ctx.font = "900 34px 'Trebuchet MS', sans-serif"; ctx.textAlign = "center";
+          ctx.lineWidth = 5; ctx.strokeStyle = "rgba(40,30,15,.6)"; ctx.strokeText(f.text, f.x, f.y); ctx.fillText(f.text, f.x, f.y); ctx.globalAlpha = 1;
+        }
+        ctx.restore();
+      }
+
+      function drawObstacle(ob) {
+        ctx.save(); ctx.translate(ob.x, ob.y);
+        ctx.fillStyle = "rgba(20,28,12,.22)"; ctx.beginPath(); ctx.ellipse(0, ob.r * 0.55, ob.r * 0.95, ob.r * 0.32, 0, 0, TAU); ctx.fill();
+        if (ob.type === "tree") {
+          ctx.fillStyle = "#6f4a23"; rr(ctx, -7, 0, 14, ob.r * 0.7, 5); ctx.fill();
+          const lobes = [[0, -ob.r * 0.5, ob.r * 0.7], [-ob.r * 0.5, -ob.r * 0.2, ob.r * 0.55], [ob.r * 0.5, -ob.r * 0.2, ob.r * 0.55], [0, -ob.r * 0.05, ob.r * 0.55]];
+          ctx.fillStyle = "#3f6b27"; for (const [dx, dy, r] of lobes) { ctx.beginPath(); ctx.arc(dx, dy, r, 0, TAU); ctx.fill(); }
+          ctx.fillStyle = "#5f9038"; for (const [dx, dy, r] of lobes) { ctx.beginPath(); ctx.arc(dx, dy - 4, r * 0.8, 0, TAU); ctx.fill(); }
+        } else if (ob.type === "rock") {
+          ctx.fillStyle = "#8d8678"; ctx.beginPath(); ctx.ellipse(0, 0, ob.r, ob.r * 0.82, 0, 0, TAU); ctx.fill();
+          ctx.fillStyle = "#a8a191"; ctx.beginPath(); ctx.ellipse(-ob.r * 0.2, -ob.r * 0.2, ob.r * 0.6, ob.r * 0.45, 0, 0, TAU); ctx.fill();
+          ctx.fillStyle = "#736d61"; ctx.beginPath(); ctx.ellipse(ob.r * 0.25, ob.r * 0.25, ob.r * 0.4, ob.r * 0.3, 0, 0, TAU); ctx.fill();
+        } else if (ob.type === "mountain") {
+          ctx.fillStyle = "#7a7468"; ctx.beginPath(); ctx.moveTo(-ob.r, ob.r * 0.5); ctx.lineTo(-ob.r * 0.15, -ob.r); ctx.lineTo(ob.r * 0.15, -ob.r); ctx.lineTo(ob.r, ob.r * 0.5); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = "#938c7e"; ctx.beginPath(); ctx.moveTo(-ob.r * 0.55, ob.r * 0.5); ctx.lineTo(0, -ob.r); ctx.lineTo(ob.r * 0.2, ob.r * 0.5); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = "#f3f0ea"; ctx.beginPath(); ctx.moveTo(-ob.r * 0.22, -ob.r * 0.55); ctx.lineTo(0, -ob.r); ctx.lineTo(ob.r * 0.22, -ob.r * 0.55); ctx.lineTo(ob.r * 0.06, -ob.r * 0.45); ctx.lineTo(-ob.r * 0.06, -ob.r * 0.45); ctx.closePath(); ctx.fill();
+        } else { // lake
+          ctx.fillStyle = "#5fa7c4"; ctx.beginPath(); ctx.ellipse(0, 0, ob.r, ob.r * 0.78, 0, 0, TAU); ctx.fill();
+          ctx.fillStyle = "#8fcfe6"; ctx.beginPath(); ctx.ellipse(0, -ob.r * 0.12, ob.r * 0.78, ob.r * 0.55, 0, 0, TAU); ctx.fill();
+          ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(-ob.r * 0.2, -ob.r * 0.2, ob.r * 0.4, ob.r * 0.18, -0.3, 0, Math.PI); ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawPen() {
+        ctx.fillStyle = "#d7c393"; rr(ctx, PEN.x + PEN.t - 2, PEN.y + PEN.t - 2, PEN.w - PEN.t * 2 + 4, PEN.h - PEN.t * 2 + 4, 10); ctx.fill();
+        ctx.strokeStyle = "rgba(150,120,70,.35)"; ctx.lineWidth = 2;
+        for (let i = 0; i < 18; i++) { const x = PEN.x + PEN.t + 14 + Math.random() * (PEN.w - PEN.t * 2 - 28), y = PEN.y + PEN.t + 14 + Math.random() * (PEN.h - PEN.t * 2 - 28); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 10, y - 4); ctx.stroke(); }
+        for (const wl of walls) {
+          ctx.fillStyle = "#a9763f"; rr(ctx, wl.x, wl.y, wl.w, wl.h, 6); ctx.fill();
+          ctx.strokeStyle = "#6f4a23"; ctx.lineWidth = 4; ctx.stroke();
+          ctx.fillStyle = "rgba(255,240,210,.25)";
+          if (wl.w > wl.h) rr(ctx, wl.x + 3, wl.y + 3, wl.w - 6, Math.max(3, wl.h * 0.34), 4); else rr(ctx, wl.x + 3, wl.y + 3, Math.max(3, wl.w * 0.34), wl.h - 6, 4);
+          ctx.fill();
+        }
+        const posts = [[PEN.x, PEN.y], [PEN.x + PEN.w, PEN.y], [PEN.x, PEN.y + PEN.h], [PEN.x + PEN.w, PEN.y + PEN.h]];
+        for (const [px, py] of posts) { ctx.fillStyle = "#8a5d2e"; ctx.strokeStyle = "#5e3d1b"; ctx.lineWidth = 4; rr(ctx, px - 15, py - 15, 30, 30, 7); ctx.fill(); ctx.stroke(); ctx.fillStyle = "rgba(255,240,210,.3)"; ctx.beginPath(); ctx.arc(px - 4, py - 4, 5, 0, TAU); ctx.fill(); }
+        // флажки на концах ворот
+        const horiz = gate.w > gate.h;
+        if (horiz) { drawFlag(gate.x, gate.y + gate.h / 2, 50, true); drawFlag(gate.x + gate.w, gate.y + gate.h / 2, 50, true); }
+        else { drawFlag(gate.x + gate.w / 2, gate.y, 50, true); drawFlag(gate.x + gate.w / 2, gate.y + gate.h, 50, true); }
+        // табличка ЗАГОН над загоном
+        const sx = PEN.x + PEN.w / 2;
+        ctx.fillStyle = "#8a5d2e"; ctx.fillRect(sx - 4, PEN.y - 54, 8, 40);
+        ctx.fillStyle = "#caa46a"; ctx.strokeStyle = "#6f4a23"; ctx.lineWidth = 4; rr(ctx, sx - 58, PEN.y - 92, 116, 44, 9); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#5e3d1b"; ctx.font = "900 26px 'Trebuchet MS', sans-serif"; ctx.textAlign = "center"; ctx.fillText("ЗАГОН", sx, PEN.y - 62);
+      }
+      function drawFlag(x, y, h, big) {
+        ctx.strokeStyle = "#6b6b6b"; ctx.lineWidth = big ? 4 : 3; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - h); ctx.stroke();
+        const fw = big ? 26 : 18, fh = big ? 16 : 12; ctx.fillStyle = "#e23b2e"; ctx.strokeStyle = "#a8281d"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(x, y - h); ctx.lineTo(x + fw, y - h + fh * 0.55); ctx.lineTo(x, y - h + fh); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#8a8a8a"; ctx.beginPath(); ctx.arc(x, y - h, big ? 3.4 : 2.6, 0, TAU); ctx.fill();
+      }
+
+      function drawSheep(s) {
+        const bob = Math.sin(nowT * 3 + s.phase) * 1.2, k = s.size * 1.45;
+        ctx.save(); ctx.translate(s.x, s.y + bob);
+        ctx.fillStyle = "rgba(30,40,20,.20)"; ctx.beginPath(); ctx.ellipse(0, 17 * k, 23 * k, 8 * k, 0, 0, TAU); ctx.fill();
+        ctx.rotate(s.dir);
+        ctx.fillStyle = "#5b4636"; for (const lx of [-9 * k, 7 * k]) for (const ly of [-7 * k, 7 * k]) { rr(ctx, lx, ly + 8 * k, 5 * k, 11 * k, 2.5 * k); ctx.fill(); }
+        const tint = Math.round(s.tone * 6);
+        const wool = s.penned ? "#ffffff" : (s.fear > 0.6 ? "#fff2ec" : `rgb(${248 + tint},${244 + tint},${234 + tint})`);
+        const bumps = [[-12, -7, 11], [-14, 4, 10], [-6, 9, 11], [5, 9, 11], [12, 3, 11], [11, -7, 10], [2, -11, 11], [-3, 0, 14]];
+        ctx.fillStyle = "#e2d8c4"; for (const [dx, dy, r] of bumps) { ctx.beginPath(); ctx.arc(dx * k, dy * k + 2, r * k, 0, TAU); ctx.fill(); }
+        ctx.fillStyle = wool; for (const [dx, dy, r] of bumps) { ctx.beginPath(); ctx.arc(dx * k, dy * k, r * k * 0.96, 0, TAU); ctx.fill(); }
+        ctx.fillStyle = "rgba(255,255,255,.5)"; ctx.beginPath(); ctx.arc(-4 * k, -5 * k, 5 * k, 0, TAU); ctx.fill();
+        ctx.fillStyle = "#46392f"; ctx.beginPath(); ctx.ellipse(15 * k, 0, 9.5 * k, 8 * k, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = "#3a2f27"; ctx.beginPath(); ctx.ellipse(11 * k, -8.5 * k, 5 * k, 3 * k, -0.7, 0, TAU); ctx.fill(); ctx.beginPath(); ctx.ellipse(11 * k, 8.5 * k, 5 * k, 3 * k, 0.7, 0, TAU); ctx.fill();
+        ctx.fillStyle = wool; ctx.beginPath(); ctx.arc(9 * k, 0, 5.5 * k, 0, TAU); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(18 * k, -3.2 * k, 2.6 * k, 0, TAU); ctx.arc(18 * k, 3.2 * k, 2.6 * k, 0, TAU); ctx.fill();
+        ctx.fillStyle = "#1c150f"; ctx.beginPath(); ctx.arc(19 * k, -3.2 * k, 1.3 * k, 0, TAU); ctx.arc(19 * k, 3.2 * k, 1.3 * k, 0, TAU); ctx.fill();
+        ctx.restore();
+      }
+
+      function drawDog() {
+        const k = 1.4, BR = "#7a4f29", BRD = "#5a3a1d", WH = "#f3efe6";
+        ctx.save(); ctx.translate(dog.x, dog.y);
+        ctx.fillStyle = "rgba(20,28,12,.28)"; ctx.beginPath(); ctx.ellipse(0, 15 * k, 27 * k, 10 * k, 0, 0, TAU); ctx.fill();
+        ctx.rotate(dog.dir);
+        ctx.strokeStyle = BR; ctx.lineWidth = 9 * k; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(-20 * k, 0); ctx.quadraticCurveTo(-34 * k, -6 * k, -36 * k, -16 * k); ctx.stroke();
+        ctx.strokeStyle = WH; ctx.lineWidth = 8 * k; ctx.beginPath(); ctx.moveTo(-33 * k, -11 * k); ctx.lineTo(-36 * k, -16 * k); ctx.stroke();
+        ctx.fillStyle = BR; ctx.strokeStyle = BRD; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(0, 0, 24 * k, 15 * k, 0, 0, TAU); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = WH; ctx.beginPath(); ctx.ellipse(3 * k, 5 * k, 16 * k, 9 * k, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = BR; ctx.beginPath(); ctx.ellipse(-2 * k, -6 * k, 18 * k, 8 * k, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = BR; ctx.beginPath(); ctx.ellipse(20 * k, 0, 13 * k, 12 * k, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = BRD; ctx.beginPath(); ctx.moveTo(13 * k, -10 * k); ctx.lineTo(9 * k, -20 * k); ctx.lineTo(20 * k, -12 * k); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(13 * k, 10 * k); ctx.lineTo(9 * k, 20 * k); ctx.lineTo(20 * k, 12 * k); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = WH; ctx.beginPath(); ctx.ellipse(28 * k, 0, 10 * k, 7 * k, 0, 0, TAU); ctx.fill(); ctx.beginPath(); ctx.moveTo(13 * k, -3 * k); ctx.lineTo(28 * k, -1.5 * k); ctx.lineTo(28 * k, 1.5 * k); ctx.lineTo(13 * k, 3 * k); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#23150b"; ctx.beginPath(); ctx.arc(35 * k, 0, 3.4 * k, 0, TAU); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(24 * k, -5 * k, 2.6 * k, 0, TAU); ctx.arc(24 * k, 5 * k, 2.6 * k, 0, TAU); ctx.fill();
+        ctx.fillStyle = "#0f0c08"; ctx.beginPath(); ctx.arc(25 * k, -5 * k, 1.4 * k, 0, TAU); ctx.arc(25 * k, 5 * k, 1.4 * k, 0, TAU); ctx.fill();
+        ctx.restore();
+      }
+
+      function drawWolf(wf) {
+        const k = 1.6, GR = "#6f7681", GRD = "#4c525c", BELLY = "#c9cdd4";
+        ctx.save(); ctx.translate(wf.x, wf.y);
+        ctx.fillStyle = "rgba(15,20,28,.30)"; ctx.beginPath(); ctx.ellipse(0, 16 * k, 30 * k, 10 * k, 0, 0, TAU); ctx.fill();
+        if (wf.hit > 0) { ctx.save(); ctx.globalAlpha = 0.5; ctx.fillStyle = "#ff5a3c"; ctx.beginPath(); ctx.arc(0, 0, 38 * k, 0, TAU); ctx.fill(); ctx.restore(); }
+        ctx.rotate(wf.dir);
+        ctx.strokeStyle = GRD; ctx.lineWidth = 12 * k; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(-22 * k, 0); ctx.quadraticCurveTo(-40 * k, -8 * k, -44 * k, -20 * k); ctx.stroke();
+        ctx.fillStyle = GR; ctx.strokeStyle = GRD; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(0, 0, 26 * k, 16 * k, 0, 0, TAU); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = BELLY; ctx.beginPath(); ctx.ellipse(2 * k, 6 * k, 17 * k, 8 * k, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = GRD; ctx.beginPath(); ctx.ellipse(-3 * k, -7 * k, 19 * k, 8 * k, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = GR; ctx.beginPath(); ctx.ellipse(22 * k, 0, 13 * k, 11 * k, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = GRD; ctx.beginPath(); ctx.moveTo(16 * k, -8 * k); ctx.lineTo(13 * k, -22 * k); ctx.lineTo(24 * k, -11 * k); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(16 * k, 8 * k); ctx.lineTo(13 * k, 22 * k); ctx.lineTo(24 * k, 11 * k); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = GR; ctx.beginPath(); ctx.ellipse(33 * k, 0, 9 * k, 6 * k, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = BELLY; ctx.beginPath(); ctx.ellipse(35 * k, 2.5 * k, 7 * k, 3.5 * k, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = "#15120e"; ctx.beginPath(); ctx.arc(41 * k, 0, 3.2 * k, 0, TAU); ctx.fill();
+        ctx.fillStyle = "#f5d23a"; ctx.beginPath(); ctx.ellipse(26 * k, -5 * k, 2.8 * k, 2 * k, -0.3, 0, TAU); ctx.ellipse(26 * k, 5 * k, 2.8 * k, 2 * k, 0.3, 0, TAU); ctx.fill();
+        ctx.fillStyle = "#1c150f"; ctx.beginPath(); ctx.arc(27 * k, -5 * k, 1.1 * k, 0, TAU); ctx.arc(27 * k, 5 * k, 1.1 * k, 0, TAU); ctx.fill();
+        ctx.restore();
+        // HP-бар над волком (в мировых координатах, без поворота)
+        if (wf.hp < wf.hpMax) {
+          const bw = 70, bh = 9, bx = wf.x - bw / 2, by = wf.y - 56;
+          ctx.fillStyle = "rgba(20,16,10,.6)"; rr(ctx, bx - 2, by - 2, bw + 4, bh + 4, 5); ctx.fill();
+          ctx.fillStyle = "#3a3027"; rr(ctx, bx, by, bw, bh, 4); ctx.fill();
+          ctx.fillStyle = "#e23b2e"; rr(ctx, bx, by, bw * clamp(wf.hp / wf.hpMax, 0, 1), bh, 4); ctx.fill();
+        }
+      }
+
+      /* =======================================================
+         ВВОД (плавающий стик) + туториал-рука
+         ======================================================= */
+      function hideJoy() { joy.active = false; joy.vx = joy.vy = 0; elJoy.classList.remove("on"); elKnob.classList.remove("on"); }
+      function endTutorial() { tut = false; elHand.style.opacity = 0; }
+      function placeKnob(x, y) { elKnob.style.left = x + "px"; elKnob.style.top = y + "px"; }
+      function tutorialTick(tms) {
+        const ox = innerWidth * 0.5, oy0 = innerHeight * 0.8, up = 100, P = 2.6, a = (tms / 1000 % P) / P;
+        elHand.style.opacity = 1;
+        if (a < 0.12) { elJoy.classList.remove("on"); elKnob.classList.remove("on"); elHand.style.left = (ox - 6) + "px"; elHand.style.top = (oy0 - 2) + "px"; }
+        else if (a < 0.85) { const p = (a - 0.12) / 0.73, ky = oy0 - up * p; elJoy.style.left = ox + "px"; elJoy.style.top = oy0 + "px"; elJoy.classList.add("on"); elKnob.classList.add("on"); placeKnob(ox, ky); elHand.style.left = (ox - 6) + "px"; elHand.style.top = (ky - 2) + "px"; }
+        else { elJoy.classList.remove("on"); elKnob.classList.remove("on"); elHand.style.left = (ox - 6) + "px"; elHand.style.top = (oy0 - up - 2) + "px"; }
+      }
+      function onDown(e) {
+        if (state !== "play") return;
+        if (tut) endTutorial();
+        joy.active = true; joy.ox = e.clientX; joy.oy = e.clientY; joy.vx = 0; joy.vy = 0;
+        elJoy.style.left = e.clientX + "px"; elJoy.style.top = e.clientY + "px"; elJoy.classList.add("on"); elKnob.classList.add("on"); placeKnob(e.clientX, e.clientY);
+        if (barks++ === 0) setTimeout(() => elHint.classList.remove("on"), 2500);
+      }
+      function onMove(e) {
+        if (!joy.active || state !== "play") return;
+        let dx = e.clientX - joy.ox, dy = e.clientY - joy.oy; const d = hyp(dx, dy), m = Math.min(d, JOY_R);
+        const nx = d > 0.001 ? dx / d : 0, ny = d > 0.001 ? dy / d : 0;
+        joy.vx = nx * (m / JOY_R); joy.vy = ny * (m / JOY_R); placeKnob(joy.ox + nx * m, joy.oy + ny * m);
+      }
+      function onUp() { hideJoy(); }
+      canvas.addEventListener("pointerdown", onDown);
+      canvas.addEventListener("pointermove", onMove);
+      addEventListener("pointerup", onUp); addEventListener("pointercancel", onUp);
+
+      $("playBtn").addEventListener("click", startLevel);
+      $("toHub").addEventListener("click", () => { state = "done"; showHub(); });
+      $("rNext").addEventListener("click", showHub);
+
+      let last = 0;
+      function frame(t) {
+        const now = t / 1000; let dt = last ? now - last : 0; last = now; dt = Math.min(dt, 0.033);
+        update(dt); draw();
+        if (tut && state === "play") tutorialTick(t);
+        requestAnimationFrame(frame);
+      }
+      showHub();
+      requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>

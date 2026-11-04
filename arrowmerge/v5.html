@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Hexa Arrows with piles v5</title>
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    height:100dvh;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;user-select:none;touch-action:none;
+    background:radial-gradient(120% 120% at 50% 0%,#222838,#10131c 80%);}
+
+  #phone{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;
+         background:#f4ede6;}
+  @media (max-aspect-ratio:1/1){ #phone{width:100vw;height:100dvh;border-radius:0;} }
+  @media (min-aspect-ratio:1/1){
+    #phone{height:96dvh;aspect-ratio:9/16;width:auto;
+           border-radius:32px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 8px #0c0e15;}
+  }
+
+  #hud{width:100%;padding:18px 16px 0;z-index:3;position:relative;height:128px;flex:none;}
+  #gearBtn{position:absolute;left:16px;top:22px;width:52px;height:52px;border:none;cursor:pointer;
+    border-radius:16px;background:linear-gradient(#e08b3a,#c9722a);
+    box-shadow:0 5px 0 #9c5518,0 8px 14px rgba(150,90,40,.35);
+    color:#fff;font-size:26px;display:flex;align-items:center;justify-content:center;}
+  #gearBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #9c5518;}
+  #lvlWrap{position:absolute;left:50%;top:14px;transform:translateX(-50%);text-align:center;}
+  #lvlBadge{display:inline-block;background:#b0692a;color:#fff;font-weight:800;font-size:15px;
+    letter-spacing:1px;padding:5px 20px;border-radius:10px;box-shadow:0 3px 0 #854e1e;}
+  #movesBanner{margin-top:-4px;background:#fff;color:#8a5a2c;font-weight:800;font-size:26px;
+    padding:6px 34px;border:3px solid #e0bd94;position:relative;
+    clip-path:polygon(0 50%,7% 0,93% 0,100% 50%,93% 100%,7% 100%);
+    filter:drop-shadow(0 3px 3px rgba(150,100,50,.3));}
+  #goalPill{display:inline-block;margin-top:5px;background:#fff3e2;color:#b0692a;font-weight:800;
+    font-size:15px;padding:4px 16px;border-radius:20px;border:2px solid #e0bd94;}
+
+  #stage{flex:1;width:100%;position:relative;z-index:2;min-height:0;}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  #fx{z-index:15;pointer-events:none;}
+
+  .ov{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
+      flex-direction:column;background:rgba(40,26,16,.66);}
+  .hidden{display:none !important;}
+
+  .card{position:relative;width:78%;max-width:360px;background:#faf2e9;border:6px solid #e08b3a;
+    border-radius:28px;padding:64px 22px 26px;display:flex;flex-direction:column;align-items:center;
+    box-shadow:0 24px 60px rgba(0,0,0,.45);}
+  .ribbon{position:absolute;top:-26px;left:50%;transform:translateX(-50%);white-space:nowrap;
+    background:linear-gradient(#ff9b2e,#f07713);color:#fff;font-weight:900;font-size:26px;
+    letter-spacing:1px;padding:12px 34px;border-radius:14px;
+    text-shadow:0 3px 0 rgba(160,70,0,.55);box-shadow:0 6px 0 #c85c08,0 10px 18px rgba(0,0,0,.3);}
+  .ribbon.red{background:linear-gradient(#ff5964,#e0333f);box-shadow:0 6px 0 #b0222c,0 10px 18px rgba(0,0,0,.3);
+    text-shadow:0 3px 0 rgba(150,20,30,.55);}
+  .emoji{font-size:84px;margin:6px 0 14px;}
+  .rewardPill{background:#e8b98f;color:#fff;font-weight:900;font-size:26px;border-radius:40px;
+    padding:12px 30px;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+  .bigBtn{border:none;cursor:pointer;color:#fff;font-weight:900;font-size:26px;letter-spacing:1px;
+    padding:15px 60px;border-radius:18px;background:linear-gradient(#5fd435,#3fae1e);
+    box-shadow:0 6px 0 #2e8514,0 10px 18px rgba(0,0,0,.25);text-shadow:0 2px 0 rgba(30,90,10,.5);}
+  .bigBtn:active{transform:translateY(4px);box-shadow:0 2px 0 #2e8514;}
+  .bigBtn.blue{background:linear-gradient(#5b8cf0,#3a68d8);box-shadow:0 6px 0 #2749a8,0 10px 18px rgba(0,0,0,.25);}
+  .bigBtn.blue:active{box-shadow:0 2px 0 #2749a8;}
+
+  #home{background:linear-gradient(#f4ede6,#ecdcc8);z-index:25;}
+  #home h1{margin:0 0 2px;font-size:44px;font-weight:900;color:#b0692a;letter-spacing:2px;
+    text-shadow:0 3px 0 #fff,0 6px 10px rgba(150,100,50,.25);text-align:center;line-height:1.1;}
+  #home .sub{color:#d98f3f;font-weight:900;font-size:22px;letter-spacing:1px;margin-bottom:14px;}
+  #home .hint{color:#bda98e;font-weight:600;font-size:14px;margin:0 30px 22px;text-align:center;line-height:1.35;}
+  #homeIcon{width:140px;height:140px;border-radius:32px;margin-bottom:14px;display:block;
+    box-shadow:0 14px 30px rgba(150,100,50,.35),0 0 0 5px #fff;}
+  #lvlRow{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;width:300px;margin-bottom:8px;}
+  #lvlName{color:#bda98e;font-weight:700;font-size:14px;margin:0 0 18px;min-height:18px;}
+  .lvlBtn{width:48px;height:48px;border:none;border-radius:14px;cursor:pointer;font-weight:900;font-size:20px;
+    color:#a8926f;background:#fff;box-shadow:0 4px 0 #d9c4a6;}
+  .lvlBtn.sel{background:linear-gradient(#f79e2d,#e0801a);color:#fff;box-shadow:0 4px 0 #b56412;}
+
+  #menuCard{background:#faf2e9;border:5px solid #e08b3a;border-radius:24px;padding:26px 30px;
+    display:flex;flex-direction:column;gap:14px;align-items:stretch;box-shadow:0 20px 50px rgba(0,0,0,.4);}
+  #menuCard .bigBtn{font-size:20px;padding:12px 40px;}
+</style>
+</head>
+<body>
+<div id="phone">
+  <div id="hud">
+    <button id="gearBtn">⚙</button>
+    <div id="lvlWrap">
+      <div id="lvlBadge">LEVEL 1</div>
+      <div id="movesBanner">Moves: 0</div>
+      <div id="goalPill">Плиток: 0</div>
+    </div>
+  </div>
+  <div id="stage">
+    <canvas id="game"></canvas>
+  </div>
+  <canvas id="fx"></canvas>
+
+  <div id="winOv" class="ov hidden">
+    <div class="card">
+      <div class="ribbon">BOARD CLEARED!</div>
+      <div class="emoji">😍</div>
+      <div class="rewardPill">🪙 +20</div>
+      <button class="bigBtn" id="nextBtn">NEXT</button>
+    </div>
+  </div>
+
+  <div id="loseOv" class="ov hidden">
+    <div class="card">
+      <div class="ribbon red">OUT OF MOVES</div>
+      <div class="emoji">😵</div>
+      <button class="bigBtn blue" id="retryBtn">RETRY</button>
+    </div>
+  </div>
+
+  <div id="menuOv" class="ov hidden">
+    <div id="menuCard">
+      <button class="bigBtn blue" id="mRestart">RESTART</button>
+      <button class="bigBtn" id="mHome" style="background:linear-gradient(#f79e2d,#e0801a);box-shadow:0 6px 0 #b56412;">HOME</button>
+      <button class="bigBtn blue" id="mClose" style="background:#8a8ab0;box-shadow:0 6px 0 #6b6b8f;">CLOSE</button>
+    </div>
+  </div>
+
+  <div id="home" class="ov">
+    <img id="homeIcon" src="icon.png" alt="">
+    <h1>HEXA<br>ARROWS</h1>
+    <div class="sub">with piles</div>
+    <div class="hint">Поле забито стопками стрелок, цвет плитки = её направление.
+      Тап по верхней плитке: путь чист, она улетает с поля; сосед по стрелке
+      того же цвета, она прыгает на него (мердж серии); путь закрыт, она
+      съезжает на свободное место. Очисти всё поле!</div>
+    <div id="lvlRow"></div>
+    <div id="lvlName"></div>
+    <button class="bigBtn" id="playBtn">PLAY</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ============ Hexa Arrows with piles — v5: 10 уровней разных форм ============
+   v5 = v4 + пять уровней (L6-L10) с полями РАЗНОЙ ФОРМЫ И РАЗМЕРА для
+   съёмки креативов: треугольник, кольцо с дырой, широкая полоса, звезда,
+   гигантский гекс R=4 (61 клетка, спайк). Все 10 уровней — кнопками в меню,
+   иконка продукта на cover-экране (icon.png).
+   Лучи считаются внутри ОПИСАННОГО гекса поля (hull): у невыпуклых форм
+   плитка перелетает зазор/дыру; съехать можно только на клетку поля.
+   GEN_HINTS для L6-L10 пересчитаны оффлайн-прогоном этого же кода в Node.
+   ---- механика v4 ----
+   v2 + МЕРДЖ ПО СТРЕЛКЕ: жеста нет, стрелка сама указывает цель.
+   Тап по верхней плитке стопки (по приоритету):
+     - луч до края чист -> плитка ВЫЛЕТАЕТ с поля;
+     - сосед РОВНО ПО СТРЕЛКЕ занят и его верх ТОГО ЖЕ ЦВЕТА (= то же
+       направление) -> верхняя одноцветная ГРУППА перепрыгивает на него
+       (мердж: серия копится и потом вылетает цепочкой тапов);
+     - луч заперт, но перед препятствием есть пустые клетки -> плитка
+       СЪЕЗЖАЕТ до упора (последняя пустая клетка) и встаёт одиночной;
+     - двинуться некуда -> bump.
+   Мердж, как и любой тап, тратит ход. Победа: поле пусто (пауза ~1с).
+   Проигрыш: кончились ходы (лимит от бота) или пат "NO MOVES LEFT" (сразу).
+   Левел-дизайн: стартовые стопки редко одноцветные (доля моно-стопок <=15%,
+   при укладке слой почти всегда другого цвета, чем верх).
+   Генерация реверсом от пустого поля (реверс-вылеты и реверс-слайды) =
+   точный форвард-скрипт решения (скрипт мерджей не использует, мердж —
+   свободный инструмент игрока); контрольная симуляция обязательна. */
+
+const $=id=>document.getElementById(id);
+const stage=$('stage'), cvs=$('game'), ctx=cvs.getContext('2d');
+const fxCvs=$('fx'), fxCtx=fxCvs.getContext('2d');
+
+const ROT=-0.10, SQUASH=0.92, CELL_GAP=0.94, CELL_DEPTH=7, LAYER_H=9;
+const DIRS=[[0,-1],[1,-1],[1,0],[0,1],[-1,1],[-1,0]];
+/* цвет = направление (фикс. маппинг по индексу DIRS) */
+const COLORS=[
+  {top:'#45c454',side:'#2f9139'},
+  {top:'#3a7cf6',side:'#2456bd'},
+  {top:'#f2404f',side:'#bd2733'},
+  {top:'#f8c92e',side:'#cc9c14'},
+  {top:'#b04ef5',side:'#8231c2'},
+  {top:'#59e0e8',side:'#37a9b5'},
+];
+
+/* extra — плитки сверх покрытия (стопки); slides — слайдов в решении;
+   wMin/wMax — приёмочная полоса винрейта случайных ботов (сложность уровня) */
+const hexDist=(q,r)=>Math.max(Math.abs(q),Math.abs(r),Math.abs(q+r));
+function disk(R){const b=[];for(let q=-R;q<=R;q++)for(let r=-R;r<=R;r++)if(hexDist(q,r)<=R)b.push([q,r]);return b;}
+function triangle(n){const b=[];const o=(n-1)/3|0;
+  for(let q=0;q<n;q++)for(let r=0;r<n-q;r++)b.push([q-o,r-o]);return b;}
+function ring(a,b){return disk(a).filter(([q,r])=>hexDist(q,r)>b);}
+function rect(cols,rows){const b=[];const q0=-((cols-1)/2|0);
+  for(let i=0;i<cols;i++){const q=q0+i;for(let j=0;j<rows;j++)b.push([q,j-(rows>>1)-Math.floor(q/2)]);}
+  return b;}
+function star(){const b=disk(2);
+  for(const [dq,dr] of DIRS)for(let k=3;k<=4;k++)b.push([dq*k,dr*k]);return b;}
+const LEVELS=[
+  {mask:()=>disk(2), maxH:2, colors:4, extra:8,  slides:2, fac:1.6, wMin:0.7,  wMax:1.0, name:'Hex 19'},
+  {mask:()=>disk(2), maxH:3, colors:5, extra:13, slides:4, fac:1.5, wMin:0.5,  wMax:1.0, name:'Hex 19 · piles 3'},
+  {mask:()=>disk(3), maxH:3, colors:6, extra:15, slides:5, fac:1.4, wMin:0.15, wMax:0.85, name:'Hex 37'},
+  {mask:()=>disk(3), maxH:4, colors:6, extra:22, slides:7, fac:1.3, wMin:0.05, wMax:0.6, name:'Hex 37 · piles 4'},
+  {mask:()=>disk(3), maxH:5, colors:6, extra:30, slides:9, fac:1.2, wMin:0.0,  wMax:0.4, name:'Hex 37 · piles 5'},  // спайк
+  /* ---- v5: новые формы для креативов ---- */
+  {mask:()=>triangle(7), maxH:3, colors:5, extra:14, slides:4, fac:1.4, wMin:0.2,  wMax:0.9, peel:true, name:'Triangle 28'},
+  {mask:()=>ring(3,1),   maxH:3, colors:6, extra:18, slides:4, fac:1.35,wMin:0.1,  wMax:0.8, peel:true, name:'Ring 30'},
+  {mask:()=>rect(9,4),   maxH:4, colors:6, extra:24, slides:6, fac:1.3, wMin:0.05, wMax:0.65,peel:true, name:'Bar 36'},
+  {mask:()=>star(),      maxH:4, colors:6, extra:22, slides:6, fac:1.3, wMin:0.05, wMax:0.6, peel:true, name:'Star 31'},
+  {mask:()=>disk(4),     maxH:4, colors:6, extra:40, slides:8, fac:1.2, wMin:0.0,  wMax:0.45,peel:true, name:'Giant Hex 61'},  // спайк
+];
+/* удачные попытки из оффлайн-прогона (сиды детерминированные) — пробуем первыми,
+   чтобы уровень грузился мгновенно; при промахе перебор продолжится с нуля.
+   ⚠️ При правке LEVELS/генератора пересчитать: node proto-arrow-merge/tools/gen_hints.mjs <путь к html> 1 10 */
+const GEN_HINTS=[28,5,35,765,588, 4,11,41,9,10];
+/* луч живёт внутри описанного гекса поля: зазоры невыпуклых форм перелетаются */
+let hullR=0, lastAttempt=-1;
+const inHull=(q,r)=>hexDist(q,r)<=hullR;
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+
+let level=parseInt(localStorage.getItem('arrowPiles.level')||'1');
+if(!(level>=1&&level<=LEVELS.length)) level=1;
+let cells=[], cellSet=new Set();
+let board=new Map();       // key -> [dir,...] снизу вверх (живое состояние)
+let meta=new Map();        // key -> {pop,hidden,bumpT,bx,by,topV,topY,baseY}
+let flyers=[];             // анимации вылета/слайда
+let moves=0, tilesLeft=0, S=34;
+let solution=[];           // [{q,r}] — клетка, которую тапнуть на каждом шаге
+let playing=false, busy=false, shake=0, winTimer=0;
+let W=0,H=0,DPR=1,cx=0,cy=0;
+const key=(q,r)=>q+','+r;
+
+/* ---------- Чистая симуляция (общая для игры и генератора) ---------- */
+function calcTapSim(st,q,r){
+  const arr=st.get(key(q,r));
+  if(!arr||!arr.length)return {type:'none'};
+  const d=arr[arr.length-1], [dq,dr]=DIRS[d];
+  let cq=q+dq, cr=r+dr, lastEmpty=null, obstacle=false;
+  while(inHull(cq,cr)){
+    const a2=st.get(key(cq,cr));
+    if(a2&&a2.length){obstacle=true;break;}
+    if(cellSet.has(key(cq,cr)))lastEmpty=[cq,cr];   // съехать можно только на клетку поля
+    cq+=dq; cr+=dr;
+  }
+  if(!obstacle)return {type:'exit',d};
+  /* мердж: сосед ровно по стрелке, его верх того же цвета (= направления) */
+  const na=st.get(key(q+dq,r+dr));
+  if(na&&na.length&&na[na.length-1]===d){
+    let cnt=1;
+    while(cnt<arr.length&&arr[arr.length-1-cnt]===d)cnt++;
+    return {type:'merge',d,dest:[q+dq,r+dr],count:cnt};
+  }
+  if(lastEmpty)return {type:'slide',d,dest:lastEmpty};
+  return {type:'none'};
+}
+function applyTapSim(st,q,r,m){
+  const k=key(q,r), arr=st.get(k);
+  if(m.type==='merge'){
+    const grp=arr.splice(arr.length-m.count,m.count);
+    if(!arr.length)st.delete(k);
+    st.get(key(m.dest[0],m.dest[1])).push(...grp);
+    return;
+  }
+  arr.pop();
+  if(!arr.length)st.delete(k);
+  if(m.type==='slide')st.set(key(m.dest[0],m.dest[1]),[m.d]);
+}
+function cloneState(st){const c=new Map();st.forEach((a,k)=>c.set(k,a.slice()));return c;}
+function totalTiles(st){let t=0;st.forEach(a=>t+=a.length);return t;}
+
+/* ---------- Генерация: реверс от пустого поля ---------- */
+function rayClearSim(st,q,r,d){
+  const [dq,dr]=DIRS[d];
+  let cq=q+dq, cr=r+dr;
+  while(inHull(cq,cr)){
+    const a=st.get(key(cq,cr));
+    if(a&&a.length)return false;
+    cq+=dq;cr+=dr;
+  }
+  return true;
+}
+function generate(cfg,seed){
+  const rng=mulberry32(seed);
+  const st=new Map(), rev=[];
+  const dirsAll=[0,1,2,3,4,5];
+  for(let i=dirsAll.length-1;i>0;i--){const j=(rng()*(i+1))|0;[dirsAll[i],dirsAll[j]]=[dirsAll[j],dirsAll[i]];}
+  const dirsUsed=dirsAll.slice(0,cfg.colors);
+  const target=cells.length+cfg.extra;
+  /* v5, cfg.peel: порядок ПОКРЫТИЯ клеток = обратное «снятие с края» (как в Hexa Arrows v1):
+     у оставшегося множества всегда есть крайняя клетка с чистым лучом, значит покрытие
+     в обратном порядке гарантированно находит чистый луч для каждой клетки. Эвристика
+     «самые зажатые первыми» на больших полях (61 клетка) срывалась в 99% попыток. */
+  let coverOrder=null;
+  if(cfg.peel){
+    const remS=new Set(cells.map(([q,r])=>key(q,r)));
+    const clearRay=(q,r)=>dirsUsed.some(d=>{let cq=q+DIRS[d][0],cr=r+DIRS[d][1];
+      while(inHull(cq,cr)){if(remS.has(key(cq,cr)))return false;cq+=DIRS[d][0];cr+=DIRS[d][1];}return true;});
+    const pool=cells.slice(), peel=[];
+    while(pool.length){
+      const cand=pool.filter(([q,r])=>clearRay(q,r));
+      if(!cand.length)return null;
+      const c=cand[(rng()*cand.length)|0];
+      remS.delete(key(c[0],c[1]));pool.splice(pool.indexOf(c),1);peel.push(c);
+    }
+    coverOrder=peel.reverse();
+  }
+  const Hh=k=>{const a=st.get(k);return a?a.length:0;};
+  let slidesDone=0, steps=0;
+  while(steps++<target*8){
+    const tot=totalTiles(st), cov=st.size;
+    if(cov===cells.length&&tot>=target)break;
+    const needed=target-tot, U=cells.length-cov;
+    if(needed<U)return null;
+    /* реверс-слайд: одиночная плитка b уезжает на верх стопки a по -d */
+    if(tot>=6&&tot<target*0.85&&slidesDone<cfg.slides&&needed>U+1&&rng()<(cfg.peel?0.5:0.3)){
+      const cands=[];
+      for(const [q,r] of cells){
+        const arr=st.get(key(q,r));
+        if(!arr||arr.length!==1)continue;
+        const d=arr[0], [dq,dr]=DIRS[d];
+        const ko=key(q+dq,r+dr);
+        if(!cellSet.has(ko)||Hh(ko)===0)continue;   // препятствие по d обязано стоять
+        const as=[]; let j=1;
+        while(true){
+          const aq=q-dq*j, ar=r-dr*j, ka=key(aq,ar);
+          if(!cellSet.has(ka))break;
+          if(Hh(ka)>0){ if(Hh(ka)<cfg.maxH)as.push([aq,ar,true]); break; }
+          as.push([aq,ar,false]); j++;
+        }
+        if(as.length&&(!cfg.peel||as.some(x=>x[2])))cands.push({b:[q,r],as});   // peel: цель a только стопка
+      }
+      if(cands.length){
+        const c=cands[(rng()*cands.length)|0];
+        const stacked=c.as.filter(a=>a[2]);
+        const pool=(stacked.length&&(cfg.peel||rng()<0.7))?stacked:c.as;
+        const a=pool[(rng()*pool.length)|0];
+        const kb=key(c.b[0],c.b[1]), ka=key(a[0],a[1]);
+        const d=st.get(kb)[0];
+        st.delete(kb);
+        if(cfg.peel){
+          /* v5: клетка b снова пуста, а её лучи по d и -d заперты — глубоко в поле её потом
+             нечем накрыть (главная причина срывов). Поэтому накрываем b СРАЗУ новой плиткой
+             (в прямой игре: сначала вылет с b, затем съезд на b); нет чистого луча — слайд отменяем. */
+          const dsB=dirsUsed.filter(d2=>rayClearSim(st,c.b[0],c.b[1],d2));
+          if(!dsB.length){st.set(kb,[d]);}
+          else{
+            if(!st.has(ka))st.set(ka,[]);
+            st.get(ka).push(d);
+            rev.push({type:'slide',q:a[0],r:a[1]});
+            slidesDone++;
+            st.set(kb,[dsB[(rng()*dsB.length)|0]]);
+            rev.push({type:'exit',q:c.b[0],r:c.b[1]});
+            continue;
+          }
+        }else{
+          if(!st.has(ka))st.set(ka,[]);
+          st.get(ka).push(d);
+          rev.push({type:'slide',q:a[0],r:a[1]});
+          slidesDone++;
+          continue;
+        }
+      }
+    }
+    /* реверс-вылет: добавить плитку на клетку с чистым лучом */
+    const cands=[];
+    for(const [q,r] of cells){
+      if(Hh(key(q,r))>=cfg.maxH)continue;
+      const ds=dirsUsed.filter(d=>rayClearSim(st,q,r,d));
+      if(ds.length)cands.push({q,r,ds,cov:Hh(key(q,r))>0});
+    }
+    if(!cands.length)return null;
+    const unc=cands.filter(c=>!c.cov), covd=cands.filter(c=>c.cov);
+    let group;
+    if(U>0&&needed===U){
+      if(!unc.length)return null;
+      group=unc;
+    }else{
+      /* pUnc: доля шагов «сначала покрыть пустую клетку» (по умолчанию 0.5, для больших полей выше,
+         иначе стопки запирают лучи ещё не покрытых клеток и генерация срывается) */
+      const p=U>0?Math.max(cfg.pUnc??0.5,U/Math.max(needed,1)):0;
+      group=(rng()<p&&unc.length)?unc:(covd.length?covd:unc);
+    }
+    let mn=7;
+    for(const c of group)mn=Math.min(mn,c.ds.length);
+    const g2=group.filter(c=>c.ds.length===mn);
+    let c=g2[(rng()*g2.length)|0];
+    if(coverOrder&&group===covd){
+      /* peel: стопки растим на клетках с >=2 чистыми лучами (иначе цвет вынужденно повторяет верх
+         и стопки выходят одноцветными), выбор случайный, не «самые зажатые» */
+      const g3=covd.filter(o=>o.ds.length>=2);
+      if(g3.length)c=g3[(rng()*g3.length)|0];
+    }
+    if(coverOrder&&group===unc){
+      const nxt=coverOrder.find(([q,r])=>Hh(key(q,r))===0);   // первая ещё не покрытая по порядку
+      const hit=nxt&&unc.find(o=>o.q===nxt[0]&&o.r===nxt[1]);
+      if(hit)c=hit;
+    }
+    /* левел-дизайн: при укладке на стопку почти всегда берём цвет,
+       отличный от текущего верха (одноцветные стопки — редкость) */
+    const k0=key(c.q,c.r);
+    const arr0=st.get(k0);
+    let pool=c.ds;
+    if(arr0&&arr0.length){
+      const alt=c.ds.filter(d2=>d2!==arr0[arr0.length-1]);
+      if(alt.length&&rng()>=0.12)pool=alt;
+    }
+    const d=pool[(rng()*pool.length)|0];
+    if(!st.has(k0))st.set(k0,[]);
+    st.get(k0).push(d);
+    rev.push({type:'exit',q:c.q,r:c.r});
+  }
+  if(!(st.size===cells.length&&totalTiles(st)>=target))return null;
+  const sol=rev.slice().reverse().map(m=>({q:m.q,r:m.r}));
+  if(!simCheck(st,sol))return null;
+  return {board:st,sol,slidesDone};
+}
+/* контрольная переигровка скрипта чистой логикой */
+function simCheck(st0,sol){
+  const st=cloneState(st0);
+  for(const s of sol){
+    const m=calcTapSim(st,s.q,s.r);
+    if(m.type==='none')return false;
+    applyTapSim(st,s.q,s.r,m);
+  }
+  return st.size===0;
+}
+/* случайный бот для калибровки лимита */
+function botRun(st0,rng,cap){
+  const st=cloneState(st0);
+  let n=0;
+  while(n<cap){
+    const mv=[];
+    st.forEach((arr,k)=>{
+      const [q,r]=k.split(',').map(Number);
+      const m=calcTapSim(st,q,r);
+      if(m.type!=='none')mv.push([q,r,m]);
+    });
+    if(!mv.length)return null;
+    const [q,r,m]=mv[(rng()*mv.length)|0];
+    applyTapSim(st,q,r,m);n++;
+    if(st.size===0)return n;
+  }
+  return null;
+}
+
+function buildLevel(n){
+  const cfg=LEVELS[n-1];
+  cells=cfg.mask();cellSet.clear();hullR=0;lastAttempt=-1;
+  for(const [q,r] of cells){cellSet.add(key(q,r));hullR=Math.max(hullR,hexDist(q,r));}
+  /* приёмка кандидата: минимум слайдов в решении + полоса винрейта ботов */
+  let done=null, fallback=null;
+  const order=[GEN_HINTS[n-1]];
+  for(let a=0;a<800;a++)if(a!==GEN_HINTS[n-1])order.push(a);
+  for(const attempt of order){
+    if(done)break;
+    const g=generate(cfg,n*77771+attempt);
+    if(!g)continue;
+    if(g.slidesDone<Math.ceil(cfg.slides*0.5))continue;
+    /* стартовые стопки: одноцветных (h>=2, все плитки одного цвета) <= 15% */
+    let hi=0,mono=0;
+    g.board.forEach(a=>{if(a.length>=2){hi++;if(a.every(x=>x===a[0]))mono++;}});
+    if(hi&&mono/hi>0.15)continue;
+    const brng=mulberry32(n*991+attempt*13+7);
+    let wins=0, bb=g.sol.length;
+    for(let i=0;i<25;i++){
+      const w=botRun(g.board,brng,g.sol.length*3);
+      if(w){wins++;if(w<bb)bb=w;}
+    }
+    g.best=bb;
+    const wr=wins/25;
+    fallback=g;
+    if(wr>=cfg.wMin&&wr<=cfg.wMax){done=g;lastAttempt=attempt;g.wr=wr;}
+  }
+  if(!done)done=fallback;
+  board=done?done.board:new Map();
+  solution=done?done.sol:[];
+  const best=done?done.best:solution.length;
+  moves=Math.max(solution.length,Math.ceil(best*cfg.fac));
+  tilesLeft=totalTiles(board);
+  meta.clear();flyers=[];
+  let i=0;
+  board.forEach((a,k)=>meta.set(k,{pop:-(i++)*0.02,hidden:false,bumpT:0,bx:0,by:0}));
+  busy=false;playing=true;shake=0;stopConfetti();clearTimeout(winTimer);
+  $('lvlBadge').textContent='LEVEL '+n;
+  updateMoves();updateGoal();layout();
+}
+function updateMoves(){$('movesBanner').textContent='Moves: '+moves;}
+function updateGoal(){$('goalPill').textContent='Плиток: '+tilesLeft;}
+
+/* ---------- Геометрия / рендер ---------- */
+function hexCenter(q,r){
+  let x=1.5*S*q, y=Math.sqrt(3)*S*(r+q/2);
+  const rx=x*Math.cos(ROT)-y*Math.sin(ROT), ry=x*Math.sin(ROT)+y*Math.cos(ROT);
+  return [cx+rx, cy+ry*SQUASH];
+}
+function hexVerts(x,y,s){
+  const v=[];
+  for(let i=0;i<6;i++){
+    const a=Math.PI/3*i;
+    let px=Math.cos(a)*s, py=Math.sin(a)*s;
+    const rx=px*Math.cos(ROT)-py*Math.sin(ROT), ry=px*Math.sin(ROT)+py*Math.cos(ROT);
+    v.push([x+rx,y+ry*SQUASH]);
+  }
+  return v;
+}
+function dirVec(d){
+  const [ax,ay]=hexCenter(0,0), [bx,by]=hexCenter(DIRS[d][0],DIRS[d][1]);
+  const dx=bx-ax, dy=by-ay, l=Math.hypot(dx,dy);
+  return [dx/l,dy/l];
+}
+function pointInPoly(px,py,v){
+  let inside=false;
+  for(let i=0,j=v.length-1;i<v.length;j=i++){
+    if((v[i][1]>py)!==(v[j][1]>py) &&
+       px<(v[j][0]-v[i][0])*(py-v[i][1])/(v[j][1]-v[i][1])+v[i][0]) inside=!inside;
+  }
+  return inside;
+}
+function drawHexPrism(c2,x,y,s,depth,topCol,sideCol){
+  const v=hexVerts(x,y,s);
+  c2.fillStyle=sideCol;
+  for(let i=0;i<6;i++){
+    const a=v[i], b=v[(i+1)%6];
+    if((a[1]+b[1])/2>=y-0.5){
+      c2.beginPath();
+      c2.moveTo(a[0],a[1]);c2.lineTo(b[0],b[1]);
+      c2.lineTo(b[0],b[1]+depth);c2.lineTo(a[0],a[1]+depth);
+      c2.closePath();c2.fill();
+    }
+  }
+  c2.beginPath();
+  v.forEach((p,i)=>i?c2.lineTo(p[0],p[1]):c2.moveTo(p[0],p[1]));
+  c2.closePath();
+  c2.fillStyle=topCol;c2.fill();
+  return v;
+}
+function drawArrow(c2,x,y,ang,s,col,shadow){
+  c2.save();
+  c2.translate(x,y);c2.scale(1,SQUASH);c2.rotate(ang);
+  c2.strokeStyle=col;c2.fillStyle=col;
+  c2.lineWidth=s*0.24;c2.lineCap='round';c2.lineJoin='round';
+  if(shadow){c2.shadowColor='rgba(0,0,0,.28)';c2.shadowOffsetY=s*0.09/SQUASH;c2.shadowBlur=1;}
+  c2.beginPath();c2.moveTo(-s*0.34,0);c2.lineTo(s*0.30,0);c2.stroke();
+  c2.beginPath();
+  c2.moveTo(s*0.14,-s*0.30);c2.lineTo(s*0.48,0);c2.lineTo(s*0.14,s*0.30);
+  c2.lineTo(s*0.26,0);c2.closePath();c2.fill();
+  c2.restore();
+}
+
+function layout(){
+  const rect=stage.getBoundingClientRect();
+  DPR=window.devicePixelRatio||1;
+  W=rect.width;H=rect.height;
+  cvs.width=W*DPR;cvs.height=H*DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  const phone=$('phone').getBoundingClientRect();
+  fxCvs.width=phone.width*DPR;fxCvs.height=phone.height*DPR;
+  fxCtx.setTransform(DPR,0,0,DPR,0,0);
+  // масштаб и центр от фактических габаритов маски (формы могут быть несимметричны)
+  let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+  for(const [q,r] of cells){
+    const x=1.5*q, y=Math.sqrt(3)*(r+q/2);
+    x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);
+  }
+  S=Math.min((W-46)/(x1-x0+2), (H-90)/(y1-y0+Math.sqrt(3)*1.9));
+  const mx=(x0+x1)/2, my=(y0+y1)/2;
+  cx=W/2-S*(mx*Math.cos(ROT)-my*Math.sin(ROT));
+  cy=H/2+10-S*(mx*Math.sin(ROT)+my*Math.cos(ROT))*SQUASH;
+}
+window.addEventListener('resize',layout);
+
+function stackDraw(c2,q,r,tiles,m,sc){
+  const [x,y]=hexCenter(q,r);
+  const s=S*CELL_GAP*0.97*sc;
+  const vis=tiles.length-(m.hideTop||0);   // верх цели мерджа скрыт до посадки
+  let topY=y-CELL_DEPTH;
+  for(let l=0;l<vis;l++){
+    const isTop=l===vis-1;
+    const bx=isTop?m.bx:0, by=isTop?m.by:0;
+    topY=y-CELL_DEPTH-l*LAYER_H*sc;
+    const col=COLORS[tiles[l]];
+    drawHexPrism(c2,x+bx,topY+by,s,LAYER_H*sc,col.top,col.side);
+    if(!isTop){
+      const v=hexVerts(x,topY,s);
+      c2.strokeStyle='rgba(0,0,0,.14)';c2.lineWidth=1;
+      c2.beginPath();
+      v.forEach((p,i)=>i?c2.lineTo(p[0],p[1]):c2.moveTo(p[0],p[1]));
+      c2.closePath();c2.stroke();
+    }
+  }
+  const d=tiles[vis-1];
+  const [vx,vy]=dirVec(d);
+  drawArrow(c2,x+m.bx,topY+m.by,Math.atan2(vy/SQUASH,vx),s,'#fff',true);
+  m.topV=hexVerts(x+m.bx,topY+m.by,s);
+  m.topY=topY; m.baseY=y; m.x=x;
+}
+function flyerDraw(c2,f){
+  const s=S*CELL_GAP*0.97;
+  c2.save();
+  if(f.alpha<1)c2.globalAlpha=Math.max(0,f.alpha);
+  const col=COLORS[f.d];
+  const cnt=f.count||1;
+  for(let l=0;l<cnt;l++)
+    drawHexPrism(c2,f.x,f.y-l*LAYER_H,s,LAYER_H,col.top,col.side);
+  const [vx,vy]=dirVec(f.d);
+  drawArrow(c2,f.x,f.y-(cnt-1)*LAYER_H,Math.atan2(vy/SQUASH,vx),s,'#fff',true);
+  c2.restore();
+}
+
+function draw(dt){
+  ctx.clearRect(0,0,W,H);
+  ctx.save();
+  if(shake>0){shake-=dt;ctx.translate((Math.random()-0.5)*4,(Math.random()-0.5)*4);}
+  for(const [q,r] of cells)
+    drawHexPrism(ctx,...hexCenter(q,r),S*CELL_GAP,CELL_DEPTH,'#c8c2ba','#a49d92');
+  const entries=[];
+  board.forEach((tiles,k)=>{
+    const [q,r]=k.split(',').map(Number);
+    entries.push({q,r,tiles,m:meta.get(k)});
+  });
+  entries.sort((a,b)=>hexCenter(a.q,a.r)[1]-hexCenter(b.q,b.r)[1]);
+  for(const e of entries){
+    const m=e.m;
+    if(!m||m.hidden)continue;
+    m.pop=Math.min(1,m.pop+dt*3.2);
+    if(m.pop<=0)continue;
+    if(m.bumpT>0){
+      m.bumpT-=dt;
+      const k2=1-m.bumpT/0.28, e2=Math.sin(k2*Math.PI)*(1-k2*0.3);
+      m.bx=m.bvx*S*0.42*e2; m.by=m.bvy*S*0.42*e2;
+      if(m.bumpT<=0){m.bx=0;m.by=0;}
+    }
+    const sc=m.pop<1?(0.5+0.5*(1-Math.pow(1-m.pop,3))):1;
+    stackDraw(ctx,e.q,e.r,e.tiles,m,sc);
+  }
+  for(const f of flyers)flyerDraw(ctx,f);
+  ctx.restore();
+}
+
+/* ---------- Логика тапа ---------- */
+function tapCell(q,r){
+  if(!playing||busy)return;
+  const k=key(q,r), arr=board.get(k);
+  if(!arr||!arr.length)return;
+  const m=calcTapSim(board,q,r);
+  const mm=meta.get(k);
+  if(m.type==='none'){
+    const [vx,vy]=dirVec(arr[arr.length-1]);
+    mm.bumpT=0.28;mm.bvx=vx;mm.bvy=vy;
+    shake=0.12;
+    return;
+  }
+  busy=true;
+  moves--;updateMoves();
+  const hBefore=arr.length;
+  const [x0,y0]=hexCenter(q,r);
+  const startY=y0-CELL_DEPTH-(hBefore-1)*LAYER_H;
+  applyTapSim(board,q,r,m);
+  if(!board.has(k))meta.delete(k);
+  if(m.type==='merge'){
+    /* группа дугой прыгает на соседа по стрелке */
+    const dk=key(m.dest[0],m.dest[1]);
+    const dm=meta.get(dk);
+    dm.hideTop=m.count;
+    const baseH=board.get(dk).length-m.count;   // высота цели до посадки
+    const [x1,y1]=hexCenter(m.dest[0],m.dest[1]);
+    const gy0=y0-CELL_DEPTH-(hBefore-m.count)*LAYER_H;  // нижний слой группы
+    const gy1=y1-CELL_DEPTH-baseH*LAYER_H;
+    const arc=S*0.9+m.count*3;
+    flyers.push({d:m.d,count:m.count,x:x0,y:gy0,alpha:1,destKey:dk,mergeLand:true,
+      anim:{t:0,dur:0.26,fn:(f,kk)=>{
+        const e=kk*kk*(3-2*kk);
+        f.x=x0+(x1-x0)*e;
+        f.y=gy0+(gy1-gy0)*e-arc*Math.sin(Math.PI*Math.min(1,kk));
+      }}});
+    return;
+  }
+  if(m.type==='exit'){
+    tilesLeft--;updateGoal();
+    const [vx,vy]=dirVec(m.d);
+    const dist=S*(2*hullR+4.5);
+    const dur=0.42;
+    flyers.push({d:m.d,x:x0,y:startY,alpha:1,anim:{t:0,dur,fn:(f,kk)=>{
+      const e=kk*kk;
+      f.x=x0+vx*dist*e; f.y=startY+vy*dist*e;
+      f.alpha=1-Math.max(0,(kk-0.62)/0.38);
+    }}});
+  }else{
+    const dk=key(m.dest[0],m.dest[1]);
+    meta.set(dk,{pop:1,hidden:true,bumpT:0,bx:0,by:0});
+    const [x1,y1]=hexCenter(m.dest[0],m.dest[1]);
+    const endY=y1-CELL_DEPTH;
+    const dist=Math.hypot(x1-x0,y1-startY);
+    const dur=Math.max(0.14,dist/(S*20));
+    flyers.push({d:m.d,x:x0,y:startY,alpha:1,destKey:dk,anim:{t:0,dur,fn:(f,kk)=>{
+      const e=1-Math.pow(1-kk,3);
+      f.x=x0+(x1-x0)*e; f.y=startY+(endY-startY)*e;
+    }}});
+  }
+}
+function flyersStep(dt){
+  for(let i=flyers.length-1;i>=0;i--){
+    const f=flyers[i];
+    f.anim.t+=dt;
+    const kk=Math.min(1,f.anim.t/f.anim.dur);
+    f.anim.fn(f,kk);
+    if(kk>=1){
+      flyers.splice(i,1);
+      if(f.mergeLand){
+        const m2=meta.get(f.destKey);
+        if(m2){m2.hideTop=0;m2.pop=0.85;}
+      }else if(f.destKey){
+        const m2=meta.get(f.destKey);
+        if(m2){m2.hidden=false;m2.pop=0.6;}
+      }
+      afterMove();
+    }
+  }
+}
+function afterMove(){
+  busy=false;
+  if(board.size===0){playing=false;winTimer=setTimeout(win,1000);return;}
+  if(moves<=0){playing=false;lose('OUT OF MOVES');return;}
+  if(!anyMoveGame()){playing=false;lose('NO MOVES LEFT');}
+}
+function anyMoveGame(){
+  let ok=false;
+  board.forEach((arr,k)=>{
+    if(ok)return;
+    const [q,r]=k.split(',').map(Number);
+    if(calcTapSim(board,q,r).type!=='none')ok=true;
+  });
+  return ok;
+}
+
+cvs.addEventListener('pointerdown',e=>{
+  if(!playing||busy)return;
+  const rc=cvs.getBoundingClientRect();
+  const px=e.clientX-rc.left, py=e.clientY-rc.top;
+  const entries=[];
+  board.forEach((tiles,k)=>{
+    const [q,r]=k.split(',').map(Number);
+    const m=meta.get(k);
+    if(m&&!m.hidden)entries.push({q,r,m});
+  });
+  entries.sort((a,b)=>b.m.baseY-a.m.baseY);
+  for(const en of entries){
+    const m=en.m;
+    if(m.topV&&pointInPoly(px,py,m.topV)){tapCell(en.q,en.r);return;}
+    if(m.x!==undefined&&Math.abs(px-m.x)<S*0.8&&py>(m.topY||m.baseY)-S*0.5&&py<m.baseY+CELL_DEPTH){
+      tapCell(en.q,en.r);return;
+    }
+  }
+});
+
+/* ---------- Конфетти ---------- */
+let confetti=[],confettiOn=false;
+function startConfetti(){
+  confetti=[];confettiOn=true;
+  const w=fxCvs.width/DPR,h=fxCvs.height/DPR;
+  const cols=['#ff5964','#f8c92e','#3a7cf6','#45c454','#ff8ac2','#59e0e8','#b04ef5','#ff9b2e'];
+  for(let i=0;i<130;i++)confetti.push({
+    x:Math.random()*w,y:-Math.random()*h*0.8,
+    vy:110+Math.random()*160,ph:Math.random()*7,om:2+Math.random()*3,
+    s:4+Math.random()*6,c:cols[(Math.random()*cols.length)|0],r:Math.random()*7});
+}
+function stopConfetti(){confettiOn=false;fxCtx.clearRect(0,0,fxCvs.width,fxCvs.height);}
+function drawConfetti(dt){
+  if(!confettiOn)return;
+  const w=fxCvs.width/DPR,h=fxCvs.height/DPR;
+  fxCtx.clearRect(0,0,w,h);
+  for(const p of confetti){
+    p.y+=p.vy*dt;p.ph+=p.om*dt;p.r+=3*dt;
+    if(p.y>h+20){p.y=-20;p.x=Math.random()*w;}
+    fxCtx.save();
+    fxCtx.translate(p.x+Math.sin(p.ph)*14,p.y);
+    fxCtx.rotate(p.r);fxCtx.scale(1,Math.abs(Math.cos(p.ph)));
+    fxCtx.fillStyle=p.c;
+    fxCtx.fillRect(-p.s/2,-p.s/2,p.s,p.s*0.62);
+    fxCtx.restore();
+  }
+}
+
+/* ---------- Экраны ---------- */
+function win(){startConfetti();$('winOv').classList.remove('hidden');}
+function lose(txt){
+  $('loseOv').querySelector('.ribbon').textContent=txt||'OUT OF MOVES';
+  $('loseOv').classList.remove('hidden');
+}
+function setLevel(n){
+  level=n;
+  localStorage.setItem('arrowPiles.level',level);
+  document.querySelectorAll('.lvlBtn').forEach(b=>b.classList.toggle('sel',+b.dataset.n===level));
+  $('lvlName').textContent=LEVELS[level-1].name;
+}
+const lvlRow=$('lvlRow');
+for(let i=1;i<=LEVELS.length;i++){
+  const b=document.createElement('button');
+  b.className='lvlBtn';b.textContent=i;b.dataset.n=i;
+  b.onclick=()=>setLevel(i);
+  lvlRow.appendChild(b);
+}
+setLevel(level);
+$('nextBtn').onclick=()=>{
+  stopConfetti();$('winOv').classList.add('hidden');
+  setLevel(level%LEVELS.length+1);
+  buildLevel(level);
+};
+$('retryBtn').onclick=()=>{$('loseOv').classList.add('hidden');buildLevel(level);};
+$('playBtn').onclick=()=>{$('home').classList.add('hidden');buildLevel(level);};
+$('gearBtn').onclick=()=>{if(playing)$('menuOv').classList.remove('hidden');};
+$('mClose').onclick=()=>$('menuOv').classList.add('hidden');
+$('mRestart').onclick=()=>{$('menuOv').classList.add('hidden');buildLevel(level);};
+$('mHome').onclick=()=>{$('menuOv').classList.add('hidden');playing=false;$('home').classList.remove('hidden');setLevel(level);};
+
+/* ---------- Тест-хук ---------- */
+window.__game={
+  get state(){
+    const stacks=[];
+    board.forEach((a,k)=>{const [q,r]=k.split(',').map(Number);stacks.push({q,r,tiles:a.slice()});});
+    return {stacks,moves,tilesLeft,level,busy,playing,cells:cells.length,hullR,lastAttempt};
+  },
+  tap(q,r){if(!board.has(key(q,r)))return false;tapCell(q,r);return true;},
+  calc(q,r){return calcTapSim(board,q,r);},
+  solution(){return solution.map(s=>({...s}));},
+  load(n){setLevel(n);buildLevel(n);},
+};
+
+/* ---------- Цикл ---------- */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(0.05,(now-last)/1000);last=now;
+  flyersStep(dt);
+  draw(dt);drawConfetti(dt);
+  requestAnimationFrame(loop);
+}
+buildLevel(level);
+playing=false;
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

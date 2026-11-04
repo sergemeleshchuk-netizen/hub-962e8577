@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Maze Signs v1</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;height:100%;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;height:100dvh;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;user-select:none;touch-action:none;background:radial-gradient(120% 120% at 50% 0%,#222838,#10131c 80%);}
+#phone{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;background:linear-gradient(180deg,#a9dcff 0%,#d8f1ff 38%,#bfe3b1 100%);}
+@media (max-aspect-ratio:1/1){#phone{width:100vw;height:100dvh;border-radius:0;}}
+@media (min-aspect-ratio:1/1){#phone{height:96dvh;aspect-ratio:9/16;width:auto;border-radius:32px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 8px #0c0e15;}}
+#bg{position:absolute;inset:0;z-index:0;overflow:hidden}
+#bg .cloud{position:absolute;width:120px;height:40px;background:#fff;border-radius:40px;opacity:.8;filter:blur(1px);animation:cl 40s linear infinite}
+#bg .cloud::before{content:'';position:absolute;left:25px;top:-22px;width:60px;height:60px;background:#fff;border-radius:50%}
+@keyframes cl{from{transform:translateX(-160px)}to{transform:translateX(560px)}}
+
+#hud{width:100%;padding:12px 16px 4px;z-index:3;display:flex;align-items:center;gap:12px;visibility:hidden}
+.pill{background:rgba(255,255,255,.9);border-radius:14px;padding:7px 12px;font-weight:800;color:#1e3a5f;font-size:14px;box-shadow:0 3px 0 rgba(0,0,0,.08)}
+#fuelWrap{flex:1;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.9);border-radius:14px;padding:6px 10px;box-shadow:0 3px 0 rgba(0,0,0,.08)}
+#fuelBar{flex:1;height:14px;background:#dfe6ee;border-radius:8px;overflow:hidden}
+#fuelFill{height:100%;width:100%;background:linear-gradient(90deg,#2ecc71,#7ed957);border-radius:8px;transition:width .12s linear}
+#fuelFill.low{background:linear-gradient(90deg,#e53935,#ff7043)}
+.btn{border:none;cursor:pointer;font:inherit}
+#homeBtn{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.9);font-size:18px;box-shadow:0 3px 0 rgba(0,0,0,.08)}
+
+#stage{flex:1;width:100%;position:relative;z-index:2;min-height:0}
+#board{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);transform-origin:center;border-radius:14px;
+  box-shadow:0 16px 40px rgba(0,0,0,.28),0 0 0 6px #6e8f5c;overflow:visible}
+#cells{position:absolute;inset:0;display:grid;border-radius:14px;overflow:hidden}
+.c{position:relative;overflow:hidden}
+.c.road{background:#565c6b}
+.c.wall{background:#7fc86e;box-shadow:inset 0 0 0 3px rgba(255,255,255,.22)}
+.c.park{background:#84cc72}
+.c.park::before,.c.park::after{content:'';position:absolute;border-radius:50%;background:radial-gradient(circle at 35% 30%,#69b65a,#3f8f38 70%);box-shadow:0 3px 4px rgba(0,0,0,.25)}
+.c.park::before{width:46%;height:46%;left:12%;top:14%}
+.c.park::after{width:34%;height:34%;left:52%;top:50%}
+.c.house{background:#84cc72}
+.c.house::before{content:'';position:absolute;left:14%;top:14%;width:72%;height:72%;border-radius:6px;background:var(--roof,#e8a25c);box-shadow:0 4px 6px rgba(0,0,0,.3),inset 0 0 0 3px rgba(255,255,255,.35)}
+.c.house::after{content:'';position:absolute;left:50%;top:14%;width:3px;height:72%;background:rgba(0,0,0,.18);transform:translateX(-50%)}
+.c.edge{background:#5da54f;background-image:radial-gradient(circle at 30% 30%,#71b962 0 22%,transparent 23%),radial-gradient(circle at 70% 65%,#4f9843 0 26%,transparent 27%)}
+.c.exit{background:repeating-conic-gradient(#f5f5f5 0 25%,#2b2b2b 0 50%) 0 0/18px 18px}
+.c.start{background:#565c6b}
+#marks,#route{position:absolute;inset:0;pointer-events:none;overflow:visible}
+#route polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:10 10;animation:march 1.2s linear infinite;opacity:.85}
+@keyframes march{to{stroke-dashoffset:-40}}
+#route .exit{stroke:#7ef29a}
+#route .crash{stroke:#ff6b6b}
+#route .loop{stroke:#ffb74d}
+#route .far{stroke:#fff}
+#routeEnd{position:absolute;width:34px;height:34px;margin:-17px;border-radius:50%;display:none;align-items:center;justify-content:center;font-weight:900;font-size:20px;color:#fff;pointer-events:none;box-shadow:0 3px 8px rgba(0,0,0,.35)}
+#routeEnd.crash{display:flex;background:#e53935}
+#routeEnd.loop{display:flex;background:#fb8c00}
+#slots,#signs,#fx{position:absolute;inset:0;pointer-events:none}
+.slot{position:absolute;width:44px;height:44px;margin:-22px;border-radius:50%;border:3px dashed rgba(255,255,255,.55);background:rgba(255,255,255,.08);transition:transform .15s,border-color .15s,background .15s}
+.slot.hot{border-color:#fff;background:rgba(255,255,255,.32);transform:scale(1.18);box-shadow:0 0 0 6px rgba(255,255,255,.25)}
+.slot.taken{opacity:0}
+.sign{position:absolute;width:44px;height:44px;margin:-22px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#3c86f0,#1259c9 70%);border:3px solid #fff;box-shadow:0 3px 0 #0b3f8f,0 6px 12px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center}
+.sign svg{width:26px;height:26px;display:block;filter:drop-shadow(0 1px 0 rgba(0,0,0,.3))}
+.sign.pop{animation:pop .3s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{from{transform:scale(.2)}to{transform:scale(1)}}
+.sign.bad{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-4px)}}
+#gate{position:absolute;width:64px;height:14px;margin:-7px -32px;border-radius:7px;background:repeating-linear-gradient(90deg,#fff 0 10px,#e53935 10px 20px);box-shadow:0 2px 4px rgba(0,0,0,.4);display:none}
+#flag{position:absolute;margin:-40px -24px;width:48px;height:20px;border-radius:8px;background:#fff;color:#2e9e44;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 6px rgba(0,0,0,.3);pointer-events:none;letter-spacing:1px}
+
+.car{position:absolute;width:32px;height:54px;left:0;top:0;margin-left:-16px;margin-top:-27px;will-change:transform;z-index:5}
+.car .sh{position:absolute;inset:2px -2px -4px;background:rgba(0,0,0,.35);border-radius:12px;filter:blur(3px)}
+.car .body{position:absolute;inset:0;background:linear-gradient(90deg,#b71c1c,#ef5350 45%,#f06060 55%,#b71c1c);border-radius:11px 11px 9px 9px}
+.car .glass{position:absolute;left:5px;right:5px;top:12px;height:10px;background:linear-gradient(#bfe7ff,#7cc4f5);border-radius:3px 3px 2px 2px}
+.car .roof{position:absolute;left:4px;right:4px;top:22px;height:16px;background:#e53935;border-radius:3px}
+.car .glass2{position:absolute;left:5px;right:5px;bottom:7px;height:7px;background:#7cc4f5;border-radius:2px 2px 3px 3px}
+.car .hl{position:absolute;top:1px;width:8px;height:4px;background:#fff59d;border-radius:2px;box-shadow:0 0 8px 2px rgba(255,245,157,.8)}
+.car .hl.l{left:4px}.car .hl.r{right:4px}
+.car .tl{position:absolute;bottom:1px;width:7px;height:3px;background:#ff1744;border-radius:2px}
+.car .tl.l{left:4px}.car .tl.r{right:4px}
+.car .wh{position:absolute;width:6px;height:12px;background:#1b1b1b;border-radius:2px}
+.car .wh.a{left:-3px;top:9px}.car .wh.b{right:-3px;top:9px}.car .wh.c{left:-3px;bottom:9px}.car .wh.d{right:-3px;bottom:9px}
+#boom{position:absolute;font-size:54px;margin:-32px;display:none;z-index:6;animation:pop .3s}
+#board.shake{animation:bshake .5s}
+@keyframes bshake{0%,100%{transform:translate(-50%,-50%) scale(var(--s))}20%{transform:translate(calc(-50% - 8px),-50%) scale(var(--s))}40%{transform:translate(calc(-50% + 8px),-50%) scale(var(--s))}60%{transform:translate(calc(-50% - 5px),-50%) scale(var(--s))}80%{transform:translate(calc(-50% + 5px),-50%) scale(var(--s))}}
+
+#tray{width:100%;padding:8px 16px 22px;display:flex;justify-content:center;gap:16px;z-index:3;visibility:hidden}
+.tcard{width:84px;height:84px;border-radius:20px;background:rgba(255,255,255,.92);box-shadow:0 6px 0 rgba(0,0,0,.12),0 8px 20px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;position:relative;cursor:grab;transition:transform .15s}
+.tcard .sign{position:relative;margin:0;width:56px;height:56px}
+.tcard .sign svg{width:34px;height:34px}
+.tcard .post{position:absolute;left:50%;top:50%;width:6px;height:30px;margin-left:-3px;background:#8d8d8d;border-radius:3px}
+.tcard.used{background:rgba(255,255,255,.35);box-shadow:inset 0 0 0 3px rgba(255,255,255,.5);cursor:default}
+.tcard.sel{transform:translateY(-8px) scale(1.06);box-shadow:0 10px 0 rgba(0,0,0,.12),0 0 0 4px #ffd54f}
+.tcard.new{animation:pop .35s cubic-bezier(.2,1.6,.4,1)}
+#ghost{position:absolute;z-index:40;pointer-events:none;display:none}
+#ghost .sign{position:relative;margin:0;width:56px;height:56px;transform:scale(1.1)}
+#ghost .sign svg{width:34px;height:34px}
+
+.ov{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(20,30,50,.55);backdrop-filter:blur(3px)}
+.ov.hidden{display:none}
+.card{background:#fff;border-radius:26px;padding:26px 28px;text-align:center;min-width:250px;box-shadow:0 20px 60px rgba(0,0,0,.4);animation:pop .4s cubic-bezier(.2,1.5,.4,1)}
+.card h2{margin:0 0 6px;font-size:28px;color:#1e3a5f}
+.card p{margin:0 0 18px;color:#5c728f;font-weight:600}
+.big{display:block;width:100%;padding:14px;border-radius:16px;font-size:18px;font-weight:800;color:#fff;background:linear-gradient(#4caf50,#2e9e44);box-shadow:0 5px 0 #23782f;margin-top:10px}
+.big.alt{background:linear-gradient(#ffb300,#ff8f00);box-shadow:0 5px 0 #c66900}
+.big.grey{background:linear-gradient(#90a4ae,#78909c);box-shadow:0 5px 0 #546e7a}
+#go{position:absolute;inset:0;z-index:25;display:none;align-items:center;justify-content:center;pointer-events:none}
+#go span{font-size:64px;font-weight:900;color:#fff;text-shadow:0 6px 0 #1259c9,0 10px 30px rgba(0,0,0,.4);animation:pop .4s cubic-bezier(.2,1.6,.4,1)}
+
+#home{position:absolute;inset:0;z-index:35;display:flex;flex-direction:column;align-items:center;background:linear-gradient(180deg,#a9dcff 0%,#d8f1ff 38%,#bfe3b1 100%)}
+#home h1{margin:8dvh 0 2px;font-size:46px;color:#1259c9;text-shadow:0 4px 0 rgba(255,255,255,.7),0 8px 20px rgba(0,0,0,.15);letter-spacing:1px}
+#home .sub{color:#2a4d7a;font-weight:700;margin-bottom:2dvh}
+#map{position:relative;width:300px;flex:1;max-height:60dvh}
+#map svg{position:absolute;inset:0;width:100%;height:100%}
+.lv{position:absolute;width:62px;height:62px;margin:-31px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#3c86f0,#1259c9 70%);border:4px solid #fff;color:#fff;font-weight:900;font-size:24px;display:flex;align-items:center;justify-content:center;box-shadow:0 5px 0 #0b3f8f,0 8px 16px rgba(0,0,0,.3);cursor:pointer;transition:transform .15s}
+.lv:active{transform:scale(.95)}
+.lv.done{background:radial-gradient(circle at 40% 35%,#7ed957,#2e9e44 70%);box-shadow:0 5px 0 #23782f,0 8px 16px rgba(0,0,0,.3)}
+.lv small{position:absolute;top:66px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:12px;font-weight:700;color:#1e3a5f;text-shadow:0 1px 0 #fff}
+.conf{position:absolute;width:10px;height:14px;border-radius:2px;z-index:28;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110dvh) rotate(720deg);opacity:.6}}
+</style>
+</head>
+<body>
+<div id="phone">
+  <div id="bg"><div class="cloud" style="top:6%;left:10%"></div><div class="cloud" style="top:14%;left:60%;animation-delay:-18s;transform:scale(.7)"></div></div>
+  <div id="hud">
+    <div class="pill" id="lvlPill">LEVEL 1</div>
+    <div id="fuelWrap"><span>⛽</span><div id="fuelBar"><div id="fuelFill"></div></div></div>
+    <button class="btn" id="homeBtn">⌂</button>
+  </div>
+  <div id="stage">
+    <div id="board">
+      <div id="cells"></div>
+      <svg id="marks"></svg>
+      <svg id="route"><polyline id="routeLine" class="far" points=""/></svg>
+      <div id="routeEnd"></div>
+      <div id="slots"></div>
+      <div id="signs"></div>
+      <div id="gate"></div>
+      <div id="flag">EXIT</div>
+      <div class="car" id="car"><div class="sh"></div><div class="body"></div><div class="glass"></div><div class="roof"></div><div class="glass2"></div>
+        <div class="hl l"></div><div class="hl r"></div><div class="tl l"></div><div class="tl r"></div>
+        <div class="wh a"></div><div class="wh b"></div><div class="wh c"></div><div class="wh d"></div></div>
+      <div id="boom">💥</div>
+    </div>
+  </div>
+  <div id="tray"></div>
+  <div id="ghost"></div>
+  <div id="go"><span>GO!</span></div>
+  <div id="winOv" class="ov hidden"><div class="card"><h2>Level complete!</h2><p id="winTxt">The car found its way out</p><button class="btn big" id="nextBtn">Next level</button><button class="btn big grey" id="winHome">Home</button></div></div>
+  <div id="loseOv" class="ov hidden"><div class="card"><h2 id="loseH">Crash!</h2><p id="loseTxt">Dead end</p><button class="btn big alt" id="retryBtn">Retry</button><button class="btn big grey" id="loseHome">Home</button></div></div>
+  <div id="home">
+    <h1>MAZE SIGNS</h1>
+    <div class="sub">Place road signs, guide the car out</div>
+    <div id="map"><svg viewBox="0 0 300 500" preserveAspectRatio="none"><path id="mapPath" d="M150 460 C 40 420, 40 360, 150 340 S 260 280, 150 220 S 40 160, 150 100 S 260 60, 150 30" fill="none" stroke="#565c6b" stroke-width="30" stroke-linecap="round"/><path d="M150 460 C 40 420, 40 360, 150 340 S 260 280, 150 220 S 40 160, 150 100 S 260 60, 150 30" fill="none" stroke="#f7c948" stroke-width="3" stroke-dasharray="10 10"/></svg></div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const CELL=64, DIRS=[[0,-1],[1,0],[0,1],[-1,0]];
+const key=(x,y)=>x+','+y;
+function rng(seed){let s=(seed>>>0)||1;return()=>{s^=s<<13;s>>>=0;s^=s>>>17;s^=s<<5;s>>>=0;return s/4294967296;};}
+function shuffle(a,r=Math.random){for(let i=a.length-1;i>0;i--){const j=(r()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
+const ARROW='<svg viewBox="0 0 24 24"><path d="M12 2.5 L20.5 12 H15.5 V21.5 H8.5 V12 H3.5 Z" fill="#fff"/></svg>';
+
+// ---------- LEVELS ----------
+// rw×rh комнат, loops = лишних проходов (петли → несколько маршрутов), speed клеток/с,
+// useful = сколько знаков в лотке гарантированно полезны, fuel = запас клеток (от PLAY-бота)
+const LEVELS=[
+ {name:'First turn', rw:3,rh:3,loops:2,speed:1.15,useful:2,seed:101,minForks:3,maxReq:1,fuel:26},
+ {name:'Two ways',   rw:3,rh:4,loops:2,speed:1.3, useful:2,seed:201,minForks:4,maxReq:2,fuel:30},
+ {name:'Roundabout', rw:3,rh:4,loops:3,speed:1.45,useful:1,seed:301,minForks:5,maxReq:2,fuel:28},
+ {name:'Downtown',   rw:3,rh:5,loops:3,speed:1.6, useful:1,seed:401,minForks:6,maxReq:2,fuel:26},
+ {name:'Rush hour',  rw:3,rh:5,loops:4,speed:1.8, useful:1,seed:501,minForks:7,maxReq:2,fuel:20},
+];
+
+// ---------- MAZE MODEL ----------
+function openDirs(mz,x,y){const out=[];for(let d=0;d<4;d++){const nx=x+DIRS[d][0],ny=y+DIRS[d][1];
+  if(nx<0||ny<0||nx>=mz.W||ny>=mz.H)continue;if(!mz.open[ny][nx])continue;if(nx===mz.start[0]&&ny===mz.start[1])continue;out.push(d);}return out;}
+function isFork(mz,x,y){return y>=0&&y<mz.H&&x>=0&&x<mz.W&&mz.open[y][x]&&openDirs(mz,x,y).length>=3;}
+function isExit(mz,x,y){return x===mz.exit[0]&&y===mz.exit[1];}
+function defDir(opens,h){if(opens.includes(h))return h;if(opens.includes((h+1)%4))return (h+1)%4;if(opens.includes((h+3)%4))return (h+3)%4;return opens[0];}
+// куда поедет машина из клетки (x,y), приехав с курсом h: знак > единственный путь > прямо > направо > налево; -1 = тупик
+function nextDir(mz,x,y,h,sg){const s=sg.get(key(x,y));if(s!=null)return s;
+  const opens=openDirs(mz,x,y).filter(d=>d!==(h+2)%4);if(!opens.length)return -1;if(opens.length===1)return opens[0];return defDir(opens,h);}
+function project(mz,x,y,h,sg,max=90){const pts=[[x,y]],seen=new Set();let end='far',cx=x,cy=y,ch=h;
+  for(let i=0;i<max;i++){if(isExit(mz,cx,cy)){end='exit';pts.push([cx,cy-1]);break;}
+    const k=key(cx,cy)+','+ch;if(seen.has(k)){end='loop';break;}seen.add(k);
+    const d=nextDir(mz,cx,cy,ch,sg);if(d<0){end='crash';break;}
+    cx+=DIRS[d][0];cy+=DIRS[d][1];ch=d;pts.push([cx,cy]);}
+  return {pts,end};}
+// все маршруты до выхода (каждая развилка не более 1 раза); req = знаки, которых не хватает; choice = решение на каждой развилке маршрута
+function routes(mz,x,y,h,sg,limit=80){const out=[];
+  function dfs(cx,cy,ch,vis,req,choice,len){
+    for(let g=0;g<300;g++){
+      if(out.length>=limit)return;
+      if(isExit(mz,cx,cy)){out.push({req,choice,len});return;}
+      const s=sg.get(key(cx,cy));const opens=openDirs(mz,cx,cy).filter(d=>d!==(ch+2)%4);
+      const fork=isFork(mz,cx,cy);
+      if(fork||s!=null){const fk=key(cx,cy);if(vis.has(fk))return;vis=new Set(vis);vis.add(fk);}
+      let d;
+      if(s!=null)d=s;
+      else if(!opens.length)return;
+      else if(opens.length===1)d=opens[0];
+      else{const def=defDir(opens,ch);
+        for(const o of opens){const nreq=o===def?req:[...req,{x:cx,y:cy,d:o}];const nch={...choice};nch[key(cx,cy)]=o;
+          dfs(cx+DIRS[o][0],cy+DIRS[o][1],o,vis,nreq,nch,len+1);}
+        return;}
+      if(fork){choice={...choice};choice[key(cx,cy)]=d;}
+      cx+=DIRS[d][0];cy+=DIRS[d][1];ch=d;len++;}}
+  dfs(x,y,h,new Set(),[],{},0);return out;}
+
+function genMaze(L){const W=2*L.rw+1,H=2*L.rh+1;
+  for(let seed=L.seed;seed<L.seed+5000;seed++){
+    const r=rng(seed*7919+13);const open=Array.from({length:H},()=>Array(W).fill(false));
+    const vis=Array.from({length:L.rh},()=>Array(L.rw).fill(false));
+    const st=[[(r()*L.rw)|0,(r()*L.rh)|0]];vis[st[0][1]][st[0][0]]=true;open[2*st[0][1]+1][2*st[0][0]+1]=true;
+    while(st.length){const [i,j]=st[st.length-1];const nb=[];
+      for(let d=0;d<4;d++){const ni=i+DIRS[d][0],nj=j+DIRS[d][1];if(ni>=0&&nj>=0&&ni<L.rw&&nj<L.rh&&!vis[nj][ni])nb.push([ni,nj,d]);}
+      if(!nb.length){st.pop();continue;}
+      const [ni,nj,d]=nb[(r()*nb.length)|0];vis[nj][ni]=true;open[2*nj+1][2*ni+1]=true;open[2*j+1+DIRS[d][1]][2*i+1+DIRS[d][0]]=true;st.push([ni,nj]);}
+    const walls=[];for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++)if(!open[y][x]&&((x%2===0)!==(y%2===0)))walls.push([x,y]);
+    shuffle(walls,r);for(let k=0;k<L.loops&&k<walls.length;k++){const [x,y]=walls[k];open[y][x]=true;}
+    const ex=2*((r()*L.rw)|0)+1,sx=2*((r()*L.rw)|0)+1;open[0][ex]=true;open[H-1][sx]=true;
+    const mz={W,H,open,exit:[ex,0],start:[sx,H-1],seed};
+    // валидация: ≥2 маршрутов, дефолтный ход не выводит, хватает развилок, лучший маршрут требует 1..maxReq знаков, есть тупик
+    const rs=routes(mz,sx,H-2,0,new Map());if(rs.length<2)continue;
+    if(project(mz,sx,H-2,0,new Map()).end==='exit')continue;
+    let forks=0,dead=0;for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!open[y][x])continue;const n=openDirs(mz,x,y).length;if(n>=3)forks++;if(n===1&&!isExit(mz,x,y)&&!(x===sx&&y===H-1))dead++;}
+    if(forks<L.minForks||dead<1)continue;
+    const minReq=Math.min(...rs.map(q=>q.req.length));if(minReq<1||minReq>L.maxReq)continue;
+    const firsts=new Set(rs.map(q=>q.req[0]?key(q.req[0].x,q.req[0].y)+q.req[0].d:'-'));if(firsts.size<2)continue;
+    mz.routesCount=rs.length;mz.minReq=minReq;mz.minLen=Math.min(...rs.map(q=>q.len));mz.forks=forks;mz.dead=dead;
+    return mz;}
+  throw new Error('no maze');}
+
+// ---------- GAME STATE ----------
+let LI=0,L=null,maze=null,signs=new Map(),tray=[null,null,null],car=null,over=false,started=false,forks=[],fuel=0,fuelMax=0;
+let routeCache=null,routeDirty=true,lastT=0,botMode=null,botDelay=0,lastBot=0,selected=-1,done=new Set(),stats={placed:0,dumped:0};
+const board=$('board');let scale=1;
+
+function build(){
+  const W=maze.W,H=maze.H;board.style.width=W*CELL+'px';board.style.height=H*CELL+'px';
+  const cells=$('cells');cells.innerHTML='';cells.style.gridTemplateColumns=`repeat(${W},${CELL}px)`;
+  const r=rng(maze.seed*31+7);const roofs=['#e8a25c','#d96a5a','#8fa3d9','#c9a0dc','#f0c36b'];
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const c=document.createElement('div');c.className='c ';
+    if(maze.open[y][x]){c.className+=isExit(maze,x,y)?'road exit':(x===maze.start[0]&&y===maze.start[1]?'road start':'road');}
+    else if(x===0||y===0||x===W-1||y===H-1)c.className+='wall edge';
+    else{const v=r();if(v<.45){c.className+='wall park';}else{c.className+='wall house';c.style.setProperty('--roof',roofs[(r()*roofs.length)|0]);}}
+    cells.appendChild(c);}
+  // разметка дорог
+  const mk=$('marks');mk.setAttribute('viewBox',`0 0 ${W*CELL} ${H*CELL}`);let s='';
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!maze.open[y][x]||isExit(maze,x,y))continue;const cx=x*CELL+CELL/2,cy=y*CELL+CELL/2;
+    const ods=openDirs(maze,x,y);if(x===maze.start[0]&&y===maze.start[1])ods.push(0);
+    for(const d of ods){s+=`<line x1="${cx}" y1="${cy}" x2="${cx+DIRS[d][0]*CELL/2}" y2="${cy+DIRS[d][1]*CELL/2}" stroke="#f7c948" stroke-width="3" stroke-dasharray="7 9" stroke-linecap="round"/>`;}}
+  mk.innerHTML=s;
+  $('route').setAttribute('viewBox',`0 0 ${W*CELL} ${H*CELL}`);
+  // слоты на развилках
+  forks=[];const sl=$('slots');sl.innerHTML='';
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(isFork(maze,x,y)){const e=document.createElement('div');e.className='slot';e.style.left=(x*CELL+CELL/2)+'px';e.style.top=(y*CELL+CELL/2)+'px';e.dataset.k=key(x,y);sl.appendChild(e);forks.push({x,y,el:e});}
+  $('signs').innerHTML='';
+  const g=$('gate');g.style.display='none';g.style.left=(maze.start[0]*CELL+CELL/2)+'px';g.style.top=(maze.start[1]*CELL)+'px';
+  $('flag').style.left=(maze.exit[0]*CELL+CELL/2)+'px';$('flag').style.top=(maze.exit[1]*CELL+CELL/2)+'px';
+  $('boom').style.display='none';board.classList.remove('shake');
+  fit();}
+
+function fit(){const stage=$('stage');if(!maze)return;const sw=stage.clientWidth-24,sh=stage.clientHeight-24;
+  scale=Math.max(.3,Math.min(sw/(maze.W*CELL),sh/(maze.H*CELL),1.6));board.style.setProperty('--s',scale);board.style.transform=`translate(-50%,-50%) scale(${scale})`;}
+window.addEventListener('resize',fit);
+
+function load(n,fuelOverride){LI=n;L=LEVELS[n];maze=genMaze(L);signs=new Map();over=false;started=false;routeDirty=true;selected=-1;stats={placed:0,dumped:0};
+  car={x:maze.start[0],y:maze.start[1],h:0,tx:maze.start[0],ty:maze.start[1]-1,prog:0,ang:0,exiting:false};
+  fuelMax=fuelOverride||L.fuel;fuel=fuelMax;
+  $('lvlPill').textContent='LEVEL '+(n+1);$('hud').style.visibility='visible';$('tray').style.visibility='visible';$('home').style.display='none';
+  $('winOv').classList.add('hidden');$('loseOv').classList.add('hidden');
+  build();tray=[null,null,null];refill();renderCar();updateFuel();
+  const go=$('go');go.style.display='flex';setTimeout(()=>{go.style.display='none';if(L===LEVELS[n]&&!over)started=true;},1300);
+  requestAnimationFrame(fit);}
+
+// ---------- TRAY ----------
+function placeable(d){return forks.some(f=>!signs.has(key(f.x,f.y))&&openDirs(maze,f.x,f.y).includes(d));}
+function genTray(){const dirs=[];
+  const pr=project(maze,car.tx,car.ty,car.h,signs);
+  if(pr.end!=='exit'){const rs=routes(maze,car.tx,car.ty,car.h,signs);
+    if(rs.length){rs.sort((a,b)=>a.req.length-b.req.length||a.len-b.len);const top=rs.slice(0,3);const rt=top[(Math.random()*top.length)|0];
+      for(const q of rt.req.slice(0,L.useful))dirs.push(q.d);}}
+  while(dirs.length<3)dirs.push((Math.random()*4)|0);
+  shuffle(dirs);
+  const anyOk=[0,1,2,3].filter(placeable);
+  return dirs.map(d=>placeable(d)||!anyOk.length?d:anyOk[(Math.random()*anyOk.length)|0]);}
+function refill(){tray=genTray();renderTray(true);}
+function renderTray(fresh){const t=$('tray');t.innerHTML='';tray.forEach((d,i)=>{const c=document.createElement('div');c.className='tcard'+(d==null?' used':'')+(fresh&&d!=null?' new':'')+(i===selected?' sel':'');c.dataset.i=i;
+  if(d!=null){c.innerHTML=`<div class="post"></div><div class="sign"><div style="transform:rotate(${d*90}deg);display:flex">${ARROW}</div></div>`;}
+  t.appendChild(c);});}
+
+function canPlace(ti,x,y){const d=tray[ti];if(d==null||over)return false;if(!isFork(maze,x,y)||signs.has(key(x,y)))return false;return openDirs(maze,x,y).includes(d);}
+function place(ti,x,y){if(!canPlace(ti,x,y))return false;const d=tray[ti];signs.set(key(x,y),d);tray[ti]=null;stats.placed++;
+  const e=document.createElement('div');e.className='sign pop';e.style.left=(x*CELL+CELL/2)+'px';e.style.top=(y*CELL+CELL/2)+'px';
+  e.innerHTML=`<div style="transform:rotate(${d*90}deg);display:flex">${ARROW}</div>`;$('signs').appendChild(e);
+  const slot=forks.find(f=>f.x===x&&f.y===y);if(slot)slot.el.classList.add('taken');
+  selected=-1;routeDirty=true;
+  if(tray.every(v=>v==null))refill();else renderTray(false);
+  return true;}
+
+// ---------- INPUT: drag / tap-select ----------
+let drag=null;const ghost=$('ghost');
+function slotAt(px,py){let best=null,bd=1e9;for(const f of forks){if(signs.has(key(f.x,f.y)))continue;const r=f.el.getBoundingClientRect();const dx=px-(r.left+r.width/2),dy=py-(r.top+r.height/2);const d=Math.hypot(dx,dy);if(d<bd){bd=d;best=f;}}
+  return best&&bd<CELL*scale*.75?best:null;}
+function clearHot(){forks.forEach(f=>f.el.classList.remove('hot'));}
+$('tray').addEventListener('pointerdown',e=>{const c=e.target.closest('.tcard');if(!c||c.classList.contains('used')||over)return;const i=+c.dataset.i;
+  drag={i,sx:e.clientX,sy:e.clientY,moved:false};ghost.innerHTML=`<div class="sign"><div style="transform:rotate(${tray[i]*90}deg);display:flex">${ARROW}</div></div>`;});
+window.addEventListener('pointermove',e=>{if(!drag)return;if(!drag.moved&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)>8){drag.moved=true;ghost.style.display='block';}
+  if(!drag.moved)return;const pr=$('phone').getBoundingClientRect();ghost.style.left=(e.clientX-pr.left-28)+'px';ghost.style.top=(e.clientY-pr.top-28-24)+'px';
+  clearHot();const f=slotAt(e.clientX,e.clientY);if(f&&canPlace(drag.i,f.x,f.y))f.el.classList.add('hot');});
+window.addEventListener('pointerup',e=>{if(!drag)return;const d=drag;drag=null;ghost.style.display='none';clearHot();
+  if(d.moved){const f=slotAt(e.clientX,e.clientY);if(f){if(!place(d.i,f.x,f.y))rejectAt(f);}}
+  else{selected=selected===d.i?-1:d.i;renderTray(false);}});
+window.addEventListener('pointercancel',()=>{drag=null;ghost.style.display='none';clearHot();});
+$('slots').style.pointerEvents='auto';
+$('stage').addEventListener('pointerup',e=>{if(selected<0||drag)return;const f=slotAt(e.clientX,e.clientY);if(!f)return;if(!place(selected,f.x,f.y))rejectAt(f);});
+function rejectAt(f){f.el.style.borderColor='#ff6b6b';setTimeout(()=>f.el.style.borderColor='',300);const c=$('tray').children[selected>=0?selected:0];if(c){const s=c.querySelector('.sign');if(s){s.classList.remove('bad');void s.offsetWidth;s.classList.add('bad');}}}
+
+// ---------- LOOP ----------
+function updateFuel(){const f=$('fuelFill');const p=Math.max(0,fuel/fuelMax*100);f.style.width=p+'%';f.classList.toggle('low',p<30);}
+function renderCar(){const px=(car.x+(car.tx-car.x)*car.prog)*CELL+CELL/2,py=(car.y+(car.ty-car.y)*car.prog)*CELL+CELL/2;
+  const target=car.h*90;let d=((target-car.ang)%360+540)%360-180;car.ang+=d*0.35;
+  $('car').style.transform=`translate(${px}px,${py}px) rotate(${car.ang}deg)`;return [px,py];}
+function renderRoute(px,py){const line=$('routeLine'),endEl=$('routeEnd');
+  if(car.exiting||over){line.setAttribute('points','');endEl.className='';return;}
+  if(routeDirty){routeCache=project(maze,car.tx,car.ty,car.h,signs);routeDirty=false;
+    line.setAttribute('class',routeCache.end);const last=routeCache.pts[routeCache.pts.length-1];
+    endEl.className=routeCache.end==='crash'||routeCache.end==='loop'?routeCache.end:'';endEl.textContent=routeCache.end==='crash'?'✕':'↻';
+    endEl.style.left=(last[0]*CELL+CELL/2)+'px';endEl.style.top=(last[1]*CELL+CELL/2)+'px';}
+  const pts=[[px,py]].concat(routeCache.pts.map(p=>[p[0]*CELL+CELL/2,p[1]*CELL+CELL/2]));
+  line.setAttribute('points',pts.map(p=>p.join(',')).join(' '));}
+function tick(){const now=performance.now();let dt=(now-lastT)/1000;lastT=now;if(dt>0.12)dt=0.12;if(!maze||over)return;
+  if(botMode&&started&&now-lastBot>=botDelay*1000){lastBot=now;botMode==='random'?randomBotAct():botAct();}
+  if(started){const mv=L.speed*dt;fuel-=mv;updateFuel();
+    if(fuel<=0&&!car.exiting){fuel=0;lose('fuel');return;}
+    car.prog+=mv;
+    while(car.prog>=1){car.prog-=1;car.x=car.tx;car.y=car.ty;
+      if(car.exiting){car.prog=0;win();break;}
+      if(car.x!==maze.start[0]||car.y!==maze.start[1])$('gate').style.display='block';
+      if(isExit(maze,car.x,car.y)){car.exiting=true;car.tx=car.x+DIRS[car.h][0];car.ty=car.y+DIRS[car.h][1];routeDirty=true;continue;}
+      const d=nextDir(maze,car.x,car.y,car.h,signs);
+      if(d<0){car.prog=0;crash();break;}
+      car.h=d;car.tx=car.x+DIRS[d][0];car.ty=car.y+DIRS[d][1];routeDirty=true;}}
+  const [px,py]=renderCar();renderRoute(px,py);}
+setInterval(()=>{try{tick();}catch(e){window.__err=String(e.stack||e);}},16);
+
+function crash(){over=true;renderCar();const b=$('boom');b.style.left=(car.x*CELL+CELL/2)+'px';b.style.top=(car.y*CELL+CELL/2)+'px';b.style.display='block';board.classList.add('shake');
+  lose('crash');}
+function lose(why){over=true;$('routeLine').setAttribute('points','');$('routeEnd').className='';
+  $('loseH').textContent=why==='fuel'?'Out of fuel!':'Crash!';$('loseTxt').textContent=why==='fuel'?'The car ran out of gas in the maze':'Dead end. Check the dotted route';
+  $('loseOv').classList.remove('hidden');window.__result={win:false,why,level:LI+1,fuelUsed:+(fuelMax-fuel).toFixed(1),...stats};}
+function win(){over=true;done.add(LI);window.__result={win:true,level:LI+1,fuelUsed:+(fuelMax-fuel).toFixed(1),...stats};confetti();
+  setTimeout(()=>{$('winTxt').textContent=`Level ${LI+1} · ${L.name}`;$('nextBtn').style.display=LI<LEVELS.length-1?'block':'none';$('winOv').classList.remove('hidden');},1000);}
+function confetti(){const ph=$('phone');const cols=['#ff5252','#ffd740','#69f0ae','#40c4ff','#e040fb'];for(let i=0;i<50;i++){const c=document.createElement('div');c.className='conf';c.style.left=Math.random()*100+'%';c.style.top='-20px';c.style.background=cols[i%cols.length];c.style.animationDuration=(1.4+Math.random()*1.2)+'s';c.style.animationDelay=(Math.random()*.6)+'s';ph.appendChild(c);setTimeout(()=>c.remove(),3200);}}
+
+// ---------- HOME ----------
+function showHome(){maze=null;over=true;$('home').style.display='flex';$('hud').style.visibility='hidden';$('tray').style.visibility='hidden';$('winOv').classList.add('hidden');$('loseOv').classList.add('hidden');renderHome();}
+function renderHome(){const map=$('map');map.querySelectorAll('.lv').forEach(e=>e.remove());const path=$('mapPath');const len=path.getTotalLength();
+  LEVELS.forEach((lv,i)=>{const p=path.getPointAtLength(len*(i/(LEVELS.length-1))*0.98+len*0.01);const e=document.createElement('div');e.className='lv'+(done.has(i)?' done':'');
+    e.style.left=(p.x/300*100)+'%';e.style.top=(p.y/500*100)+'%';e.innerHTML=`${i+1}<small>${lv.name}</small>`;e.onclick=()=>load(i);map.appendChild(e);});}
+$('homeBtn').onclick=showHome;$('winHome').onclick=showHome;$('loseHome').onclick=showHome;
+$('retryBtn').onclick=()=>load(LI);$('nextBtn').onclick=()=>load(Math.min(LI+1,LEVELS.length-1));
+
+// ---------- BOTS (PLAY-проверка) ----------
+function botAct(){if(over||car.exiting)return;const pr=project(maze,car.tx,car.ty,car.h,signs);if(pr.end==='exit')return;
+  const rs=routes(maze,car.tx,car.ty,car.h,signs);if(!rs.length)return;
+  const have=tray.filter(d=>d!=null);
+  rs.forEach(r=>{const t=[...have];let miss=0;for(const q of r.req){const i=t.indexOf(q.d);if(i>=0)t.splice(i,1);else miss++;}r.miss=miss;});
+  rs.sort((a,b)=>a.miss-b.miss||a.req.length-b.req.length||a.len-b.len);const rt=rs[0];
+  for(const q of rt.req){const i=tray.indexOf(q.d);if(i>=0)place(i,q.x,q.y);}
+  if(rt.miss>0){ // нужен новый лоток: сбрасываем лишние знаки безвредно (не на маршруте, либо по ходу маршрута)
+    for(let i=0;i<3;i++){const d=tray[i];if(d==null)continue;
+      let f=forks.find(f=>!signs.has(key(f.x,f.y))&&!(key(f.x,f.y) in rt.choice)&&openDirs(maze,f.x,f.y).includes(d));
+      if(!f)f=forks.find(f=>!signs.has(key(f.x,f.y))&&rt.choice[key(f.x,f.y)]===d);
+      if(f){stats.dumped++;place(i,f.x,f.y);if(tray.every(v=>v==null))break;}}}}
+function randomBotAct(){if(over)return;const opts=[];tray.forEach((d,i)=>{if(d==null)return;forks.forEach(f=>{if(canPlace(i,f.x,f.y))opts.push([i,f.x,f.y]);});});
+  if(!opts.length)return;const o=opts[(Math.random()*opts.length)|0];place(...o);}
+window.__game={load,place,canPlace,botAct,LEVELS,get state(){return {level:LI+1,fuel,fuelMax,started,over,tray:[...tray],signs:[...signs],car:{...car},forks:forks.length,maze:maze&&{W:maze.W,H:maze.H,seed:maze.seed,routes:maze.routesCount,minReq:maze.minReq,minLen:maze.minLen,forks:maze.forks,dead:maze.dead},stats:{...stats}};},
+  bot(mode,delay){botMode=mode;botDelay=delay||0;},skipGo(){started=true;$('go').style.display='none';},project:()=>project(maze,car.tx,car.ty,car.h,signs),routes:()=>routes(maze,car.tx,car.ty,car.h,signs)};
+
+lastT=performance.now();showHome();
+</script>
+</body>
+</html>

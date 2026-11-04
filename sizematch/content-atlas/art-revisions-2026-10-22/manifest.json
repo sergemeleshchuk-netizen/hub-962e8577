@@ -1,0 +1,140 @@
+[
+  {
+    "key": "stonehenge_trilithon_v2",
+    "source": "exec-ab11e937-cb21-4d2f-b394-afceb3cdc12e.png",
+    "source_sha256": "b2e8134084ea35bd5ff777317f9f3d21f9f49150c16c314c9fd02c0ca2056141",
+    "source_size": [
+      1312,
+      1199
+    ],
+    "bbox": [
+      114,
+      49,
+      1227,
+      1162
+    ],
+    "sprite_size": [
+      512,
+      512
+    ],
+    "sprite_alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "key": "scrat_small_acorn_v2",
+    "source": "exec-8988e9a7-f327-404e-b087-2c80cc3e344d.png",
+    "source_sha256": "080ee022446b690ff9034862063e70d5be57de97f8e0cc2a8e4d38d278c4a3d3",
+    "source_size": [
+      1254,
+      1254
+    ],
+    "bbox": [
+      46,
+      43,
+      1213,
+      1200
+    ],
+    "sprite_size": [
+      512,
+      512
+    ],
+    "sprite_alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "key": "marshmallow_monster_v1",
+    "source": "exec-cfb7163d-e5d2-4d29-8d61-ffb1cef46c16.png",
+    "source_sha256": "3ad7bc69feeaf597552c3e982f9da24e05359a8c34f9b0594fbf600c1122187b",
+    "source_size": [
+      1145,
+      1374
+    ],
+    "bbox": [
+      28,
+      32,
+      1124,
+      1346
+    ],
+    "sprite_size": [
+      512,
+      512
+    ],
+    "sprite_alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "key": "ghost_hunter_v1",
+    "source": "exec-6ad4d92f-86b6-4213-9954-b0d2434860f6.png",
+    "source_sha256": "255585d462dd0f36e3a5f1d611463de0f1fec2ad6469f6c279636671d0cd79fa",
+    "source_size": [
+      1024,
+      1536
+    ],
+    "bbox": [
+      201,
+      18,
+      835,
+      1495
+    ],
+    "sprite_size": [
+      512,
+      512
+    ],
+    "sprite_alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "key": "tireman_v1",
+    "source": "exec-5261cb61-5f91-472d-a26f-62872b1f8294.png",
+    "source_sha256": "9163d9cd75c390bf0d6bc8d055269511c3337a0bf2d773c39cdb20d555b8675b",
+    "source_size": [
+      1024,
+      1536
+    ],
+    "bbox": [
+      31,
+      125,
+      1008,
+      1443
+    ],
+    "sprite_size": [
+      512,
+      512
+    ],
+    "sprite_alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "key": "haunted_manor_door_v1",
+    "source": "exec-bd7cc82f-fab1-4006-b4ac-fce26a8bb2f8.png",
+    "source_sha256": "e10827205d18fb370bb36ac8f1fd46a1db548a971612abc432955fe5a7b01384",
+    "source_size": [
+      1142,
+      1377
+    ],
+    "bbox": [
+      72,
+      4,
+      1076,
+      1338
+    ],
+    "sprite_size": [
+      512,
+      512
+    ],
+    "sprite_alpha": [
+      0,
+      255
+    ]
+  }
+]

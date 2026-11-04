@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Math Solitaire — Playable</title>
+<style>
+  /* ---- reset ---- */
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0b3d22;font-family:Arial,Helvetica,sans-serif;touch-action:none}
+
+  /* ---- scaling stage: design is fixed 360x640, scaled to fit ---- */
+  #fit{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  #stage{position:relative;width:360px;height:640px;background:#1f7a3d;overflow:hidden;
+         transform-origin:center center}
+
+  /* ---- top bar ---- */
+  .logo{position:absolute;top:8px;left:50%;transform:translateX(-50%);text-align:center;z-index:4}
+  .logo .badge{display:inline-block;background:#fff;border:2px solid #d33;border-radius:6px;padding:1px 6px;
+               font-weight:900;color:#2b7a3a;font-size:13px;letter-spacing:1px}
+  .logo .sub{display:block;background:#d33;color:#fff;font-size:9px;font-weight:800;border-radius:3px;
+             margin-top:2px;letter-spacing:2px}
+
+  .moves{position:absolute;top:62px;left:18px;background:#fff;border-radius:10px;padding:5px 12px;
+         text-align:center;box-shadow:0 2px 4px rgba(0,0,0,.25);z-index:4}
+  .moves .lbl{font-size:9px;font-weight:800;color:#2b7a3a;letter-spacing:1px}
+  .moves .num{font-size:20px;font-weight:900;color:#1b5e2a;line-height:1}
+
+  .deckback{position:absolute;top:62px;right:18px;width:54px;height:74px;border-radius:8px;
+            background:repeating-linear-gradient(45deg,#e23b3b 0 6px,#c52f2f 6px 12px);
+            border:3px solid #fff;box-shadow:0 2px 5px rgba(0,0,0,.3);z-index:4}
+
+  .headline{position:absolute;top:150px;left:0;right:0;text-align:center;z-index:3;
+            color:#bff0c4;font-size:17px;font-weight:900;letter-spacing:.5px;
+            text-shadow:0 1px 2px rgba(0,0,0,.4)}
+
+  /* ---- foundations ---- */
+  .foundations{position:absolute;top:182px;left:18px;right:18px;display:flex;gap:10px;z-index:2}
+  .found{flex:1;height:78px;border-radius:9px;background:rgba(0,0,0,.18);
+         border:2px dashed rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;
+         color:#bff0c4;font-size:22px;font-weight:900;transition:transform .12s,box-shadow .12s,background .15s}
+  .found.hot{background:rgba(255,235,120,.28);border-color:#ffe066;box-shadow:0 0 14px rgba(255,224,102,.7)}
+  .found.locked{background:#fff;border:2px solid #2b7a3a;color:#1b5e2a;flex-direction:column}
+  .found .cnt{font-size:11px;font-weight:800;color:#3a9a52;margin-top:1px}
+  .found.pop{transform:scale(1.12)}
+
+  /* ---- drag hint ---- */
+  .hint{position:absolute;top:286px;left:0;right:0;text-align:center;z-index:3;
+        color:#fff;font-size:14px;font-weight:800;letter-spacing:.5px;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+
+  /* ---- stacks row ---- */
+  .stacks{position:absolute;top:318px;left:18px;right:18px;height:300px;display:flex;gap:10px;z-index:1}
+  .col{flex:1;position:relative}
+
+  .card{position:absolute;left:50%;transform:translateX(-50%);width:100%;max-width:74px;height:96px;
+        border-radius:9px;background:#fff;border:1px solid #d7d7d7;box-shadow:0 2px 4px rgba(0,0,0,.25);
+        display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:900;color:#1b3a23}
+  .card.back{background:repeating-linear-gradient(45deg,#e23b3b 0 6px,#c52f2f 6px 12px);border:2px solid #fff}
+  .card.front{cursor:grab;z-index:5}
+  .card.dragging{cursor:grabbing;transition:none!important;box-shadow:0 10px 20px rgba(0,0,0,.4);z-index:99}
+  .card.snap{transition:left .18s,top .18s,transform .18s}
+
+  /* ---- tutorial hand ---- */
+  .hand{position:absolute;width:46px;height:46px;z-index:60;pointer-events:none;opacity:0;
+        transition:left .35s ease,top .35s ease,opacity .2s;filter:drop-shadow(0 3px 4px rgba(0,0,0,.4))}
+  .hand.tap{animation:tap 1s ease-in-out infinite}
+  @keyframes tap{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-4px,-8px) scale(.92)}}
+
+  /* ---- particles ---- */
+  .spark{position:absolute;width:8px;height:8px;border-radius:2px;z-index:50;pointer-events:none}
+
+  /* ---- end card ---- */
+  #end{position:absolute;inset:0;z-index:200;background:rgba(8,40,22,.92);display:none;
+       flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+  #end.show{display:flex;animation:fade .3s ease}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  #end .big{color:#fff;font-size:30px;font-weight:900;text-shadow:0 2px 4px rgba(0,0,0,.5)}
+  #end .small{color:#bff0c4;font-size:15px;font-weight:700;margin:8px 0 22px}
+  .play{background:linear-gradient(#7ed957,#4caf3f);color:#fff;font-size:24px;font-weight:900;
+        letter-spacing:1px;border:none;border-radius:14px;padding:16px 46px;box-shadow:0 5px 0 #2f7a2a,0 8px 16px rgba(0,0,0,.4);
+        cursor:pointer;animation:cta 1.2s ease-in-out infinite}
+  @keyframes cta{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+
+  /* persistent CTA strip (also clickable any time) */
+  .cta-bar{position:absolute;bottom:14px;left:0;right:0;display:flex;justify-content:center;z-index:6}
+  .cta-bar button{background:linear-gradient(#7ed957,#4caf3f);color:#fff;font-size:20px;font-weight:900;
+        letter-spacing:1px;border:none;border-radius:12px;padding:12px 40px;box-shadow:0 4px 0 #2f7a2a;
+        cursor:pointer;display:none}
+  .cta-bar button.show{display:block;animation:cta 1.2s ease-in-out infinite}
+</style>
+</head>
+<body>
+<div id="fit"><div id="stage">
+
+  <div class="logo"><span class="badge">3×7 MATH</span><span class="sub">SOLITAIRE</span></div>
+  <div class="moves"><div class="lbl">MOVES</div><div class="num" id="moves">20</div></div>
+  <div class="deckback"></div>
+
+  <div class="headline">CATEGORIZE ALL CARDS</div>
+  <div class="foundations" id="foundations"></div>
+
+  <div class="hint" id="hint">DRAG THE CARD</div>
+  <div class="stacks" id="stacks"></div>
+
+  <svg class="hand" id="hand" viewBox="0 0 64 64"><path fill="#ffe0bd" stroke="#caa17a" stroke-width="2"
+    d="M26 6c3 0 5 2 5 5v18l3-1c2-1 4 0 5 2l8 16c2 5 1 12-4 16-4 3-9 4-14 4-7 0-12-3-15-9L9 42c-1-3 0-6 3-7s6 0 7 3l2 4V11c0-3 2-5 5-5z"/></svg>
+
+  <div class="cta-bar"><button id="ctaBar" onclick="ctaClick()">PLAY NOW</button></div>
+
+  <div id="end">
+    <div class="big">LEVEL COMPLETE!</div>
+    <div class="small">1000 levels · √ ² ÷ × — your arsenal</div>
+    <button class="play" onclick="ctaClick()">PLAY NOW</button>
+  </div>
+
+</div></div>
+
+<script>
+/* ============================================================
+   Math Solitaire — faithful playable  (v1)
+   Build target: Meta (Facebook) + Google — single self-contained file.
+   Replace STORE_URL before upload.
+   ============================================================ */
+var STORE_URL = "https://play.google.com/store/apps/details?id=YOUR.PACKAGE"; // TODO: replace
+
+/* ---- CTA: detect ad-network API, fall back gracefully ---- */
+var ctaFired = false;
+function ctaClick(){
+  if (ctaFired) return; ctaFired = true;
+  try { if (window.FbPlayableAd && FbPlayableAd.onCTAClick) { FbPlayableAd.onCTAClick(); return; } } catch(e){}
+  try { if (typeof ExitApi !== "undefined" && ExitApi.exit) { ExitApi.exit(); return; } } catch(e){}
+  try { if (window.mraid && mraid.open) { mraid.open(STORE_URL); return; } } catch(e){}
+  try { window.open(STORE_URL, "_blank"); } catch(e){}
+}
+
+/* ============================================================
+   LEVEL DATA  (data-first: expression -> value)
+   4 foundations, 4 stacks, mixed values force real categorizing.
+   ============================================================ */
+var LEVEL = {
+  stacks: [
+    [ {e:"90/2", v:45}, {e:"√81", v:9} ],   // √81 = 9
+    [ {e:"4×8", v:32}, {e:"10+10", v:20} ], // 4×8 = 32
+    [ {e:"55−10", v:45}, {e:"3²", v:9} ], // 3² = 9
+    [ {e:"16+16", v:32}, {e:"5×4", v:20} ]  // 5×4 = 20
+  ]
+};
+
+var stage = document.getElementById("stage");
+var fEl   = document.getElementById("foundations");
+var sEl   = document.getElementById("stacks");
+var hand  = document.getElementById("hand");
+var hint  = document.getElementById("hint");
+var movesEl = document.getElementById("moves");
+
+var FOUND_N = 4;          // four empty foundations like the screenshot
+var founds = [];          // {el, value:null|number, count}
+var cols   = [];          // array of {el, cards:[cardObj...] front=last}
+var placed = 0, total = 0, moves = 20;
+
+/* ---- build foundations ---- */
+for (var i=0;i<FOUND_N;i++){
+  var d=document.createElement("div"); d.className="found"; fEl.appendChild(d);
+  founds.push({el:d, value:null, count:0});
+}
+
+/* ---- build stacks ---- */
+LEVEL.stacks.forEach(function(stack, ci){
+  var col=document.createElement("div"); col.className="col"; sEl.appendChild(col);
+  var cards=[];
+  stack.forEach(function(c, idx){
+    total++;
+    var card=document.createElement("div");
+    card.className="card"; card.textContent=c.e;
+    card.style.top=(idx*22)+"px";          // fanned downward
+    card.dataset.value=c.v;
+    col.appendChild(card);
+    cards.push({el:card, value:c.v, col:ci, e:c.e});
+  });
+  cols.push({el:col, cards:cards});
+  refreshCol(ci);
+});
+
+/* front card = last in array; only it is draggable & face-up */
+function refreshCol(ci){
+  var col=cols[ci];
+  col.cards.forEach(function(card, idx){
+    var isFront = (idx === col.cards.length-1);
+    if (isFront){ card.el.className="card front"; card.el.textContent=card.e; }   // face up
+    else { card.el.className="card back"; card.el.textContent=""; }               // red back
+  });
+}
+
+/* ---- find the suggested next move for the hand ---- */
+function nextMove(){
+  for (var ci=0; ci<cols.length; ci++){
+    var col=cols[ci];
+    if (!col.cards.length) continue;
+    var card=col.cards[col.cards.length-1];
+    var fi=targetFoundation(card.value);
+    if (fi>=0) return {card:card, fi:fi};
+  }
+  return null;
+}
+/* a foundation already holding this value, else first empty one */
+function targetFoundation(v){
+  for (var i=0;i<founds.length;i++) if (founds[i].value===v) return i;
+  for (var i=0;i<founds.length;i++) if (founds[i].value===null) return i;
+  return -1;
+}
+
+/* ---- tutorial hand points at suggested card ---- */
+function guide(){
+  var mv=nextMove();
+  if (!mv){ hand.style.opacity=0; return; }
+  hand.style.opacity=1; hand.classList.add("tap");
+  var r=mv.card.el.getBoundingClientRect(), sr=stage.getBoundingClientRect();
+  var sc=currentScale();
+  hand.style.left=((r.left-sr.left)/sc + 30)+"px";
+  hand.style.top =((r.top -sr.top )/sc + 50)+"px";
+}
+
+/* ============================================================
+   DRAG  (pointer events, lenient drop)
+   ============================================================ */
+var drag=null;
+stage.addEventListener("pointerdown", function(ev){
+  var el=ev.target.closest(".card.front");
+  if (!el) return;
+  var col=null, card=null;
+  cols.forEach(function(c){ var f=c.cards[c.cards.length-1]; if(f&&f.el===el){col=c;card=f;} });
+  if (!card) return;
+  ev.preventDefault();
+  hand.style.opacity=0; hand.classList.remove("tap");
+  var sc=currentScale(), sr=stage.getBoundingClientRect();
+  var r=el.getBoundingClientRect();
+  drag={card:card, col:col, sc:sc, sr:sr,
+        ox:(ev.clientX-r.left), oy:(ev.clientY-r.top),
+        homeLeft:el.style.left, homeTop:el.style.top};
+  el.classList.add("dragging");
+  el.style.left="50%"; // will override via move
+  moveDrag(ev);
+});
+window.addEventListener("pointermove", function(ev){ if(drag) moveDrag(ev); });
+window.addEventListener("pointerup", function(ev){ if(drag) dropDrag(ev); });
+
+function moveDrag(ev){
+  var sc=drag.sc, sr=drag.sr, el=drag.card.el;
+  var x=(ev.clientX - sr.left)/sc - drag.ox/sc;
+  var y=(ev.clientY - sr.top )/sc - drag.oy/sc;
+  el.style.transform="none";
+  el.style.left=x+"px"; el.style.top=y+"px";
+  // highlight valid foundation
+  var fi=targetFoundation(drag.card.value);
+  founds.forEach(function(f,i){ f.el.classList.toggle("hot", i===fi); });
+}
+
+function dropDrag(ev){
+  var el=drag.card.el;
+  var fi=targetFoundation(drag.card.value);
+  var over=foundationUnder(ev.clientX, ev.clientY);
+  founds.forEach(function(f){ f.el.classList.remove("hot"); });
+  el.classList.remove("dragging");
+
+  // accept if dropped on/near the correct foundation (lenient) OR anywhere if it's correct & user released in top half
+  var accept = (over===fi) || (over<0 && nearFoundationRow(ev.clientY) && fi>=0);
+  if (accept && fi>=0){ landCard(drag.card, drag.col, fi); }
+  else { returnCard(el); }
+  drag=null;
+}
+
+function foundationUnder(x,y){
+  for (var i=0;i<founds.length;i++){
+    var r=founds[i].el.getBoundingClientRect();
+    if (x>=r.left-12 && x<=r.right+12 && y>=r.top-12 && y<=r.bottom+12) return i;
+  }
+  return -1;
+}
+function nearFoundationRow(y){
+  var r=fEl.getBoundingClientRect();
+  return y < r.bottom + 40;
+}
+
+function returnCard(el){
+  el.classList.add("snap");
+  el.style.transform="translateX(-50%)";
+  el.style.left="50%"; el.style.top=drag.homeTop;
+  setTimeout(function(){ el.classList.remove("snap"); guide(); }, 200);
+}
+
+function landCard(card, col, fi){
+  // remove from column
+  col.cards.pop();
+  refreshCol(cols.indexOf(col));
+  // animate into foundation
+  var f=founds[fi], fr=f.el.getBoundingClientRect(), sr=stage.getBoundingClientRect(), sc=currentScale();
+  card.el.classList.add("snap");
+  card.el.style.transform="none";
+  card.el.style.left=((fr.left-sr.left)/sc)+"px";
+  card.el.style.top =((fr.top -sr.top )/sc)+"px";
+  card.el.style.width=(fr.width/sc)+"px";
+  card.el.style.height=(fr.height/sc)+"px";
+  card.el.style.zIndex=40;
+
+  setTimeout(function(){
+    card.el.style.display="none";
+    f.value=card.value; f.count++;
+    f.el.classList.add("locked");
+    f.el.innerHTML = card.value + '<span class="cnt">'+f.count+'</span>';
+    f.el.classList.add("pop"); setTimeout(function(){f.el.classList.remove("pop");},140);
+    burst(f.el);
+    placed++;
+    moves--; movesEl.textContent=moves;
+    if (placed>=total){ win(); } else { guide(); }
+  }, 190);
+}
+
+/* ---- particle burst ---- */
+function burst(target){
+  var r=target.getBoundingClientRect(), sr=stage.getBoundingClientRect(), sc=currentScale();
+  var cx=(r.left-sr.left)/sc + r.width/sc/2, cy=(r.top-sr.top)/sc + r.height/sc/2;
+  var colors=["#ffe066","#7ed957","#fff","#ffb84d"];
+  for (var i=0;i<12;i++){
+    var p=document.createElement("div"); p.className="spark";
+    p.style.background=colors[i%colors.length];
+    p.style.left=cx+"px"; p.style.top=cy+"px";
+    stage.appendChild(p);
+    var ang=(Math.PI*2*i)/12, dist=30+(i%3)*14;
+    (function(p,dx,dy){
+      p.animate([{transform:"translate(0,0) scale(1)",opacity:1},
+                 {transform:"translate("+dx+"px,"+dy+"px) scale(0)",opacity:0}],
+                {duration:550,easing:"cubic-bezier(.2,.7,.3,1)"});
+      setTimeout(function(){p.remove();},560);
+    })(p, Math.cos(ang)*dist, Math.sin(ang)*dist);
+  }
+}
+
+/* ============================================================
+   WIN -> end card  (+ show persistent CTA)
+   ============================================================ */
+function win(){
+  hint.style.opacity=0;
+  document.getElementById("ctaBar").classList.add("show");
+  setTimeout(function(){ document.getElementById("end").classList.add("show"); }, 500);
+}
+
+/* ============================================================
+   SCALING — keep 360x640 layout exact on any screen
+   ============================================================ */
+function currentScale(){
+  var s = Math.min(window.innerWidth/360, window.innerHeight/640);
+  return s;
+}
+function fit(){
+  var s=currentScale();
+  stage.style.transform="scale("+s+")";
+}
+window.addEventListener("resize", function(){ fit(); guide(); });
+fit();
+/* position the hand on the very first frame so it never flashes at 0,0 */
+requestAnimationFrame(function(){ fit(); requestAnimationFrame(function(){ fit(); guide(); }); });
+setTimeout(guide, 400);
+</script>
+</body>
+</html>

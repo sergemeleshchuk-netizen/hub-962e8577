@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>Brusca</title>
+<style>
+  :root{ --bg:#161a1f; --panel:#242a31; --txt:#e8e6df; --ok:#9bd17a; }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;max-width:560px;margin:0 auto;padding:env(safe-area-inset-top) 0 0}
+
+  /* ===== Меню ===== */
+  #menu{flex:1;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:24px}
+  #menu h1{font-size:40px;letter-spacing:1px;margin:0;font-weight:800}
+  #menu .sub{color:#9aa0a8;font-size:14px;margin-top:-14px}
+  .tiles{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;width:100%}
+  .tile{background:var(--panel);border-radius:22px;padding:14px;width:160px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:10px;border:0;color:var(--txt);
+    box-shadow:0 10px 30px rgba(0,0,0,.35);transition:transform .12s}
+  .tile:active{transform:scale(.96)}
+  .tile canvas{border-radius:14px;background:#0e1115}
+  .tile b{font-size:18px}
+  .tile small{color:#9aa0a8;font-size:12px;text-align:center;line-height:1.3}
+
+  /* ===== Выбор уровня ===== */
+  #levelselect{flex:1;width:100%;display:none;flex-direction:column;align-items:center;padding:0 0 10px}
+  #levelselect header{justify-content:flex-start;gap:12px}
+  #lsTitle{font-weight:700;font-size:18px}
+  #lsSub{font-size:12px;color:#9aa0a8}
+  #levelgrid{flex:1;width:100%;max-width:440px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
+    align-content:start;padding:18px 24px;overflow-y:auto}
+  .lvlbtn{aspect-ratio:1;border-radius:18px;border:2px solid #3a424c;background:#202730;color:var(--txt);
+    font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    position:relative;transition:transform .1s}
+  .lvlbtn:active{transform:scale(.94)}
+  .lvlbtn.done{color:#16240c}
+  .lvlbtn.locked{opacity:.4;cursor:default;font-size:18px}
+  .lvlbtn .num{position:absolute;top:5px;left:8px;font-size:11px;font-weight:700;color:#ffffffaa}
+  .lvlbtn.tut{font-size:18px}
+  .lsgroup{grid-column:1/-1;color:#9aa0a8;font-size:13px;font-weight:700;margin:8px 2px -4px;text-align:left}
+
+  /* ===== Игра ===== */
+  #game{flex:1;width:100%;display:none;flex-direction:column;align-items:center}
+  header{width:100%;padding:10px 14px 4px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  #back{background:var(--panel);border:0;color:var(--txt);border-radius:12px;padding:9px 13px;font-size:15px;cursor:pointer}
+  .head-mid{flex:1;min-width:0}
+  .lvl{font-weight:700;font-size:16px}
+  .hint{font-size:12px;color:#9aa0a8;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .refbox{display:flex;flex-direction:column;align-items:center;gap:2px}
+  .refbox span{font-size:11px;color:#9aa0a8}
+  #ref{border-radius:10px;background:#0e1115}
+  .moves{font-variant-numeric:tabular-nums;font-size:14px;color:#9aa0a8}
+  #board-area{flex:1;width:100%;display:flex;align-items:center;justify-content:center;padding:6px;position:relative}
+  canvas{touch-action:manipulation;border-radius:16px}
+  footer{width:100%;padding:10px 18px calc(14px + env(safe-area-inset-bottom));display:flex;gap:10px;justify-content:center}
+  button.act{border:0;border-radius:14px;padding:12px 18px;font-size:15px;font-weight:600;background:var(--panel);color:var(--txt);cursor:pointer}
+  button.primary{background:var(--ok);color:#16240c}
+  /* рука */
+  #hand{position:fixed;font-size:60px;pointer-events:none;z-index:8;opacity:0;filter:drop-shadow(0 6px 8px #00000055);transition:opacity .25s;will-change:transform;transform-origin:top center}
+  #hand.show{opacity:1;animation:tap 1.05s ease-in-out infinite}
+  @keyframes tap{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(14px) scale(.9)}}
+  #tut{position:fixed;z-index:8;background:#000000b0;color:#fff;font-size:13px;font-weight:600;padding:7px 12px;border-radius:12px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+  #tut.show{opacity:1}
+  #toast{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(10,12,15,.78);backdrop-filter:blur(3px);z-index:9}
+  #toast .card{background:var(--panel);padding:30px 34px;border-radius:22px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6);animation:pop .35s ease}
+  #toast h2{margin:0 0 6px;font-size:26px;color:var(--ok)}
+  #toast p{margin:0 0 18px;color:#aeb4bc;font-size:14px}
+  #toast .row{display:flex;gap:10px;justify-content:center}
+  @keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Меню -->
+  <div id="menu">
+    <h1>Brusca</h1>
+    <div class="sub">выбери режим</div>
+    <div class="tiles">
+      <button class="tile" data-mode="pattern"><canvas width="132" height="132"></canvas><b>Узор</b><small>собери узор<br>под образец</small></button>
+      <button class="tile" data-mode="pipes"><canvas width="132" height="132"></canvas><b>Pipes</b><small>соедини линии<br>с источником</small></button>
+    </div>
+  </div>
+  <!-- Выбор уровня -->
+  <div id="levelselect">
+    <header>
+      <button id="lsBack">← Меню</button>
+      <div class="head-mid"><div id="lsTitle">Уровни</div><div id="lsSub"></div></div>
+    </header>
+    <div id="levelgrid"></div>
+  </div>
+  <!-- Игра -->
+  <div id="game">
+    <header>
+      <button id="back">← Уровни</button>
+      <div class="head-mid"><div class="lvl" id="lvlTxt">Уровень 1</div><div class="hint" id="hintTxt"></div></div>
+      <div class="refbox" id="refbox"><span>образец</span><canvas id="ref" width="92" height="92"></canvas></div>
+      <div class="moves" id="moves" style="display:none">0 ходов</div>
+    </header>
+    <div id="board-area"><canvas id="cv"></canvas></div>
+    <footer>
+      <button class="act" id="restart">↻ Заново</button>
+      <button class="act primary" id="next" style="display:none">Дальше →</button>
+    </footer>
+  </div>
+</div>
+<div id="hand">👆</div>
+<div id="tut">Тапни, чтобы повернуть</div>
+<div id="toast"><div class="card">
+  <h2 id="toastH">Готово!</h2><p id="toastSub"></p>
+  <div class="row"><button class="act" id="toastMenu">Меню</button><button class="act primary" id="toastNext">Дальше →</button></div>
+</div></div>
+
+<script>
+/* ===== Brusca v6 — меню с режимами =====
+   Концепция (узор тапами под образец) + отдельная плитка PIPES
+   (соедини линии с источником, из v2). Общая гекс-геометрия.   */
+
+const SQ3=Math.sqrt(3);
+function hdist(q,r){return (Math.abs(q)+Math.abs(r)+Math.abs(q+r))/2;}
+
+// ===== Формы =====
+const SHAPES={
+  hex:{ E:6,
+    makeCells(N){const m=new Map();for(let q=-N;q<=N;q++)for(let r=-N;r<=N;r++)
+      if(hdist(q,r)<=N)m.set(q+','+r,{i:q,j:r,target:0,rot:0,mask:0,sol:0});return m;},
+    center(c,s){return [s*SQ3*(c.i+c.j/2), s*1.5*c.j];},
+    extent(s){return [s*SQ3/2, s];},
+    outline(g,cx,cy,s){g.beginPath();for(let k=0;k<6;k++){const a=Math.PI/3*k+Math.PI/6;const x=cx+s*Math.cos(a),y=cy+s*Math.sin(a);k?g.lineTo(x,y):g.moveTo(x,y);}g.closePath();},
+    edgeMid(cx,cy,k,s){const a=Math.PI/3*k,ap=s*Math.cos(Math.PI/6);return [cx+ap*Math.cos(a),cy+ap*Math.sin(a)];},
+    corner(cx,cy,k,s){const a=Math.PI/3*k+Math.PI/6;return [cx+s*Math.cos(a),cy+s*Math.sin(a)];},
+    arcR(s){return s/2;},
+    pickSize(W,H,N){return Math.min(W/(SQ3*(2*N+1)), H/(1.5*(2*N+1)+0.5));},
+    hit(px,py,s){const q=(SQ3/3*px-1/3*py)/s,r=(2/3*py)/s;let cx=q,cz=r,cy=-cx-cz;
+      let rx=Math.round(cx),ry=Math.round(cy),rz=Math.round(cz);const dx=Math.abs(rx-cx),dy=Math.abs(ry-cy),dz=Math.abs(rz-cz);
+      if(dx>dy&&dx>dz)rx=-ry-rz;else if(dy>dz)ry=-rx-rz;else rz=-rx-ry;return rx+','+rz;} },
+  square:{ E:4,
+    makeCells(n){const m=new Map();for(let i=0;i<n;i++)for(let j=0;j<n;j++)m.set(i+','+j,{i,j,target:0,rot:0});return m;},
+    center(c,s){return [(c.i+0.5)*s,(c.j+0.5)*s];},
+    extent(s){return [s/2,s/2];},
+    outline(g,cx,cy,s){const r=Math.max(2,s*0.06),x=cx-s/2,y=cy-s/2,w=s,h=s;
+      g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();},
+    edgeMid(cx,cy,k,s){const h=s/2;return [[cx,cy-h],[cx+h,cy],[cx,cy+h],[cx-h,cy]][k];},
+    corner(cx,cy,k,s){const h=s/2;return [[cx+h,cy-h],[cx+h,cy+h],[cx-h,cy+h],[cx-h,cy-h]][k];},
+    arcR(s){return s/2;},
+    pickSize(W,H,n){return Math.min(W/n,H/n);},
+    hit(px,py,s){return Math.floor(px/s)+','+Math.floor(py/s);} },
+  circle:{ E:6,
+    makeCells(n){const m=new Map();for(let i=0;i<n;i++)for(let j=0;j<n;j++)m.set(i+','+j,{i,j,target:0,rot:0});return m;},
+    center(c,s){return [(c.i+0.5)*s,(c.j+0.5)*s];},
+    extent(s){return [s/2,s/2];},
+    outline(g,cx,cy,s){g.beginPath();g.arc(cx,cy,s*0.46,0,Math.PI*2);g.closePath();},
+    edgeMid(cx,cy,k,s){const a=Math.PI/3*k-Math.PI/2;return [cx+s*0.44*Math.cos(a),cy+s*0.44*Math.sin(a)];},
+    corner(cx,cy,k,s){const a=Math.PI/3*k-Math.PI/2+Math.PI/6;return [cx+s*0.42*Math.cos(a),cy+s*0.42*Math.sin(a)];},
+    arcR(s){return s*0.3;},
+    pickSize(W,H,n){return Math.min(W/n,H/n);},
+    hit(px,py,s){return Math.floor(px/s)+','+Math.floor(py/s);} }
+};
+
+// общий fit -> SZ,OX,OY,canvas
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const refc=document.getElementById('ref'), rctx=refc.getContext('2d');
+let SZ=0,OX=0,OY=0;
+function fit(SH,size,cells){
+  const area=document.getElementById('board-area');
+  const W=Math.min(area.clientWidth-12,520), H=area.clientHeight-12;
+  SZ=Math.floor(SH.pickSize(W,H,size));
+  const [ex,ey]=SH.extent(SZ); let mnX=1e9,mxX=-1e9,mnY=1e9,mxY=-1e9;
+  for(const c of cells.values()){const[x,y]=SH.center(c,SZ);mnX=Math.min(mnX,x-ex);mxX=Math.max(mxX,x+ex);mnY=Math.min(mnY,y-ey);mxY=Math.max(mxY,y+ey);}
+  const pad=Math.round(SZ*0.18); OX=pad-mnX; OY=pad-mnY;
+  const cw=Math.ceil(mxX-mnX+pad*2),ch=Math.ceil(mxY-mnY+pad*2),dpr=window.devicePixelRatio||1;
+  cv.style.width=cw+'px';cv.style.height=ch+'px';cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+
+/* ============================================================
+   РЕЖИМ 1 — УЗОР (как v5: 10 уровней, паттерн каждые 2)
+   ============================================================ */
+const PAT=(()=>{
+  const P={
+    stone:{bg:'#161a1f',stone:'#d3ccbd',edge:'rgba(40,44,50,.30)',groove:'#5b5849',ribbon:'#bcae93',band:.34},
+    slate:{bg:'#12171c',stone:'#c4ccd3',edge:'rgba(30,40,48,.32)',groove:'#3a4b58',ribbon:'#8ea6b8',band:.34},
+    terra:{bg:'#1b1410',stone:'#e2cdb4',edge:'rgba(60,40,28,.34)',groove:'#7e4626',ribbon:'#cf9166',band:.30},
+    sage :{bg:'#12150f',stone:'#cdd6c1',edge:'rgba(40,50,30,.32)',groove:'#5f7444',ribbon:'#7c9a57',band:.28},
+    teal :{bg:'#0e1718',stone:'#bfd3cf',edge:'rgba(20,50,46,.34)',groove:'#27554e',ribbon:'#5fa394',band:.32},
+    plum :{bg:'#14101a',stone:'#352e42',edge:'rgba(255,255,255,.07)',groove:'#221b2d',ribbon:'#d9b8cf',band:.32},
+    indigo:{bg:'#0f1020',stone:'#c9c9e0',edge:'rgba(30,32,70,.4)',groove:'#33356b',ribbon:'#8a8cd0',band:.40},
+    amber:{bg:'#1a1408',stone:'#efe1c2',edge:'rgba(70,50,10,.38)',groove:'#9a6a16',ribbon:'#e0ad4e',band:.42},
+    crimson:{bg:'#1a0e10',stone:'#ead0d0',edge:'rgba(60,20,26,.38)',groove:'#7a2230',ribbon:'#cf5f6e',band:.30},
+    gold :{bg:'#100f0a',stone:'#2a2620',edge:'rgba(255,255,255,.06)',groove:'#15120c',ribbon:'#e9c97a',band:.34},
+    // яркие туториал-палитры
+    brightA:{bg:'#241046',stone:'#ffd23f',edge:'rgba(0,0,0,.22)',groove:'#b3245e',ribbon:'#ff4d8d',band:.34},
+    brightB:{bg:'#06231d',stone:'#22e3a3',edge:'rgba(0,0,0,.22)',groove:'#0a4a5c',ribbon:'#0fa3c4',band:.34},
+    brightC:{bg:'#06223a',stone:'#36c5f0',edge:'rgba(0,0,0,.20)',groove:'#9a5a00',ribbon:'#ffc83d',band:.34},
+  };
+  const LEVELS=[
+    {shape:'hex',size:1,style:'arc',  off:5,            pal:P.stone,  hint:'Собери узор под образец (нужно ≥5 ходов)'},
+    {shape:'hex',size:2,style:'arc',  off:null,         pal:P.slate,  hint:'Сравни с образцом и поверни'},
+    {shape:'hex',size:2,style:'chord',off:null,         pal:P.terra,  hint:'Новый узор — прямые линии'},
+    {shape:'hex',size:3,style:'chord',off:null,         pal:P.sage,   hint:'Поле больше — внимательнее'},
+    {shape:'hex',size:3,style:'petal',off:null,         pal:P.teal,   hint:'Новый узор — лепестки'},
+    {shape:'hex',size:3,style:'petal',off:null,         pal:P.plum,   hint:'Тот же узор, новые цвета'},
+    {shape:'square',size:5,style:'arc',off:null,        pal:P.indigo, hint:'Форма сменилась — квадраты!'},
+    {shape:'square',size:6,style:'arc',off:null,        pal:P.amber,  hint:'Квадраты, поле больше'},
+    {shape:'square',size:6,style:'chord',off:null,      pal:P.crimson,hint:'Новый узор — диагонали'},
+    {shape:'square',size:7,style:'chord',off:null,      pal:P.gold,   hint:'Финал — собери весь узор'},
+  ];
+  const TUTN=LEVELS.filter(l=>l.tutorial).length, MAINN=LEVELS.length-TUTN;
+  function isTut(lv){return !!LEVELS[(lv-1)%LEVELS.length].tutorial;}
+  function labelOf(lv){return LEVELS[(lv-1)%LEVELS.length].label||'';}
+  function mainNum(lv){let n=0;for(let i=0;i<lv;i++)if(!LEVELS[i].tutorial)n++;return n;}
+  let L=null, level=1;
+  function matchMod(cfg){ return cfg.style==='fan'? SHAPES[cfg.shape].E : 2; } // fan = полный поворот, иначе паритет
+  function gen(cfg){
+    const SH=SHAPES[cfg.shape],E=SH.E,MM=matchMod(cfg),cells=SH.makeCells(cfg.size);
+    for(const c of cells.values()) c.target=Math.floor(Math.random()*MM);
+    const arr=[...cells.values()];
+    if(cfg.off!=null){ for(const c of arr)c.rot=c.target;             // всё верно...
+      const ord=[...arr.keys()].sort(()=>Math.random()-.5).slice(0,Math.min(cfg.off,arr.length));
+      for(const k of ord) arr[k].rot=(arr[k].target+E-1)%E;           // ...кроме off штук — на один тап назад (1 тап чинит)
+    } else { for(const c of arr)c.rot=Math.floor(Math.random()*E); if(solvedCfg(cells,cfg))arr[0].rot=(arr[0].rot+1)%E; }
+    return {cells,shape:cfg.shape,size:cfg.size,cfg};
+  }
+  function solvedCfg(cells,cfg){ const MM=matchMod(cfg); for(const c of cells.values()) if(c.rot%MM!==c.target) return false; return true; }
+  function solved(){ return solvedCfg(L.cells,L.cfg); }
+  function offTiles(){ const MM=matchMod(L.cfg),o=[];for(const c of L.cells.values()) if(c.rot%MM!==c.target)o.push(c); return o; }
+
+  function connector(g,V,A,B,C,style,arcR,wG,wR,gC,rC){
+    function path(){ if(style==='arc'){let a1=Math.atan2(A[1]-V[1],A[0]-V[0]),a2=Math.atan2(B[1]-V[1],B[0]-V[0]);
+        let d=a2-a1;while(d<-Math.PI)d+=2*Math.PI;while(d>Math.PI)d-=2*Math.PI;g.arc(V[0],V[1],arcR,a1,a1+d,d<0);}
+      else if(style==='chord'){g.moveTo(A[0],A[1]);g.lineTo(B[0],B[1]);}
+      else{g.moveTo(A[0],A[1]);g.quadraticCurveTo(C[0],C[1],B[0],B[1]);} }
+    g.beginPath();path();g.lineWidth=wG;g.strokeStyle=gC;g.stroke();
+    g.beginPath();path();g.lineWidth=wR;g.strokeStyle=rC;g.stroke();
+  }
+  function tile(g,SH,cx,cy,s,rot,pal,style){
+    const E=SH.E,band=s*pal.band,wG=band+Math.max(2,s*0.10);
+    SH.outline(g,cx,cy,s);
+    g.save(); g.clip();                       // рисунок не вылазит за край плитки
+    g.fillStyle=pal.stone; g.fillRect(cx-s,cy-s,2*s,2*s);
+    g.lineCap='round';g.lineJoin='round';
+    if(style==='fan'){
+      const k=((rot%E)+E)%E, [px,py]=SH.edgeMid(cx,cy,k,s);
+      g.beginPath();g.moveTo(cx,cy);g.lineTo(px,py);g.lineWidth=band+Math.max(2,s*0.12);g.strokeStyle=pal.groove;g.stroke();
+      g.beginPath();g.moveTo(cx,cy);g.lineTo(px,py);g.lineWidth=band;g.strokeStyle=pal.ribbon;g.stroke();
+      g.beginPath();g.arc(cx,cy,band*0.72,0,7);g.fillStyle=pal.ribbon;g.fill();
+      g.beginPath();g.arc(px,py,band*0.55,0,7);g.fillStyle=pal.groove;g.fill();
+    } else {
+      const parity=((rot%2)+2)%2, arcR=SH.arcR(s);
+      for(let c=0;c<E;c++) if(c%2===parity){
+        const A=SH.edgeMid(cx,cy,c,s),B=SH.edgeMid(cx,cy,(c+1)%E,s),V=SH.corner(cx,cy,c,s);
+        connector(g,V,A,B,[cx,cy],style,arcR,wG,band,pal.groove,pal.ribbon);
+      }
+    }
+    g.restore();
+    if(pal.edge){SH.outline(g,cx,cy,s);g.strokeStyle=pal.edge;g.lineWidth=Math.max(1,s*0.04);g.stroke();}
+  }
+  function draw(){
+    const SH=SHAPES[L.shape],pal=L.cfg.pal,style=L.cfg.style;
+    ctx.clearRect(0,0,cv.width,cv.height);ctx.fillStyle=pal.bg;ctx.fillRect(0,0,cv.width,cv.height);
+    for(const c of L.cells.values()){const[x,y]=SH.center(c,SZ);tile(ctx,SH,x+OX,y+OY,SZ,c.rot,pal,style);}
+  }
+  function drawRef(){
+    const SH=SHAPES[L.shape],pal=L.cfg.pal,style=L.cfg.style,dpr=window.devicePixelRatio||1,size=92;
+    refc.width=size*dpr;refc.height=size*dpr;rctx.setTransform(dpr,0,0,dpr,0,0);
+    rctx.clearRect(0,0,size,size);rctx.fillStyle=pal.bg;rctx.fillRect(0,0,size,size);
+    const rs=SH.pickSize(size-8,size-8,L.size),[ex,ey]=SH.extent(rs);
+    let mnX=1e9,mxX=-1e9,mnY=1e9,mxY=-1e9;
+    for(const c of L.cells.values()){const[x,y]=SH.center(c,rs);mnX=Math.min(mnX,x-ex);mxX=Math.max(mxX,x+ex);mnY=Math.min(mnY,y-ey);mxY=Math.max(mxY,y+ey);}
+    const ox=(size-(mxX-mnX))/2-mnX,oy=(size-(mxY-mnY))/2-mnY,rp={...pal,edge:null};
+    for(const c of L.cells.values()){const[x,y]=SH.center(c,rs);tile(rctx,SH,x+ox,y+oy,rs,c.target,rp,style);}
+  }
+  // туториал
+  function showHandAt(c){const SH=SHAPES[L.shape],rect=cv.getBoundingClientRect();const[hx,hy]=SH.center(c,SZ);
+    const sx=rect.left+OX+hx,sy=rect.top+OY+hy;hand.style.left=(sx-18)+'px';hand.style.top=(sy+6)+'px';hand.classList.add('show');
+    tut.style.left=(sx-70)+'px';tut.style.top=(sy-52)+'px';tut.classList.add('show');}
+  function tutorial(){ if(!L.cfg.tut){hideHand();return;} const o=offTiles(); if(o.length)showHandAt(o[0]);else hideHand(); }
+
+  function titleOf(lv){ return isTut(lv)? 'Обучение · '+labelOf(lv) : 'Уровень '+mainNum(lv)+' / '+MAINN; }
+  function start(n){
+    if(n) level=n;
+    showGameUI({ref:true,moves:false});
+    const cfg=LEVELS[(level-1)%LEVELS.length]; L=gen(cfg);
+    setHead(titleOf(level), cfg.hint);
+    fit(SHAPES[cfg.shape],cfg.size,L.cells); draw(); drawRef(); tutorial();
+  }
+  function tap(e){
+    const SH=SHAPES[L.shape],rect=cv.getBoundingClientRect();
+    const key=SH.hit(e.clientX-rect.left-OX,e.clientY-rect.top-OY,SZ);
+    const c=L.cells.get(key); if(!c) return;
+    c.rot=(c.rot+1)%SH.E; draw(); tutorial();
+    if(solved()){ hideHand();
+      const last=level>=LEVELS.length;
+      reportWin(isTut(level)?'Готово!':'Узор собран!', titleOf(level), level, last); }
+  }
+  function relayout(){ if(!L)return; fit(SHAPES[L.shape],L.size,L.cells); draw(); drawRef(); tutorial(); }
+  return {start,tap,restart(){start(level);},relayout,
+    count:LEVELS.length, get level(){return level;}, accent(n){return LEVELS[(n-1)%LEVELS.length].pal.ribbon;},
+    isTut, labelOf, mainNum};
+})();
+
+/* ============================================================
+   РЕЖИМ 2 — PIPES (как v2: соедини всё с источником)
+   ============================================================ */
+const PIPE=(()=>{
+  const SH=SHAPES.hex;
+  const DQ=[1,0,-1,-1,0,1],DR=[0,1,1,0,-1,-1],OPP=i=>(i+3)%6;
+  const PAL={bg:'#161a1f',stone0:'#cdc7ba',stone1:'#c4beb0',edge:'rgba(40,44,50,.32)',
+             on:'#e9c97a',off:'#9a958a',groove:'#3a3e44',srcDot:'#2a2410'};
+  const LEVELS=[1,2,2,3,3,4]; // радиусы
+  let L=null, level=1, moves=0;
+
+  function rotCW(m){return ((m<<1)|(m>>5))&63;}
+  function gen(N){
+    const cells=SH.makeCells(N); const keys=[...cells.keys()];
+    const src=keys[Math.floor(Math.random()*keys.length)];
+    const vis=new Set([src]),stack=[src],key=(q,r)=>q+','+r;
+    while(stack.length){ const cur=stack[stack.length-1],c=cells.get(cur),opts=[];
+      for(let i=0;i<6;i++){const nk=key(c.i+DQ[i],c.j+DR[i]); if(cells.has(nk)&&!vis.has(nk))opts.push([i,nk]);}
+      if(!opts.length){stack.pop();continue;}
+      const [i,nk]=opts[Math.floor(Math.random()*opts.length)];
+      c.sol|=1<<i; cells.get(nk).sol|=1<<OPP(i); vis.add(nk); stack.push(nk); }
+    for(const c of cells.values()) c.mask=c.sol;
+    let tries=0; const obj={cells,src,N};
+    do{ for(const c of cells.values()){const k=Math.floor(Math.random()*6);for(let t=0;t<k;t++)c.mask=rotCW(c.mask);} tries++; }
+    while(isSolved(obj)&&tries<8);
+    return obj;
+  }
+  function analyze(o){ const key=(q,r)=>q+','+r; let loose=false; const reached=new Set();
+    for(const c of o.cells.values()) for(let i=0;i<6;i++) if(c.mask&(1<<i)){
+      const nb=o.cells.get(key(c.i+DQ[i],c.j+DR[i])); if(!nb||!(nb.mask&(1<<OPP(i))))loose=true; }
+    const q=[o.src];reached.add(o.src);
+    while(q.length){ const c=o.cells.get(q.shift());
+      for(let i=0;i<6;i++) if(c.mask&(1<<i)){ const nk=key(c.i+DQ[i],c.j+DR[i]),nb=o.cells.get(nk);
+        if(nb&&(nb.mask&(1<<OPP(i)))&&!reached.has(nk)){reached.add(nk);q.push(nk);} } }
+    return {loose,reached}; }
+  function isSolved(o){ const{loose,reached}=analyze(o); if(loose)return false;
+    for(const[k,c] of o.cells){ if(c.mask!==0&&!reached.has(k))return false; } return true; }
+
+  function tile(c,cx,cy,on,isSrc){
+    SH.outline(ctx,cx,cy,SZ); ctx.fillStyle=((c.i-c.j)%2===0)?PAL.stone0:PAL.stone1; ctx.fill();
+    ctx.strokeStyle=PAL.edge;ctx.lineWidth=Math.max(1,SZ*0.04);ctx.stroke();
+    const m=c.mask; if(!m)return;
+    const ink=on?PAL.on:PAL.off, lw=SZ*0.30;
+    const mids=[];for(let i=0;i<6;i++)mids[i]=SH.edgeMid(cx,cy,i,SZ);
+    const dirs=[];for(let i=0;i<6;i++)if(m&(1<<i))dirs.push(i); const deg=dirs.length;
+    ctx.lineCap='round';ctx.lineJoin='round';
+    function band(fn){ctx.beginPath();fn();ctx.lineWidth=lw+Math.max(2,SZ*0.07);ctx.strokeStyle=PAL.groove;ctx.stroke();
+      ctx.beginPath();fn();ctx.lineWidth=lw;ctx.strokeStyle=ink;ctx.stroke();}
+    if(deg===2){ const[a,b]=dirs,delta=(b-a+6)%6;
+      if(delta===1||delta===5){ const v=(delta===1)?a:b,[vx,vy]=SH.corner(cx,cy,v,SZ);
+        band(()=>{let a1=Math.atan2(mids[a][1]-vy,mids[a][0]-vx),a2=Math.atan2(mids[b][1]-vy,mids[b][0]-vx);
+          let d=a2-a1;while(d<-Math.PI)d+=2*Math.PI;while(d>Math.PI)d-=2*Math.PI;ctx.arc(vx,vy,SZ/2,a1,a1+d,d<0);}); }
+      else band(()=>{ctx.moveTo(mids[a][0],mids[a][1]);ctx.quadraticCurveTo(cx,cy,mids[b][0],mids[b][1]);});
+    } else { band(()=>{for(const i of dirs){ctx.moveTo(mids[i][0],mids[i][1]);ctx.lineTo(cx,cy);}});
+      ctx.beginPath();ctx.arc(cx,cy,lw*0.55,0,7);ctx.fillStyle=ink;ctx.fill(); }
+    if(isSrc){ ctx.beginPath();ctx.arc(cx,cy,SZ*0.22,0,7);ctx.fillStyle=ink;ctx.fill();
+      ctx.beginPath();ctx.arc(cx,cy,SZ*0.11,0,7);ctx.fillStyle=PAL.srcDot;ctx.fill(); }
+    else if(deg===1){ const[mx,my]=mids[dirs[0]];ctx.beginPath();ctx.arc((mx+cx)/2,(my+cy)/2,SZ*0.10,0,7);ctx.fillStyle=ink;ctx.fill(); }
+  }
+  function draw(){ const{reached}=analyze(L);
+    ctx.clearRect(0,0,cv.width,cv.height);ctx.fillStyle=PAL.bg;ctx.fillRect(0,0,cv.width,cv.height);
+    for(const[k,c] of L.cells){const[x,y]=SH.center(c,SZ);tile(c,x+OX,y+OY,reached.has(k),k===L.src);} }
+
+  function start(n){ if(n)level=n; showGameUI({ref:false,moves:true});
+    L=gen(LEVELS[(level-1)%LEVELS.length]); moves=0;
+    setHead('Pipes · уровень '+level+' / '+LEVELS.length, 'Соедини все линии с источником');
+    setMoves();
+    fit(SH,L.N,L.cells); draw(); }
+  function setMoves(){ document.getElementById('moves').textContent=moves+' ходов'; }
+  function tap(e){ const rect=cv.getBoundingClientRect();
+    const key=SH.hit(e.clientX-rect.left-OX,e.clientY-rect.top-OY,SZ); const c=L.cells.get(key); if(!c)return;
+    c.mask=rotCW(c.mask); moves++; setMoves(); draw();
+    if(isSolved(L)) reportWin('Соединено!','Уровень '+level+' · '+moves+' ходов', level, level>=LEVELS.length); }
+  function relayout(){ if(!L)return; fit(SH,L.N,L.cells); draw(); }
+  return {start,tap,restart(){start(level);},relayout,
+    count:LEVELS.length, get level(){return level;}, accent(){return '#e9c97a';},
+    isTut(){return false;}, labelOf(){return '';}, mainNum(lv){return lv;}};
+})();
+
+/* ===== Роутер / общий UI ===== */
+const hand=document.getElementById('hand'), tut=document.getElementById('tut');
+function hideHand(){hand.classList.remove('show');tut.classList.remove('show');}
+let mode=null;
+function curEngine(){return mode==='pattern'?PAT:(mode==='pipes'?PIPE:null);}
+function setHead(lvl,hint){document.getElementById('lvlTxt').textContent=lvl;document.getElementById('hintTxt').textContent=hint||'';}
+
+// ---- прогресс (сохраняется между заходами) ----
+const TITLES={pattern:'Узор',pipes:'Pipes'};
+let progress={pattern:{unlocked:1,done:[]},pipes:{unlocked:1,done:[]}};
+try{ const s=localStorage.getItem('brusca_progress_v11'); if(s) progress=JSON.parse(s); }catch(e){}
+function saveProgress(){ try{ localStorage.setItem('brusca_progress_v11',JSON.stringify(progress)); }catch(e){} }
+function markDone(m,level){ const p=progress[m]; if(!p.done.includes(level))p.done.push(level);
+  p.unlocked=Math.min(curEngine().count, Math.max(p.unlocked, level+1)); saveProgress(); }
+
+// ---- экраны ----
+function showScreen(name){
+  for(const id of ['menu','levelselect','game']) document.getElementById(id).style.display='none';
+  document.getElementById(name).style.display='flex';
+}
+function showGameUI(opt){
+  showScreen('game');
+  document.getElementById('refbox').style.display=opt.ref?'flex':'none';
+  document.getElementById('moves').style.display=opt.moves?'block':'none';
+  document.getElementById('next').style.display='none';
+}
+function openMenu(){ hideHand(); closeToast(); mode=null; showScreen('menu'); drawMenuPreviews(); }
+
+function openLevels(m){
+  hideHand(); closeToast(); mode=m; const eng=curEngine();
+  document.getElementById('lsTitle').textContent=TITLES[m];
+  const p=progress[m];
+  document.getElementById('lsSub').textContent='пройдено '+p.done.length+' / '+eng.count;
+  const grid=document.getElementById('levelgrid'); grid.innerHTML='';
+  function header(txt){ const h=document.createElement('div'); h.className='lsgroup'; h.textContent=txt; grid.appendChild(h); }
+  let prevKind=null;
+  for(let i=1;i<=eng.count;i++){
+    const tut=eng.isTut(i), kind=tut?'tut':'main';
+    if(kind!==prevKind){ header(tut?'Обучение':'Уровни'); prevKind=kind; }
+    const b=document.createElement('button'); b.className='lvlbtn';
+    const unlocked=i<=p.unlocked, done=p.done.includes(i);
+    const face = tut? eng.labelOf(i) : eng.mainNum(i);   // N1/N2/N3 или номер
+    if(!unlocked){ b.classList.add('locked'); b.textContent='🔒'; b.disabled=true; }
+    else {
+      b.textContent = done? '✓' : face;
+      if(tut) b.classList.add('tut');
+      const col=eng.accent(i);
+      if(done){ b.classList.add('done'); b.style.background=col; b.style.borderColor=col;
+        const num=document.createElement('span'); num.className='num'; num.textContent=face; b.appendChild(num); }
+      else { b.style.borderColor=col; }
+      b.onclick=()=>playLevel(m,i);
+    }
+    grid.appendChild(b);
+  }
+  showScreen('levelselect');
+}
+function playLevel(m,n){ closeToast(); mode=m; curEngine().start(n); }
+
+// ---- тост победы ----
+function openToast(h,sub,rLabel,rCb,lLabel,lCb){
+  document.getElementById('toastH').textContent=h;
+  document.getElementById('toastSub').textContent=sub;
+  const rB=document.getElementById('toastNext'), lB=document.getElementById('toastMenu');
+  rB.textContent=rLabel; rB.onclick=()=>{closeToast(); rCb&&rCb();};
+  lB.textContent=lLabel; lB.onclick=()=>{closeToast(); lCb&&lCb();};
+  setTimeout(()=>{document.getElementById('toast').style.display='flex';},260);
+}
+function closeToast(){document.getElementById('toast').style.display='none';}
+function reportWin(title,sub,level,last){
+  markDone(mode,level); const m=mode;
+  if(last) openToast(title,sub+' · 🎉', 'К уровням',()=>openLevels(m), 'Меню',openMenu);
+  else     openToast(title,sub, 'Следующий →',()=>playLevel(m,level+1), 'Уровни',()=>openLevels(m));
+}
+
+cv.addEventListener('pointerdown',e=>{ const eng=curEngine(); if(eng && document.getElementById('game').style.display!=='none') eng.tap(e); });
+document.getElementById('back').onclick=()=>openLevels(mode);
+document.getElementById('lsBack').onclick=openMenu;
+document.getElementById('restart').onclick=()=>{closeToast();curEngine().restart();};
+document.querySelectorAll('.tile').forEach(t=>t.onclick=()=>openLevels(t.dataset.mode));
+window.addEventListener('resize',()=>{ if(document.getElementById('game').style.display!=='none' && curEngine())curEngine().relayout(); else if(document.getElementById('menu').style.display!=='none') drawMenuPreviews(); });
+
+// превью на плитках меню
+function drawMenuPreviews(){
+  const tiles=document.querySelectorAll('.tile');
+  tiles.forEach(t=>{
+    const m=t.dataset.mode, g=t.querySelector('canvas').getContext('2d'), size=132, dpr=window.devicePixelRatio||1;
+    const cvp=t.querySelector('canvas'); cvp.width=size*dpr;cvp.height=size*dpr;g.setTransform(dpr,0,0,dpr,0,0);
+    if(m==='pattern') previewPattern(g,size); else previewPipes(g,size);
+  });
+}
+function previewPattern(g,size){
+  const SH=SHAPES.hex,N=2,pal={bg:'#0e1115',stone:'#d3ccbd',edge:null,groove:'#5b5849',ribbon:'#bcae93',band:.34};
+  g.fillStyle=pal.bg;g.fillRect(0,0,size,size);
+  const cells=SH.makeCells(N),rs=SH.pickSize(size-6,size-6,N),[ex,ey]=SH.extent(rs);
+  let mnX=1e9,mxX=-1e9,mnY=1e9,mxY=-1e9;
+  for(const c of cells.values()){const[x,y]=SH.center(c,rs);mnX=Math.min(mnX,x-ex);mxX=Math.max(mxX,x+ex);mnY=Math.min(mnY,y-ey);mxY=Math.max(mxY,y+ey);}
+  const ox=(size-(mxX-mnX))/2-mnX,oy=(size-(mxY-mnY))/2-mnY;
+  for(const c of cells.values()){const[x,y]=SH.center(c,rs),p=((c.i*2+c.j)%2+2)%2;
+    PAT_tilePreview(g,SH,x+ox,y+oy,rs,p,pal);}
+}
+function PAT_tilePreview(g,SH,cx,cy,s,parity,pal){
+  SH.outline(g,cx,cy,s);g.fillStyle=pal.stone;g.fill();
+  const E=SH.E,band=s*pal.band,wG=band+Math.max(2,s*0.10);g.lineCap='round';
+  for(let c=0;c<E;c++)if(c%2===parity){const A=SH.edgeMid(cx,cy,c,s),B=SH.edgeMid(cx,cy,(c+1)%E,s),V=SH.corner(cx,cy,c,s);
+    let a1=Math.atan2(A[1]-V[1],A[0]-V[0]),a2=Math.atan2(B[1]-V[1],B[0]-V[0]);let d=a2-a1;while(d<-Math.PI)d+=2*Math.PI;while(d>Math.PI)d-=2*Math.PI;
+    g.beginPath();g.arc(V[0],V[1],s/2,a1,a1+d,d<0);g.lineWidth=wG;g.strokeStyle=pal.groove;g.stroke();
+    g.beginPath();g.arc(V[0],V[1],s/2,a1,a1+d,d<0);g.lineWidth=band;g.strokeStyle=pal.ribbon;g.stroke();}
+}
+function previewPipes(g,size){
+  // мини «решённый» pipes: простая связная картинка
+  const SH=SHAPES.hex,N=1,DQ=[1,0,-1,-1,0,1],DR=[0,1,1,0,-1,-1],OPP=i=>(i+3)%6;
+  g.fillStyle='#0e1115';g.fillRect(0,0,size,size);
+  const cells=SH.makeCells(N),keys=[...cells.keys()],key=(q,r)=>q+','+r;
+  // дерево от центра
+  const src='0,0',vis=new Set([src]),st=[src];
+  while(st.length){const cur=st[st.length-1],c=cells.get(cur),opts=[];
+    for(let i=0;i<6;i++){const nk=key(c.i+DQ[i],c.j+DR[i]);if(cells.has(nk)&&!vis.has(nk))opts.push([i,nk]);}
+    if(!opts.length){st.pop();continue;}const[i,nk]=opts[Math.floor((vis.size*7)%opts.length)];
+    c.mask|=1<<i;cells.get(nk).mask|=1<<OPP(i);vis.add(nk);st.push(nk);}
+  const rs=SH.pickSize(size-6,size-6,N),[ex,ey]=SH.extent(rs);
+  let mnX=1e9,mxX=-1e9,mnY=1e9,mxY=-1e9;
+  for(const c of cells.values()){const[x,y]=SH.center(c,rs);mnX=Math.min(mnX,x-ex);mxX=Math.max(mxX,x+ex);mnY=Math.min(mnY,y-ey);mxY=Math.max(mxY,y+ey);}
+  const ox=(size-(mxX-mnX))/2-mnX,oy=(size-(mxY-mnY))/2-mnY;
+  for(const[k,c] of cells){const[x,y]=SH.center(c,rs);PIPE_tilePreview(g,SH,c,x+ox,y+oy,rs,k===src);}
+}
+function PIPE_tilePreview(g,SH,c,cx,cy,s,isSrc){
+  SH.outline(g,cx,cy,s);g.fillStyle='#cdc7ba';g.fill();
+  const m=c.mask;if(!m)return;const ink='#e9c97a',lw=s*0.30;
+  const mids=[];for(let i=0;i<6;i++)mids[i]=SH.edgeMid(cx,cy,i,s);
+  const dirs=[];for(let i=0;i<6;i++)if(m&(1<<i))dirs.push(i);const deg=dirs.length;g.lineCap='round';
+  function band(fn){g.beginPath();fn();g.lineWidth=lw+Math.max(2,s*0.07);g.strokeStyle='#3a3e44';g.stroke();g.beginPath();fn();g.lineWidth=lw;g.strokeStyle=ink;g.stroke();}
+  if(deg===2){const[a,b]=dirs,delta=(b-a+6)%6;
+    if(delta===1||delta===5){const v=(delta===1)?a:b,[vx,vy]=SH.corner(cx,cy,v,s);
+      band(()=>{let a1=Math.atan2(mids[a][1]-vy,mids[a][0]-vx),a2=Math.atan2(mids[b][1]-vy,mids[b][0]-vx);let d=a2-a1;while(d<-Math.PI)d+=2*Math.PI;while(d>Math.PI)d-=2*Math.PI;g.arc(vx,vy,s/2,a1,a1+d,d<0);});}
+    else band(()=>{g.moveTo(mids[a][0],mids[a][1]);g.quadraticCurveTo(cx,cy,mids[b][0],mids[b][1]);});}
+  else {band(()=>{for(const i of dirs){g.moveTo(mids[i][0],mids[i][1]);g.lineTo(cx,cy);}});g.beginPath();g.arc(cx,cy,lw*0.55,0,7);g.fillStyle=ink;g.fill();}
+  if(isSrc){g.beginPath();g.arc(cx,cy,s*0.22,0,7);g.fillStyle=ink;g.fill();g.beginPath();g.arc(cx,cy,s*0.11,0,7);g.fillStyle='#2a2410';g.fill();}
+  else if(deg===1){const[mx,my]=mids[dirs[0]];g.beginPath();g.arc((mx+cx)/2,(my+cy)/2,s*0.10,0,7);g.fillStyle=ink;g.fill();}
+}
+
+openMenu();
+</script>
+</body>
+</html>

@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Word Hexa Sort — v11 (классика: рука + авто-слияние)</title>
+<style>
+  :root{ --hex:polygon(25% 1%,75% 1%,100% 50%,75% 99%,25% 99%,0 50%);
+         --neutral:#9aa3c0; --neutral-d:#7b85a8; --ink:#2a3a4a; }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    color:#fff;overflow:hidden;user-select:none;touch-action:none;
+    height:100dvh;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(120% 120% at 50% 0%,#222838,#10131c 80%);}
+
+  /* ===== РАМКА-ТЕЛЕФОН 9:16 ===== */
+  #phone{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;}
+  @media (max-aspect-ratio:1/1){ #phone{width:100vw;height:100dvh;border-radius:0;} }
+  @media (min-aspect-ratio:1/1){ #phone{height:96dvh;aspect-ratio:9/16;width:auto;
+        border-radius:32px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 8px #0c0e15;} }
+
+  /* ===== ФОН (внутри рамки, меняется по теме) ===== */
+  #sky{position:absolute;inset:0;z-index:0;transition:background .6s;}
+  #sun{position:absolute;z-index:0;}
+  #clouds{position:absolute;inset:0;z-index:0;pointer-events:none;}
+  .cloud{position:absolute;background:#fff;border-radius:50px;opacity:.9;}
+  .cloud::before,.cloud::after{content:"";position:absolute;background:#fff;border-radius:50%;}
+  .cloud::before{width:60%;height:150%;left:8%;top:-55%;}
+  .cloud::after{width:50%;height:130%;right:10%;top:-40%;}
+  #decor{position:absolute;left:0;right:0;bottom:0;height:62%;width:100%;z-index:0;display:block;}
+
+  /* ===== HUD ===== */
+  #hud{width:100%;max-width:480px;padding:12px 14px 4px;display:flex;align-items:center;gap:8px;z-index:3;}
+  .stat{background:rgba(255,255,255,.92);border-radius:14px;padding:6px 10px;display:flex;flex-direction:column;line-height:1.1;
+    box-shadow:0 4px 14px rgba(20,40,60,.25);color:var(--ink);}
+  .stat b{font-size:16px;} .stat span{font-size:9px;opacity:.65;letter-spacing:.4px;text-transform:uppercase;}
+  #lvl{margin-left:auto;text-align:right;}
+  #bar{width:100%;max-width:480px;padding:0 14px;z-index:3;}
+  #barTrack{height:8px;border-radius:8px;background:rgba(255,255,255,.55);overflow:hidden;margin-top:6px;box-shadow:inset 0 1px 3px rgba(0,0,0,.12);}
+  #barFill{height:100%;width:0;border-radius:8px;background:linear-gradient(90deg,#ffd25a,#ff9a3d);transition:width .4s;}
+
+  /* ===== ПОЛЕ ===== */
+  #stage{flex:1;width:100%;position:relative;z-index:2;min-height:0;}
+  #board{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);transform-origin:center;}
+  .hex{position:absolute;display:flex;align-items:center;justify-content:center;clip-path:var(--hex);transition:transform .12s;}
+  .cell{background:rgba(255,255,255,.20);box-shadow:inset 0 0 0 2px rgba(255,255,255,.34);}
+  .cell.hot{transform:scale(1.12);box-shadow:inset 0 0 0 3px rgba(255,255,255,.9);}
+  .tile{position:absolute;left:0;top:0;}
+  .tile .face{position:absolute;inset:0;clip-path:var(--hex);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,var(--neutral),var(--neutral-d));
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.30),inset 0 -4px 8px rgba(0,0,0,.22);}
+  .tile .word{font-weight:800;font-size:10px;text-align:center;line-height:1;padding:0 4px;color:#fff;text-shadow:0 1px 1.5px rgba(0,0,0,.5);word-break:break-word;}
+  .tile .badge{position:absolute;top:5px;right:8px;background:#fff;color:var(--ink);font-size:9px;font-weight:900;border-radius:9px;padding:1px 5px;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+  .pop{animation:pop .42s ease forwards;} @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(0);opacity:0}}
+  .land{animation:land .2s ease;} @keyframes land{0%{transform:scale(.6)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+  .ghost{position:fixed;pointer-events:none;z-index:60;filter:drop-shadow(0 8px 14px rgba(0,40,80,.4));}
+
+  /* ===== РУКА (3 плитки) ===== */
+  #hand{display:flex;justify-content:center;align-items:center;gap:16px;padding:8px 0 4px;z-index:3;min-height:70px;}
+  #hand .slot{width:66px;height:58px;display:flex;align-items:center;justify-content:center;}
+  #hand .slot .tile{position:relative;width:66px;height:58px;cursor:grab;animation:land .2s ease;}
+  #hand .slot .tile .word{font-size:11px;}
+  #hand .empty{width:52px;height:46px;clip-path:var(--hex);background:rgba(255,255,255,.16);box-shadow:inset 0 0 0 2px rgba(255,255,255,.3);}
+
+  /* ===== ПОПАП ===== */
+  #ov{position:absolute;inset:0;background:rgba(20,40,30,.55);display:none;align-items:center;justify-content:center;z-index:20;backdrop-filter:blur(4px);}
+  #ov .card{background:#fff;color:var(--ink);border-radius:24px;padding:26px 30px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35);animation:land .3s ease;}
+  #ov h1{margin:0 0 6px;font-size:26px;} #ov p{margin:0 0 16px;opacity:.7;font-size:13px;}
+  #ov button{border:0;border-radius:14px;padding:12px 28px;font-size:15px;font-weight:800;color:#fff;
+    background:linear-gradient(180deg,#7ed957,#4caf3f);box-shadow:0 6px 0 #2f8a2a;cursor:pointer;}
+  #ov button:active{transform:translateY(3px);box-shadow:0 3px 0 #2f8a2a;}
+  .hint{padding:4px 14px 12px;font-size:10.5px;color:#fff;opacity:.92;text-align:center;z-index:3;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,.45);}
+
+  #confetti{position:absolute;inset:0;pointer-events:none;z-index:25;overflow:hidden;}
+  .conf{position:absolute;width:9px;height:14px;border-radius:2px;will-change:transform,opacity;}
+  @keyframes fall{0%{transform:translateY(-20px) rotate(0);opacity:1}100%{transform:translateY(120%) rotate(620deg);opacity:.9}}
+
+  /* ===== указатель уровня — кликабельный (ведёт на карту) ===== */
+  #lvl{cursor:pointer;position:relative;} #lvl:active{transform:scale(.95);}
+
+  /* ===== HOME — карта уровней (путь снизу вверх) ===== */
+  #home{position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;overflow:hidden;
+    background:linear-gradient(180deg,#8fd6f2 0%,#c7ecdf 40%,#9fdd86 54%,#6cc35a 100%);}
+  #home.hidden{display:none;}
+  #home .htitle{margin:0;padding:18px 0 2px;text-align:center;font-size:23px;font-weight:900;color:#22402a;text-shadow:0 2px 0 rgba(255,255,255,.55);z-index:2;}
+  #home .hsub{text-align:center;font-size:11px;color:#22402a;opacity:.7;font-weight:700;z-index:2;letter-spacing:.3px;}
+  #homeMap{flex:1;position:relative;min-height:0;}
+  #homeMap .road{position:absolute;inset:0;width:100%;height:100%;}
+  #homeMap .node{position:absolute;transform:translate(-50%,-50%);width:58px;height:58px;border-radius:50%;
+    border:3px solid rgba(255,255,255,.92);font-weight:900;font-size:23px;color:#fff;cursor:pointer;
+    box-shadow:0 6px 0 rgba(0,0,0,.22),0 10px 18px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;}
+  #homeMap .node:active{transform:translate(-50%,-50%) scale(.93);}
+  #homeMap .node .lbl{position:absolute;top:58px;left:50%;transform:translateX(-50%);font-size:10px;white-space:nowrap;
+    color:#22402a;font-weight:800;background:rgba(255,255,255,.82);padding:1px 7px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.15);}
+  #homeMap .node.cur::before{content:"⭐";position:absolute;top:-26px;left:50%;transform:translateX(-50%);font-size:20px;
+    filter:drop-shadow(0 2px 2px rgba(0,0,0,.3));animation:bob 1.1s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
+</style>
+</head>
+<body>
+<div id="phone">
+  <div id="sky"></div><div id="sun"></div><div id="clouds"></div>
+  <div id="decor"></div>
+
+  <div id="hud">
+    <div class="stat"><b id="score">0</b><span>Очки</span></div>
+    <div class="stat"><b id="left">0</b><span>Осталось</span></div>
+    <div class="stat" id="lvl" onclick="showHome()" title="К карте уровней"><b id="lvlNum">Ур. 1/5 ☰</b><span id="lvlName">Цветочная</span></div>
+  </div>
+  <div id="bar"><div id="barTrack"><div id="barFill"></div></div></div>
+  <div id="stage"><div id="board"></div></div>
+  <div id="hand"></div>
+  <div class="hint">Тащи слово из руки на поле · ставь рядом с такой же категорией — они сольются сами · собери 4 → ✨</div>
+
+  <div id="ov"><div class="card"><h1 id="ovT">🎉</h1><p id="ovP"></p><button id="ovB" onclick="doNext()">Дальше</button></div></div>
+  <div id="confetti"></div>
+
+  <!-- ===== КАРТА УРОВНЕЙ (HomeScreen, путь снизу вверх) ===== -->
+  <div id="home" class="hidden">
+    <div class="htitle">Word Hexa Sort</div>
+    <div class="hsub">Выбери уровень</div>
+    <div id="homeMap"></div>
+  </div>
+</div>
+
+<script>
+/* ======================= ДАННЫЕ ======================= */
+const CATS = {
+  animals:  {color:'#5BC15A', words:['GECKO','IGUANA','SNAKE','BIRD','LIZARD','FROG','TIGER','PANDA','FALCON','TURTLE','RABBIT','OTTER']},
+  veggies:  {color:'#F2A93B', words:['CARROT','CELERY','ONION','PEA','PEPPER','SPINACH','POTATO','BEET','RADISH','LEEK','CORN','KALE']},
+  body:     {color:'#E8556E', words:['KIDNEY','LIVER','LUNG','HEART','SPLEEN','RIB','ELBOW','ANKLE','SKULL','WRIST','SHIN','JAW']},
+  family:   {color:'#7E6CF0', words:['SISTER','FATHER','MOTHER','BROTHER','COUSIN','UNCLE','AUNT','NEPHEW','NIECE','GRANNY','TWIN','SPOUSE']},
+  food:     {color:'#36B7C9', words:['DONUT','BAGEL','PIZZA','STEAK','BURGER','SALAD','TACO','SUSHI','WAFFLE','PASTA','RAMEN','KEBAB']},
+};
+const CATKEYS=Object.keys(CATS);
+
+/* ---- ТЕМЫ (фон) ---- */
+const FLW=`<g id="flw"><circle cx="0" cy="-6.2" r="4.2"/><circle cx="5.9" cy="-1.9" r="4.2"/><circle cx="3.6" cy="5" r="4.2"/><circle cx="-3.6" cy="5" r="4.2"/><circle cx="-5.9" cy="-1.9" r="4.2"/><circle cx="0" cy="0" r="3.2" fill="#ffce3a"/></g>`;
+const GRASS=`<g id="grass" fill="#4ea73f"><path d="M0 0 C-2 -10 -4 -16 -3 -22 C-1 -15 1 -10 1 0 Z"/><path d="M2 0 C3 -12 7 -18 9 -24 C7 -16 5 -10 4 0 Z"/><path d="M-2 0 C-4 -11 -8 -17 -10 -23 C-8 -15 -6 -9 -4 0 Z"/></g>`;
+const pine=(x,y,s,c1,c2)=>`<g transform="translate(${x},${y}) scale(${s})"><rect x="-3" y="0" width="6" height="14" fill="#7a5230"/><polygon points="0,-46 -20,-8 20,-8" fill="${c2}"/><polygon points="0,-58 -16,-22 16,-22" fill="${c1}"/><polygon points="0,-68 -12,-36 12,-36" fill="${c1}"/></g>`;
+
+const THEMES=[
+ { name:'Цветочная',
+   sky:'linear-gradient(180deg,#8fd6f2 0%,#aee3f6 24%,#cdeffb 40%,#ecfbff 50%,#f3fde9 56%)',
+   sun:{css:'left:74%;top:-8%;width:120%;height:50%;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(255,250,205,.9),rgba(255,250,205,.3) 42%,rgba(255,250,205,0) 70%)'},
+   clouds:`<div class="cloud" style="left:9%;top:7%;width:26%;height:3.2%"></div><div class="cloud" style="left:62%;top:5%;width:32%;height:3.6%;opacity:.85"></div>`,
+   decor:`<defs>
+     <linearGradient id="gHillFar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe9a0"/><stop offset="1" stop-color="#a3da86"/></linearGradient>
+     <linearGradient id="gMeadow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fd873"/><stop offset="55%" stop-color="#6cc35a"/><stop offset="1" stop-color="#57b14b"/></linearGradient>
+     <linearGradient id="gSand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6e6a6"/><stop offset="1" stop-color="#ecd279"/></linearGradient>
+     <radialGradient id="gBush" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#6fc960"/><stop offset="1" stop-color="#3f9a3c"/></radialGradient>${FLW}${GRASS}</defs>
+     <path d="M0,70 Q90,20 200,55 Q310,90 400,48 L400,300 L0,300 Z" fill="url(#gHillFar)"/>
+     <path d="M0,120 Q120,80 240,118 Q330,146 400,112 L400,300 L0,300 Z" fill="url(#gMeadow)"/>
+     <path d="M0,235 Q110,205 210,232 Q320,258 400,228 L400,300 L0,300 Z" fill="url(#gSand)"/>
+     <ellipse cx="34" cy="150" rx="34" ry="24" fill="url(#gBush)"/><ellipse cx="372" cy="138" rx="36" ry="26" fill="url(#gBush)"/>
+     <use href="#flw" transform="translate(48,196) scale(1.1)" fill="#ff6f9c"/><use href="#flw" transform="translate(150,205) scale(1.2)" fill="#fff"/>
+     <use href="#flw" transform="translate(214,182) scale(.85)" fill="#ff8fb3"/><use href="#flw" transform="translate(286,200) scale(1.15)" fill="#fff4f7"/>
+     <use href="#flw" transform="translate(338,178) scale(.95)" fill="#ff6f9c"/><use href="#flw" transform="translate(96,176) scale(.9)" fill="#fff4f7"/>
+     <use href="#grass" transform="translate(28,238)"/><use href="#grass" transform="translate(132,240)"/><use href="#grass" transform="translate(244,242)"/><use href="#grass" transform="translate(356,243)"/>` },
+
+ { name:'Пляжная',
+   sky:'linear-gradient(180deg,#4fb8ec 0%,#7fd0f3 30%,#bfe9fb 50%,#eaf8ff 58%)',
+   sun:{css:'left:80%;top:4%;width:34%;height:20%;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(255,248,200,1),rgba(255,240,170,.5) 45%,rgba(255,240,170,0) 70%)'},
+   clouds:`<div class="cloud" style="left:12%;top:10%;width:24%;height:3%"></div><div class="cloud" style="left:55%;top:6%;width:20%;height:2.6%;opacity:.8"></div>`,
+   decor:`<defs>
+     <linearGradient id="gSea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2fb6e0"/><stop offset="1" stop-color="#1c8fc4"/></linearGradient>
+     <linearGradient id="gBeach" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbeec2"/><stop offset="1" stop-color="#ecca7e"/></linearGradient></defs>
+     <path d="M0,40 L400,40 L400,175 Q300,160 200,172 Q100,184 0,168 Z" fill="url(#gSea)"/>
+     <path d="M0,150 Q120,176 230,160 Q330,146 400,162 L400,300 L0,300 Z" fill="url(#gBeach)"/>
+     <path d="M0,168 Q100,184 200,172 Q300,160 400,175 L400,182 Q300,168 200,180 Q100,192 0,176 Z" fill="#fff" opacity=".55"/>
+     <g transform="translate(54,150)"><path d="M5,0 C1,-34 -1,-62 -3,-86 C2,-62 9,-34 13,0 Z" fill="#9c6b3f"/>
+       <g fill="#2f9a4a"><ellipse cx="-3" cy="-88" rx="30" ry="9" transform="rotate(-22 -3 -88)"/><ellipse cx="-3" cy="-88" rx="30" ry="9" transform="rotate(22 -3 -88)"/><ellipse cx="-3" cy="-88" rx="9" ry="28" transform="rotate(8 -3 -88)"/><ellipse cx="-3" cy="-88" rx="28" ry="9" transform="rotate(-60 -3 -88)"/><ellipse cx="-3" cy="-88" rx="28" ry="9" transform="rotate(60 -3 -88)"/></g>
+       <circle cx="-3" cy="-86" r="5" fill="#b9742f"/></g>
+     <g transform="translate(348,158) scale(.8)"><path d="M5,0 C1,-34 -1,-62 -3,-86 C2,-62 9,-34 13,0 Z" fill="#9c6b3f"/>
+       <g fill="#2f9a4a"><ellipse cx="-3" cy="-88" rx="30" ry="9" transform="rotate(-22 -3 -88)"/><ellipse cx="-3" cy="-88" rx="30" ry="9" transform="rotate(22 -3 -88)"/><ellipse cx="-3" cy="-88" rx="9" ry="28"/><ellipse cx="-3" cy="-88" rx="28" ry="9" transform="rotate(-60 -3 -88)"/><ellipse cx="-3" cy="-88" rx="28" ry="9" transform="rotate(60 -3 -88)"/></g></g>
+     <path d="M150,250 l4,-9 4,9 9,1 -7,6 3,9 -9,-5 -9,5 3,-9 -7,-6 z" fill="#ff8aa0"/>
+     <ellipse cx="250" cy="262" rx="11" ry="7" fill="#f3b6c4"/>` },
+
+ { name:'Лесная',
+   sky:'linear-gradient(180deg,#a7d9d2 0%,#c6e8df 34%,#e3f3ea 52%)',
+   sun:{css:'left:30%;top:2%;width:40%;height:26%;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(255,255,235,.7),rgba(255,255,235,0) 70%)'},
+   clouds:'',
+   decor:`<defs><linearGradient id="gFloor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7cc26a"/><stop offset="1" stop-color="#4f9a45"/></linearGradient></defs>
+     <path d="M0,90 Q100,60 200,84 Q300,108 400,80 L400,300 L0,300 Z" fill="#86c97a" opacity=".7"/>
+     <path d="M0,150 Q120,120 240,148 Q330,168 400,142 L400,300 L0,300 Z" fill="url(#gFloor)"/>
+     ${pine(40,150,1.05,'#2f7d3c','#266a32')}${pine(95,158,.8,'#347f3f','#2a6b33')}${pine(150,150,1.15,'#2f7d3c','#266a32')}
+     ${pine(212,156,.85,'#357f40','#2b6b34')}${pine(270,150,1.1,'#2f7d3c','#266a32')}${pine(330,158,.78,'#347f3f','#2a6b33')}${pine(372,152,1.0,'#2f7d3c','#266a32')}
+     <g transform="translate(120,250)"><ellipse cx="0" cy="0" rx="11" ry="8" fill="#e0533f"/><circle cx="-4" cy="-2" r="1.6" fill="#fff"/><circle cx="4" cy="0" r="1.6" fill="#fff"/><rect x="-3" y="0" width="6" height="9" fill="#f0e6cf"/></g>
+     <g transform="translate(300,258)"><ellipse cx="0" cy="0" rx="9" ry="6" fill="#e0533f"/><circle cx="0" cy="-2" r="1.4" fill="#fff"/><rect x="-2.5" y="0" width="5" height="7" fill="#f0e6cf"/></g>
+     <use href="#grass" transform="translate(70,242)"/><use href="#grass" transform="translate(240,244)"/><use href="#grass" transform="translate(356,243)"/>
+     <defs>${GRASS}</defs>` },
+
+ { name:'Горная',
+   sky:'linear-gradient(180deg,#bcdcf0 0%,#d6ecf8 36%,#eef7fc 54%)',
+   sun:{css:'left:72%;top:0%;width:34%;height:22%;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(255,252,235,.8),rgba(255,252,235,0) 70%)'},
+   clouds:`<div class="cloud" style="left:14%;top:8%;width:22%;height:2.8%;opacity:.8"></div>`,
+   decor:`<defs><linearGradient id="gMtn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fa6c4"/><stop offset="1" stop-color="#5d6f92"/></linearGradient>
+     <linearGradient id="gMtn2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#aebfd6"/><stop offset="1" stop-color="#8094b5"/></linearGradient>
+     <linearGradient id="gFoot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#74b86a"/><stop offset="1" stop-color="#4e9444"/></linearGradient></defs>
+     <polygon points="-20,170 90,40 200,170" fill="url(#gMtn2)"/><polygon points="200,180 320,55 430,180" fill="url(#gMtn2)"/>
+     <polygon points="60,180 200,30 340,180" fill="url(#gMtn)"/>
+     <polygon points="200,30 170,75 185,70 200,92 215,70 230,75" fill="#fff"/>
+     <polygon points="90,40 70,72 82,67 90,82 98,67 110,72" fill="#fff"/>
+     <polygon points="320,55 300,88 312,82 320,98 328,82 340,88" fill="#fff"/>
+     <path d="M0,150 Q120,124 240,150 Q330,170 400,146 L400,300 L0,300 Z" fill="url(#gFoot)"/>
+     ${pine(50,158,.7,'#2f7d3c','#266a32')}${pine(360,160,.66,'#347f3f','#2a6b33')}
+     <ellipse cx="150" cy="250" rx="16" ry="9" fill="#9aa3ad"/><ellipse cx="270" cy="262" rx="13" ry="8" fill="#8b95a0"/><ellipse cx="60" cy="262" rx="11" ry="7" fill="#9aa3ad"/>` },
+
+ { name:'Закатная',
+   sky:'linear-gradient(180deg,#ff9e6d 0%,#ff7e9d 28%,#cf6fb0 56%,#7d6bbf 100%)',
+   sun:{css:'left:50%;top:30%;width:60%;height:40%;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(255,224,150,.95),rgba(255,180,120,.4) 45%,rgba(255,150,110,0) 72%)'},
+   clouds:`<div class="cloud" style="left:16%;top:12%;width:26%;height:3%;opacity:.7;background:#ffd9c2"></div><div class="cloud" style="left:60%;top:18%;width:22%;height:2.6%;opacity:.6;background:#ffc9bf"></div>`,
+   decor:`<defs><linearGradient id="gWater" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e98a73"/><stop offset="1" stop-color="#9c6ab0"/></linearGradient></defs>
+     <circle cx="200" cy="120" r="54" fill="#ffd27a" opacity=".95"/>
+     <path d="M0,150 L400,150 L400,210 Q300,200 200,208 Q100,216 0,204 Z" fill="url(#gWater)" opacity=".85"/>
+     <ellipse cx="200" cy="150" rx="40" ry="6" fill="#ffd27a" opacity=".55"/><ellipse cx="200" cy="172" rx="30" ry="4" fill="#ffe3a8" opacity=".4"/>
+     <path d="M0,135 Q90,95 190,128 Q300,162 400,120 L400,180 L0,180 Z" fill="#7a4f86"/>
+     <path d="M0,170 Q120,140 240,168 Q330,188 400,162 L400,300 L0,300 Z" fill="#4a2f63"/>
+     ${pine(60,210,.9,'#3a2350','#2e1b42')}${pine(330,214,.8,'#3a2350','#2e1b42')}
+     <g fill="#3a2350"><path d="M150,90 q6,-5 12,0 q-6,-3 -12,0"/><path d="M250,80 q6,-5 12,0 q-6,-3 -12,0"/><path d="M205,70 q5,-4 10,0 q-5,-3 -10,0"/></g>` },
+];
+
+// Классический Hexa Sort: рука из 3, авто-слияние соседей.
+// cats — сколько плиток каждой категории (кратно 4, чтобы собирались); preplace — сколько уже стоит на поле в начале.
+const LEVELS=[
+ {theme:0, cats:[4,4,4],      preplace:4},  // L1 (12)
+ {theme:1, cats:[4,4,4,4],    preplace:5},  // L2 (16)
+ {theme:2, cats:[8,4,4,4],    preplace:6},  // L3 (20)
+ {theme:3, cats:[8,8,4,4],    preplace:7},  // L4 (24)
+ {theme:4, cats:[8,8,8,4],    preplace:8},  // L5 (28)
+];
+const NODE_COLORS=['#5bbf6a','#39b6e0','#3f9a4c','#7f8fb0','#c56fae'];
+const NODE_POS=[{x:52,y:88},{x:30,y:71},{x:64,y:54},{x:33,y:37},{x:60,y:19}];
+
+const CLEAR_AT=4, RADIUS=2, WIN_DELAY=1100;
+const SIZE=34, W=SIZE*2, H=Math.round(Math.sqrt(3)*SIZE);
+const HW=66, HH=58;   // размер плитки в руке / ghost
+
+/* ======================= СОСТОЯНИЕ ======================= */
+let cells={}, hand=[null,null,null], deck=[], score=0, total=0, pending=0, over=false, level=0, nextAction=null, picked=null;
+let _seed=Date.now()%100000; function rnd(){ _seed=(_seed*9301+49297)%233280; return _seed/233280; }
+function shade(hex,p){let n=parseInt(hex.slice(1),16),r=(n>>16)+p,g=(n>>8&255)+p,b=(n&255)+p;
+  return '#'+[r,g,b].map(v=>Math.max(0,Math.min(255,v)).toString(16).padStart(2,'0')).join('');}
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+/* ---- тема ---- */
+function applyTheme(i){
+  const t=THEMES[i];
+  document.getElementById('lvlNum').textContent='Ур. '+(i+1)+'/5 ☰';
+  document.getElementById('lvlName').textContent=t.name;
+  try{
+    document.getElementById('sky').style.background=t.sky;
+    document.getElementById('sun').style.cssText='position:absolute;z-index:0;'+(t.sun?t.sun.css:'display:none');
+    document.getElementById('clouds').innerHTML=t.clouds||'';
+    const inner=t.decor.replace(/<use href="([^"]+)"/g,'<use xlink:href="$1" href="$1"');
+    document.getElementById('decor').innerHTML=
+      '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '+
+      'viewBox="0 0 400 300" preserveAspectRatio="xMidYMax slice" '+
+      'style="width:100%;height:100%;display:block">'+inner+'</svg>';
+  }catch(e){}
+}
+
+/* ---- геометрия ---- */
+function axialToPx(q,r){ return { x:SIZE*1.5*q, y:H*(r+q/2) }; }
+function neighbors(id){ const [q,r]=id.split(',').map(Number);
+  return [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]].map(d=>(q+d[0])+','+(r+d[1])); }
+
+function buildBoard(){
+  const board=document.getElementById('board'); board.innerHTML=''; cells={};
+  let pts=[];
+  for(let q=-RADIUS;q<=RADIUS;q++) for(let r=-RADIUS;r<=RADIUS;r++)
+    if(Math.abs(q+r)<=RADIUS){ const p=axialToPx(q,r); pts.push({q,r,...p}); }
+  const minX=Math.min(...pts.map(p=>p.x)), minY=Math.min(...pts.map(p=>p.y));
+  const maxX=Math.max(...pts.map(p=>p.x)), maxY=Math.max(...pts.map(p=>p.y));
+  board.style.width=(maxX-minX+W)+'px'; board.style.height=(maxY-minY+H)+'px';
+  pts.forEach(p=>{
+    const id=`${p.q},${p.r}`;
+    const el=document.createElement('div'); el.className='hex cell';
+    el.style.cssText=`width:${W}px;height:${H}px;left:${p.x-minX}px;top:${p.y-minY}px`;
+    el.dataset.id=id; board.appendChild(el);
+    cells[id]={q:p.q,r:p.r,el,pile:null};
+  });
+}
+function fit(){
+  const stage=document.getElementById('stage'), board=document.getElementById('board');
+  if(!board.offsetWidth) return;
+  const sw=stage.clientWidth-20, sh=stage.clientHeight-20;
+  const s=Math.max(.4, Math.min(sw/board.offsetWidth, sh/board.offsetHeight, 1.35));
+  board.style.transform=`translate(-50%,-50%) scale(${s})`;
+}
+window.addEventListener('resize',fit);
+
+/* ---- плитка (DOM) ---- */
+function makeTileEl(t){
+  const el=document.createElement('div'); el.className='hex tile land';
+  const face=document.createElement('div'); face.className='face';
+  if(t.count>=2){ const col=CATS[t.cat].color; face.style.background=`linear-gradient(180deg,${col},${shade(col,-22)})`; }
+  face.innerHTML=`<div class="word">${t.word}</div>`+(t.count>=2?`<div class="badge">${t.count}/${CLEAR_AT}</div>`:'');
+  el.appendChild(face); return el;
+}
+function paintCell(id){
+  const c=cells[id]; c.el.innerHTML=''; c.el.classList.remove('hot');
+  if(!c.pile) return;
+  const t=makeTileEl(c.pile); t.style.width=W+'px'; t.style.height=H+'px';
+  c.el.appendChild(t);
+}
+
+/* ---- рука ---- */
+function renderHand(){
+  const h=document.getElementById('hand'); h.innerHTML='';
+  hand.forEach((t,i)=>{
+    const slot=document.createElement('div'); slot.className='slot';
+    if(t){ const tile=makeTileEl(t); tile.dataset.hi=i; tile.onpointerdown=e=>startHandDrag(e,i,tile); slot.appendChild(tile); }
+    else { const e=document.createElement('div'); e.className='empty'; slot.appendChild(e); }
+    h.appendChild(slot);
+  });
+}
+function deal(){ for(let i=0;i<3;i++){ if(!hand[i] && deck.length) hand[i]=deck.shift(); } renderHand(); }
+
+/* ======================= ХОД: поставить из руки ======================= */
+function place(hi,cellId){
+  if(over) return false;
+  const t=hand[hi]; const c=cells[cellId];
+  if(!t || !c || c.pile) return false;      // ставить можно только на пустую клетку
+  c.pile={...t}; hand[hi]=null;
+  paintCell(cellId); renderHand();
+  autoMerge(cellId);
+  if(hand.every(x=>!x)) deal();             // рука пуста → новые 3
+  settle();
+  return true;
+}
+// авто-слияние: связная область той же категории вокруг поставленной плитки схлопывается в одну
+function autoMerge(id){
+  const start=cells[id].pile; if(!start) return;
+  const cat=start.cat, seen={}, comp=[], stack=[id];
+  while(stack.length){ const cur=stack.pop(); if(seen[cur]) continue; const p=cells[cur]&&cells[cur].pile;
+    if(!p||p.cat!==cat) continue; seen[cur]=1; comp.push(cur);
+    neighbors(cur).forEach(n=>{ if(cells[n]&&!seen[n]) stack.push(n); }); }
+  if(comp.length<2) return;                  // рядом нет такой же — плитка остаётся одна
+  let sum=0; const word=cells[id].pile.word;
+  comp.forEach(cid=>{ sum+=cells[cid].pile.count; if(cid!==id){ cells[cid].pile=null; paintCell(cid); } });
+  cells[id].pile={cat,word,count:sum}; paintCell(id);
+  if(sum>=CLEAR_AT){                          // собралось ≥4 → стопка уходит
+    score+=100*sum; pending++;
+    const el=cells[id].el.querySelector('.tile'); if(el) el.className='hex tile pop';
+    setTimeout(()=>{ cells[id].pile=null; paintCell(id); pending--; settle(); }, 420);
+  }
+}
+
+/* ======================= ДРАГ из руки ======================= */
+function getScale(){ const m=document.getElementById('board').style.transform.match(/scale\(([\d.]+)\)/); return m?parseFloat(m[1]):1; }
+function startHandDrag(e,hi,el){
+  if(over||!hand[hi]) return; e.preventDefault();
+  const g=makeTileEl(hand[hi]); g.className='hex tile ghost'; g.style.width=HW+'px'; g.style.height=HH+'px';
+  document.body.appendChild(g);
+  el.style.visibility='hidden';
+  picked={hi,el,g};
+  moveHandGhost(e);
+  window.addEventListener('pointermove',moveHandGhost);
+  window.addEventListener('pointerup',endHandDrag);
+}
+function moveHandGhost(e){
+  if(!picked) return;
+  picked.g.style.left=(e.clientX-HW/2)+'px'; picked.g.style.top=(e.clientY-HH/2)+'px';
+  Object.values(cells).forEach(c=>c.el.classList.remove('hot'));
+  const t=nearestEmpty(e.clientX,e.clientY); if(t) t.el.classList.add('hot');
+}
+function nearestEmpty(x,y){
+  let best=null,bd=1e9; const scale=getScale();
+  for(const id in cells){ const c=cells[id]; if(c.pile) continue;
+    const r=c.el.getBoundingClientRect(); const cx=r.left+r.width/2, cy=r.top+r.height/2, d=(cx-x)**2+(cy-y)**2;
+    if(d<bd && d<(SIZE*1.6*scale)**2){ bd=d; best={id,el:c.el}; } }
+  return best;
+}
+function endHandDrag(e){
+  window.removeEventListener('pointermove',moveHandGhost);
+  window.removeEventListener('pointerup',endHandDrag);
+  if(!picked) return;
+  Object.values(cells).forEach(c=>c.el.classList.remove('hot'));
+  picked.g.remove();
+  const tgt=nearestEmpty(e.clientX,e.clientY); const hi=picked.hi, el=picked.el; picked=null;
+  if(tgt){ place(hi,tgt.id); } else if(el){ el.style.visibility='visible'; }
+}
+
+/* ======================= СТАТУС ======================= */
+function boardTiles(){ let n=0; for(const id in cells){ if(cells[id].pile) n+=cells[id].pile.count; } return n; }
+function handTiles(){ let n=0; hand.forEach(h=>{ if(h) n+=h.count; }); return n; }
+function tilesLeft(){ return boardTiles()+handTiles()+deck.length; }
+function hasEmpty(){ return Object.values(cells).some(c=>!c.pile); }
+function refreshHUD(){
+  const left=tilesLeft();
+  document.getElementById('score').textContent=score;
+  document.getElementById('left').textContent=left;
+  document.getElementById('barFill').style.width=Math.min(100,(total-left)/total*100)+'%';
+}
+function settle(){
+  refreshHUD();
+  if(over || pending>0) return;
+  if(tilesLeft()===0){ over=true; setTimeout(()=>{ confetti(); winLevel(); }, WIN_DELAY); return; }
+  // проигрыш: поле забито, а в руке ещё есть плитки — ставить некуда
+  if(!hasEmpty() && hand.some(h=>h)){ over=true;
+    showOver('💥 Поле заполнено','Некуда ставить плитку. Очки: '+score,'↻ Заново',()=>startLevel(level)); }
+}
+function winLevel(){
+  if(level < LEVELS.length-1){
+    showOver('🏆 Уровень '+(level+1)+'!', THEMES[level].name+' пройдена · Очки: '+score, 'Дальше ▶', ()=>startLevel(level+1));
+  } else {
+    showOver('🎉 Все 5 уровней!', 'Поздравляем! Итог: '+score+' очков', '↻ Сначала', ()=>{ score=0; startLevel(0); });
+  }
+}
+function showOver(t,p,btn,action){
+  document.getElementById('ovT').textContent=t; document.getElementById('ovP').textContent=p;
+  document.getElementById('ovB').textContent=btn; nextAction=action;
+  document.getElementById('ov').style.display='flex';
+}
+function doNext(){ document.getElementById('ov').style.display='none'; if(nextAction) nextAction(); }
+function confetti(){
+  const box=document.getElementById('confetti'); box.innerHTML='';
+  const cols=['#7ed957','#ffd25a','#ff9a3d','#ff6f9c','#54c4e0','#fff4f7'];
+  for(let i=0;i<26;i++){ const d=document.createElement('div'); d.className='conf';
+    d.style.left=(rnd()*100)+'%'; d.style.background=cols[Math.floor(rnd()*cols.length)];
+    d.style.animation=`fall ${1+rnd()*1.2}s ${rnd()*0.5}s ease-in forwards`; box.appendChild(d); }
+  setTimeout(()=>{box.innerHTML='';}, 2600);
+}
+
+/* ======================= ГЕНЕРАЦИЯ ======================= */
+function genLevel(cfg){
+  const keys=shuffle([...CATKEYS]).slice(0,cfg.cats.length);
+  deck=[];
+  keys.forEach((cat,ci)=>{ const pool=shuffle([...CATS[cat].words]);
+    for(let i=0;i<cfg.cats[ci];i++) deck.push({cat,word:pool[i],count:1}); });
+  total=deck.length;
+  shuffle(deck);
+  // предзаполнение поля
+  const ids=shuffle(Object.keys(cells));
+  for(let i=0;i<cfg.preplace && deck.length;i++){ cells[ids[i]].pile=deck.shift(); }
+  hand=[null,null,null]; deal();
+  Object.keys(cells).forEach(paintCell);
+}
+
+function startLevel(n){
+  level=Math.max(0,Math.min(LEVELS.length-1,n));
+  over=false; pending=0; picked=null; _seed=(_seed+12345)%100000;
+  document.getElementById('ov').style.display='none';
+  document.getElementById('confetti').innerHTML='';
+  buildBoard(); genLevel(LEVELS[level]); refreshHUD(); requestAnimationFrame(fit);
+  applyTheme(LEVELS[level].theme);
+}
+
+/* ======================= КАРТА УРОВНЕЙ (HomeScreen) ======================= */
+function renderHome(){
+  const map=document.getElementById('homeMap');
+  const d='M '+NODE_POS.map(p=>p.x+' '+p.y).join(' L ');
+  let html=`<svg class="road" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <path d="${d}" fill="none" stroke="#caa877" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <path d="${d}" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 7" opacity=".8" vector-effect="non-scaling-stroke"/>
+    </svg>`;
+  NODE_POS.forEach((p,i)=>{ const c=NODE_COLORS[i];
+    html+=`<button class="node" data-lvl="${i}" style="left:${p.x}%;top:${p.y}%;background:radial-gradient(circle at 38% 30%, ${shade(c,28)}, ${c})">${i+1}<span class="lbl">${THEMES[i].name}</span></button>`; });
+  map.innerHTML=html;
+  map.querySelectorAll('.node').forEach(b=> b.onclick=()=>enterLevel(+b.dataset.lvl));
+  markCurrent();
+}
+function markCurrent(){ document.querySelectorAll('#homeMap .node').forEach((b,i)=>b.classList.toggle('cur', i===level)); }
+function showHome(){ document.getElementById('ov').style.display='none'; markCurrent(); document.getElementById('home').classList.remove('hidden'); }
+function enterLevel(i){ document.getElementById('home').classList.add('hidden'); startLevel(i); requestAnimationFrame(fit); }
+
+renderHome();
+showHome();
+
+window.__g={get cells(){return cells;}, get hand(){return hand;}, get deck(){return deck;}, place, tilesLeft,
+  get over(){return over;}, get score(){return score;}, get level(){return level;}, startLevel, enterLevel, showHome, fit};
+</script>
+</body>
+</html>

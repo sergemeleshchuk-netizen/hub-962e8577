@@ -1,0 +1,3774 @@
+{
+  "schema": "sizematch.unique-pair-catalog.v1",
+  "date": "2026-10-22",
+  "status": "integrated_v45",
+  "counts": {
+    "objects": 600,
+    "pairs": 300,
+    "existing_objects": 191,
+    "new_objects": 409,
+    "excluded_objects": 17,
+    "archived_objects": 4
+  },
+  "selection_policy": {
+    "pass": "without_replacement",
+    "each_object_appears": 1,
+    "ai_selection": "choose_from_remaining_pairs_only",
+    "after_pool_exhausted": "reuse_one_object_with_an_uncompared_partner",
+    "comparison_history": "persist_unordered_object_pair_ids_on_check",
+    "slider_ratio_min": 0.04,
+    "slider_ratio_max": 25,
+    "game_order": "strict_editor_order_no_starter_override"
+  },
+  "notes": [
+    "Other saved favorites and existing curated pairs are retained only when neither object was used earlier.",
+    "Integrated in v45 runtime; the user's saved editor state remains available separately.",
+    "81 rows rebalanced for slider reachability and cross-group contrast; previous pairs retained for editor-state migration.",
+    "Pairs 147–150 include Louvre pyramid/cactus and Dubai Museum of the Future/65 m luxury yacht. Pair #102 is Greenland/Mexico. Japan and American Falls remain in the Atlas archive.",
+    "Pair order and first-ten starters follow the downloaded Atlas editor selection dated 2026-10-19; no pair edits or deletions were present.",
+    "Rows 151–200 append the approved 100 art assets in mixed, slider-reachable pairs; the saved order of rows 1–150 is unchanged.",
+    "Three object exchanges from the user export dated 2026-10-20 are applied at rows 150, 156 and 176; row order is unchanged. The current tardigrade artwork is retained.",
+    "Row 199 replaces the Tardigrade object with a 1 mm Poppy seed; the row and all other pairs keep their positions.",
+    "Latest user selection applied: six pairwise object exchanges, zero repeated objects. All active object sizes use one numeric size_m in metres, calibrated to the larger sprite side.",
+    "Measurement types and axes restored; pair order unchanged; all sizes stay in metres.",
+    "Pair #60 eagle/human uses 0.85 m folded eagle length rather than unseen 2 m wingspan; order unchanged.",
+    "2026-10-20: nine B-partner substitutions for visual scale; all 400 keys remain unique and 200 rows keep their order.",
+    "2026-10-20: pair 97 becomes Whale / labeled 75 m Great Wall section; pair 201 is Parthenon / Titanic. Prior row positions unchanged.",
+    "2026-10-20: pair 69 replaces Everest with Costa Rica; all other pair positions are unchanged.",
+    "2026-10-21: mixed-dimension pair 185 split into two same-dimension pairs at positions 185 and 186; former pairs 186-201 move to 187-202.",
+    "Latest user selection applied; snowman/goose and watchtower/unicycle use matching height axes; film/game character pairs are distributed after row 50.",
+    "2026-10-22 user request: Greenland/California, Texas/Mexico, Snowman/Marshmallow Monster, Tireman/Goose, Ghost Hunter/Haunted Manor Door; Dandelion 0.08 m. No repeated objects.",
+    "2026-10-22 art/size review: 32 corrected object measurements; all pair ratios recalculated, order unchanged.",
+    "46 user-requested cross-category pairs appended at rows 255–300; Tireman paired with a monster-truck wheel instead of reused goose. Original 254 row order retained.",
+    "2026-10-23: kf computed for all 600 objects from the visible alpha extent (stale manual kf of snow_shovel, button, luxury_yacht_65m, guinea_pig removed); 17 corrected sizes (toddler slide, garden rope bridge, light helicopter, Sydney arch span, tin soldier, gingerbread house, lunch box, chandelier, 9 diagonal/3-4-view projections); English in-game names for the 92 expansion objects (Russian kept in name_ru); pair order and images unchanged.",
+    "2026-10-23: 12 pairs re-paired so that partners differ by at most ~4.7x (slots [72, 88, 203, 206, 214, 228, 236, 243, 250, 251, 269, 291]); mosquito = 0.012 m incl. legs.",
+    "2026-10-23 pair audit (all 300 pairs rendered at game scale): 13 sizes corrected (T-rex by height, ant/Lego/cableway station/monster truck wheel, 8 exact-x1 pairs); pairs 256 and 266 swapped partners.",
+    "2026-10-23: tracked_excavator = visible width 6.5 m (folded pose); pair 70 ratio recalculated.",
+    "2026-10-23: cruiseship (300, 'length', 'w') -> (65.0, height above waterline, h); Art is a strongly foreshortened 3/4 view (stern cropped); 300 m length stretched onto the canvas width made the ship 214 m tall, above the 134 m bridge arch. Height above waterline of a ~300 m cruise ship.",
+    "2026-10-23: playground_slide (1.2, 'length', 'w') -> (1.6, length, w); Chute is 40 % of the visible width and the ladder has 4 steps: a 1.6 m kids slide, 1.2 m looked too small by chute width.",
+    "2026-10-23: hamster (0.12, 'length', 'w') -> (0.08, width (sitting), w); Art is a front-facing sitting hamster: the visible width is the body width (~8 cm), not the 12 cm nose-to-tail length.",
+    "2026-10-23: lion (1.2, 'height', 'h') -> (1.4, height to top of head, h); Standing lion with raised head: 1.2 m is the shoulder height, the canvas top is the head/mane.",
+    "2026-10-23: kick_scooter (1.1, 'height', 'h') -> (0.9, height, h); Art shows a kids kick scooter (handlebar ~0.9 m); 1.1 m was an adult scooter.",
+    "2026-10-23: lion (1.4, 'height to top of head', 'h') -> (1.4, height to top of head, h); Standing lion with raised head: 1.2 m is the shoulder height, the canvas top is the head/mane (manifest override fixed)."
+  ],
+  "excluded_keys": [
+    "charizard",
+    "eevee",
+    "groudon",
+    "gyarados",
+    "jigglypuff",
+    "lugia",
+    "magikarp",
+    "mewtwo",
+    "onix",
+    "pidgey",
+    "pig",
+    "pikachu",
+    "rayquaza",
+    "snorlax",
+    "squirtle",
+    "steelix",
+    "wailord"
+  ],
+  "pairs": [
+    {
+      "id": "unique-001",
+      "order": 1,
+      "a": "liberty",
+      "b": "starship",
+      "source": "atlas_editor_order",
+      "is_first_ten": true,
+      "reference_object": "liberty",
+      "source_before_reorder": "saved_first_ten",
+      "ratio": 0.5591397849462365
+    },
+    {
+      "id": "unique-002",
+      "order": 2,
+      "a": "moon",
+      "b": "australia",
+      "source": "atlas_editor_order",
+      "is_first_ten": true,
+      "reference_object": "moon",
+      "source_before_reorder": "saved_first_ten",
+      "ratio": 1.1514104778353482
+    },
+    {
+      "id": "unique-003",
+      "order": 3,
+      "a": "red_phone_kiosk",
+      "b": "concert_harp",
+      "source": "atlas_editor_order",
+      "reference_object": "red_phone_kiosk",
+      "is_first_ten": true,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 0.7401574803149605
+    },
+    {
+      "id": "unique-004",
+      "order": 4,
+      "a": "thumbelina",
+      "b": "chessking",
+      "source": "strawberry_chessking_swap_2026-10-21",
+      "is_first_ten": true,
+      "reference_object": "thumbelina",
+      "source_before_reorder": "saved_first_ten",
+      "ratio": 3.8,
+      "previous_pair": [
+        "thumbelina",
+        "strawberry"
+      ]
+    },
+    {
+      "id": "unique-005",
+      "order": 5,
+      "a": "italy",
+      "b": "madagascar",
+      "source": "atlas_editor_order",
+      "is_first_ten": true,
+      "source_before_reorder": "approved_batch_group",
+      "ratio": 1.2030075187969924
+    },
+    {
+      "id": "unique-006",
+      "order": 6,
+      "a": "hotairballoon",
+      "b": "hollywood_sign",
+      "source": "atlas_editor_order",
+      "is_first_ten": true,
+      "reference_object": "hotairballoon",
+      "source_before_reorder": "saved_first_ten",
+      "ratio": 4.8500000000000005
+    },
+    {
+      "id": "unique-007",
+      "order": 7,
+      "a": "strawberry",
+      "b": "hummingbird",
+      "source": "strawberry_chessking_swap_2026-10-21",
+      "reference_object": "strawberry",
+      "is_first_ten": true,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 2.25,
+      "previous_pair": [
+        "chessking",
+        "hummingbird"
+      ]
+    },
+    {
+      "id": "unique-008",
+      "order": 8,
+      "a": "iss",
+      "b": "footballfield",
+      "source": "atlas_editor_order",
+      "reference_object": "iss",
+      "is_first_ten": true,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 0.963302752293578
+    },
+    {
+      "id": "unique-009",
+      "order": 9,
+      "a": "mount_rushmore",
+      "b": "b747",
+      "source": "atlas_editor_order",
+      "is_first_ten": true,
+      "reference_object": "mount_rushmore",
+      "source_before_reorder": "saved_first_ten",
+      "ratio": 1.1766666666666665
+    },
+    {
+      "id": "unique-010",
+      "order": 10,
+      "a": "charging_bull",
+      "b": "two_seat_helicopter",
+      "source": "atlas_editor_order",
+      "is_first_ten": true,
+      "reference_object": "charging_bull",
+      "source_before_reorder": "saved_favorite_replaces_duplicate_moon",
+      "ratio": 1.7755102040816324
+    },
+    {
+      "id": "unique-011",
+      "order": 11,
+      "a": "giant_sequoia",
+      "b": "london_eye",
+      "source": "atlas_editor_order",
+      "reference_object": "giant_sequoia",
+      "is_first_ten": false,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 1.6109785202863962
+    },
+    {
+      "id": "unique-012",
+      "order": 12,
+      "a": "snow_tube",
+      "b": "duck",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "existing_curated_pair",
+      "previous_pair": [
+        "snow_tube",
+        "steerable_snow_sled"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.5
+    },
+    {
+      "id": "unique-013",
+      "order": 13,
+      "a": "flying_carpet",
+      "b": "giant_waterlily_leaf",
+      "source": "atlas_editor_order",
+      "reference_object": "flying_carpet",
+      "is_first_ten": false,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 1.3333333333333335
+    },
+    {
+      "id": "unique-014",
+      "order": 14,
+      "a": "mantaray",
+      "b": "rhino",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "reference_object": "mantaray",
+      "source_before_reorder": "saved_first_ten",
+      "ratio": 0.8444444444444444
+    },
+    {
+      "id": "unique-015",
+      "order": 15,
+      "a": "palm",
+      "b": "lighthouse",
+      "source": "atlas_editor_order",
+      "reference_object": "palm",
+      "is_first_ten": false,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 2.5
+    },
+    {
+      "id": "unique-016",
+      "order": 16,
+      "a": "baba_yaga_hut",
+      "b": "moai",
+      "source": "atlas_editor_order",
+      "reference_object": "baba_yaga_hut",
+      "is_first_ten": false,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 0.5041666666666667
+    },
+    {
+      "id": "unique-017",
+      "order": 17,
+      "a": "pumpkin_carriage",
+      "b": "narwhal",
+      "source": "atlas_editor_order",
+      "reference_object": "pumpkin_carriage",
+      "is_first_ten": false,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 1.4
+    },
+    {
+      "id": "unique-018",
+      "order": 18,
+      "a": "giantsquid",
+      "b": "schoolbus",
+      "source": "atlas_editor_order",
+      "reference_object": "giantsquid",
+      "is_first_ten": false,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 0.8461538461538461
+    },
+    {
+      "id": "unique-019",
+      "order": 19,
+      "a": "neptune",
+      "b": "africa",
+      "source": "atlas_editor_order",
+      "reference_object": "neptune",
+      "is_first_ten": false,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 0.16245633985866298
+    },
+    {
+      "id": "unique-020",
+      "order": 20,
+      "a": "bus",
+      "b": "bigben",
+      "source": "atlas_editor_order",
+      "reference_object": "bus",
+      "is_first_ten": false,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 8.754545454545454
+    },
+    {
+      "id": "unique-021",
+      "order": 21,
+      "a": "flamingo_pool_float",
+      "b": "wooden_sled",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "existing_curated_pair",
+      "ratio": 0.6666666666666666
+    },
+    {
+      "id": "unique-022",
+      "order": 22,
+      "a": "eiffel",
+      "b": "airship",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "reference_object": "eiffel",
+      "source_before_reorder": "saved_first_ten",
+      "ratio": 0.22727272727272727
+    },
+    {
+      "id": "unique-023",
+      "order": 23,
+      "a": "snowmobile",
+      "b": "vintage_jukebox",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "existing_curated_pair",
+      "ratio": 0.47408194233687406
+    },
+    {
+      "id": "unique-024",
+      "order": 24,
+      "a": "empire_state",
+      "b": "burj",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "reference_object": "empire_state",
+      "source_before_reorder": "saved_first_ten",
+      "ratio": 1.8690744920993227
+    },
+    {
+      "id": "unique-025",
+      "order": 25,
+      "a": "santa",
+      "b": "gorilla",
+      "source": "atlas_editor_order",
+      "reference_object": "santa",
+      "is_first_ten": false,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 0.7222222222222222
+    },
+    {
+      "id": "unique-026",
+      "order": 26,
+      "a": "sun",
+      "b": "jupiter",
+      "source": "atlas_editor_order",
+      "reference_object": "sun",
+      "source_before_rebalance": "saved_favorite",
+      "previous_pair": [
+        "sun",
+        "basketball"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.10044540229885057
+    },
+    {
+      "id": "unique-027",
+      "order": 27,
+      "a": "crop_duster_biplane",
+      "b": "elephant",
+      "source": "atlas_editor_order",
+      "reference_object": "crop_duster_biplane",
+      "is_first_ten": false,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 0.7954545454545454
+    },
+    {
+      "id": "unique-028",
+      "order": 28,
+      "a": "inflatable_dinghy",
+      "b": "life_ring",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "existing_curated_pair",
+      "ratio": 0.25
+    },
+    {
+      "id": "unique-029",
+      "order": 29,
+      "a": "pirate_ship",
+      "b": "balanced_rock",
+      "source": "atlas_editor_order",
+      "reference_object": "pirate_ship",
+      "is_first_ten": false,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 1.56
+    },
+    {
+      "id": "unique-030",
+      "order": 30,
+      "a": "tennisball",
+      "b": "koala",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "existing_curated_pair",
+      "ratio": 11.641791044776118
+    },
+    {
+      "id": "unique-031",
+      "order": 31,
+      "a": "buffalo",
+      "b": "tracked_bulldozer",
+      "source": "atlas_editor_order",
+      "reference_object": "buffalo",
+      "is_first_ten": false,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 1.71875
+    },
+    {
+      "id": "unique-032",
+      "order": 32,
+      "a": "sicily",
+      "b": "deathstar",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "sicily",
+        "great_britain"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.5517241379310345
+    },
+    {
+      "id": "unique-033",
+      "order": 33,
+      "a": "knight",
+      "b": "grizzly",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "existing_curated_pair",
+      "ratio": 1.5135135135135134
+    },
+    {
+      "id": "unique-034",
+      "order": 34,
+      "a": "shark",
+      "b": "beetle",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "existing_curated_pair",
+      "ratio": 0.82
+    },
+    {
+      "id": "unique-035",
+      "order": 35,
+      "a": "space_needle",
+      "b": "antonov_an225",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "existing_curated_pair",
+      "previous_pair": [
+        "space_needle",
+        "washington_monument"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.4555215722001692
+    },
+    {
+      "id": "unique-036",
+      "order": 36,
+      "a": "paraglider",
+      "b": "halfpipe",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "existing_curated_pair",
+      "previous_pair": [
+        "paraglider",
+        "floatplane"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.36363636363636365
+    },
+    {
+      "id": "unique-037",
+      "order": 37,
+      "a": "christmas_tree",
+      "b": "road_roller",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "existing_curated_pair",
+      "previous_pair": [
+        "pedal_boat",
+        "sup_board"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.35
+    },
+    {
+      "id": "unique-038",
+      "order": 38,
+      "a": "quad_roller_skate",
+      "b": "cartoon_beaver",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "existing_curated_pair",
+      "ratio": 3.3333333333333335
+    },
+    {
+      "id": "unique-039",
+      "order": 39,
+      "a": "ant",
+      "b": "raindrop",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "existing_curated_pair",
+      "previous_pair": [
+        "ant",
+        "bumblebee"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.4
+    },
+    {
+      "id": "unique-040",
+      "order": 40,
+      "a": "giraffe",
+      "b": "trex",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "existing_curated_pair",
+      "ratio": 0.9090909090909091
+    },
+    {
+      "id": "unique-041",
+      "order": 41,
+      "a": "red_panda",
+      "b": "robot_dog",
+      "source": "atlas_editor_user_edit_2026-10-20",
+      "source_before_rebalance": "existing_curated_pair",
+      "previous_pair": [
+        "dog",
+        "robot_dog"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.8965517241379313
+    },
+    {
+      "id": "unique-042",
+      "order": 42,
+      "a": "moose",
+      "b": "cable_car_cabin",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "existing_curated_pair",
+      "previous_pair": [
+        "moose",
+        "horse"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.4285714285714286
+    },
+    {
+      "id": "unique-043",
+      "order": 43,
+      "a": "liberty_bell",
+      "b": "giant_pumpkin",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "existing_curated_pair",
+      "ratio": 0.8333333333333333
+    },
+    {
+      "id": "unique-044",
+      "order": 44,
+      "a": "rbc",
+      "b": "hair",
+      "source": "atlas_editor_order",
+      "reference_object": "rbc",
+      "is_first_ten": false,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 10.000000000000002
+    },
+    {
+      "id": "unique-045",
+      "order": 45,
+      "a": "tiger",
+      "b": "forklift",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "existing_curated_pair",
+      "previous_pair": [
+        "tiger",
+        "lion"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.25
+    },
+    {
+      "id": "unique-046",
+      "order": 46,
+      "a": "circus_big_top",
+      "b": "horse_carousel",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "existing_curated_pair",
+      "ratio": 0.5333333333333333
+    },
+    {
+      "id": "unique-047",
+      "order": 47,
+      "a": "kangaroo",
+      "b": "ostrich",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "existing_curated_pair",
+      "ratio": 1.5625
+    },
+    {
+      "id": "unique-048",
+      "order": 48,
+      "a": "smartphone",
+      "b": "banana",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "existing_curated_pair",
+      "ratio": 1.2
+    },
+    {
+      "id": "unique-049",
+      "order": 49,
+      "a": "coin",
+      "b": "golfball",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "existing_curated_pair",
+      "ratio": 1.7916666666666665
+    },
+    {
+      "id": "unique-050",
+      "order": 50,
+      "a": "rice",
+      "b": "transistor",
+      "source": "atlas_editor_user_edit_2026-10-20",
+      "source_before_rebalance": "existing_curated_pair",
+      "previous_pair": [
+        "rice",
+        "housefly"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 4.285714285714286
+    },
+    {
+      "id": "unique-051",
+      "order": 51,
+      "a": "cement_mixer_truck",
+      "b": "pteranodon",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "existing_curated_pair",
+      "previous_pair": [
+        "cement_mixer_truck",
+        "road_roller"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.6666666666666666
+    },
+    {
+      "id": "unique-052",
+      "order": 52,
+      "a": "uluru",
+      "b": "stardestroyer",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "existing_curated_pair",
+      "previous_pair": [
+        "uluru",
+        "baobab_tree"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.4444444444444444
+    },
+    {
+      "id": "unique-053",
+      "order": 53,
+      "a": "submarine",
+      "b": "baobab_tree",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "existing_curated_pair",
+      "previous_pair": [
+        "stardestroyer",
+        "submarine"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.14285714285714285
+    },
+    {
+      "id": "unique-054",
+      "order": 54,
+      "a": "xwing",
+      "b": "boxing_ring",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "existing_curated_pair",
+      "previous_pair": [
+        "xwing",
+        "helicopter"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.48
+    },
+    {
+      "id": "unique-055",
+      "order": 55,
+      "a": "babygroot",
+      "b": "soccerball",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "existing_curated_pair",
+      "ratio": 0.88
+    },
+    {
+      "id": "unique-056",
+      "order": 56,
+      "a": "vader",
+      "b": "atst",
+      "source": "atlas_editor_order",
+      "reference_object": "vader",
+      "is_first_ten": false,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 4.257425742574258
+    },
+    {
+      "id": "unique-057",
+      "order": 57,
+      "a": "button",
+      "b": "goldfish",
+      "source": "pair_62_partner_swap_2026-10-21",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "button",
+        "lego_brick"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 10.0
+    },
+    {
+      "id": "unique-058",
+      "order": 58,
+      "a": "salmon",
+      "b": "dolphin",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "existing_curated_pair",
+      "ratio": 4.545454545454545
+    },
+    {
+      "id": "unique-059",
+      "order": 59,
+      "a": "tuna",
+      "b": "backhoe_loader",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "new_pair_concept",
+      "previous_pair": [
+        "tuna",
+        "orca"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 2.3333333333333335
+    },
+    {
+      "id": "unique-060",
+      "order": 60,
+      "a": "costa_rica",
+      "b": "hawaii_big_island",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "new_pair_concept",
+      "previous_pair": [
+        "everest",
+        "hawaii_big_island"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.4166666666666667
+    },
+    {
+      "id": "unique-061",
+      "order": 61,
+      "a": "flamingo",
+      "b": "motorcycle",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "new_pair_concept",
+      "previous_pair": [
+        "jupiter",
+        "deathstar"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.5714285714285716
+    },
+    {
+      "id": "unique-062",
+      "order": 62,
+      "a": "astronaut",
+      "b": "bb8",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "new_pair_concept",
+      "ratio": 0.35263157894736846
+    },
+    {
+      "id": "unique-063",
+      "order": 63,
+      "a": "pyramid",
+      "b": "road_train",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "new_pair_concept",
+      "previous_pair": [
+        "pyramid",
+        "sphinx"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.16307692307692306
+    },
+    {
+      "id": "unique-064",
+      "order": 64,
+      "a": "camel",
+      "b": "formula1_car",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "new_pair_concept",
+      "previous_pair": [
+        "reindeer",
+        "camel"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 2.6666666666666665
+    },
+    {
+      "id": "unique-065",
+      "order": 65,
+      "a": "court",
+      "b": "belaz_75710",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "new_pair_concept",
+      "previous_pair": [
+        "court",
+        "tenniscourt"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.7357142857142858
+    },
+    {
+      "id": "unique-066",
+      "order": 66,
+      "a": "bowling",
+      "b": "skateboard",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "new_pair_concept",
+      "ratio": 3.669724770642202
+    },
+    {
+      "id": "unique-067",
+      "order": 67,
+      "a": "bumblebee",
+      "b": "triangle_instrument",
+      "source": "pair_62_partner_swap_2026-10-21",
+      "source_before_rebalance": "new_pair_concept",
+      "previous_pair": [
+        "tie",
+        "falcon"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 5.999999999999999
+    },
+    {
+      "id": "unique-068",
+      "order": 68,
+      "a": "pigeon",
+      "b": "robot_vacuum",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "new_pair_concept",
+      "previous_pair": [
+        "pigeon",
+        "owl"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.0606060606060606
+    },
+    {
+      "id": "unique-069",
+      "order": 69,
+      "a": "crocodile",
+      "b": "brachiosaurus",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "new_pair_concept",
+      "ratio": 2.6
+    },
+    {
+      "id": "unique-070",
+      "order": 70,
+      "a": "tracked_excavator",
+      "b": "log_cabin",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "new_pair_concept",
+      "previous_pair": [
+        "tank",
+        "tracked_excavator"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.0769230769230769
+    },
+    {
+      "id": "unique-071",
+      "order": 71,
+      "a": "saturnv",
+      "b": "devils_tower",
+      "source": "measurement_visual_repair_2026-10-20",
+      "source_before_rebalance": "new_pair_concept",
+      "previous_pair": [
+        "saturnv",
+        "sydney_harbour_bridge"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "atlas_editor_order",
+      "ratio": 2.4023781818181815
+    },
+    {
+      "id": "unique-072",
+      "order": 72,
+      "a": "machu_picchu_citadel",
+      "b": "colosseum",
+      "source": "pair_repair_2026-10-23",
+      "is_first_ten": false,
+      "source_before_reorder": "atlas_editor_order",
+      "ratio": 0.35660377358490564,
+      "previous_pair": [
+        "colosseum",
+        "cloud_gate"
+      ],
+      "note": "re-paired 2026-10-23: partners within a few times of each other"
+    },
+    {
+      "id": "unique-073",
+      "order": 73,
+      "a": "goldengate",
+      "b": "meteor_crater",
+      "source": "measurement_visual_repair_2026-10-20",
+      "is_first_ten": false,
+      "source_before_reorder": "atlas_editor_order",
+      "ratio": 0.9375,
+      "previous_pair": [
+        "goldengate",
+        "cloud_gate"
+      ]
+    },
+    {
+      "id": "unique-074",
+      "order": 74,
+      "a": "mosquito",
+      "b": "snowflake",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "new_pair_concept",
+      "previous_pair": [
+        "mosquito",
+        "mangrove_tree"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.4166666666666667
+    },
+    {
+      "id": "unique-075",
+      "order": 75,
+      "a": "bicycle",
+      "b": "galapagos_tortoise",
+      "source": "measurement_visual_repair_2026-10-20",
+      "source_before_rebalance": "new_pair_concept",
+      "previous_pair": [
+        "bicycle",
+        "firefighter"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "atlas_editor_order",
+      "ratio": 0.6666666666666666
+    },
+    {
+      "id": "unique-076",
+      "order": 76,
+      "a": "firetruck",
+      "b": "bouncy_castle",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "new_pair_concept",
+      "previous_pair": [
+        "pickup",
+        "firetruck"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.4166666666666667
+    },
+    {
+      "id": "unique-077",
+      "order": 77,
+      "a": "windturbine",
+      "b": "viking_longship",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "new_pair_concept",
+      "previous_pair": [
+        "windturbine",
+        "windmill"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.2
+    },
+    {
+      "id": "unique-078",
+      "order": 78,
+      "a": "asianelephant",
+      "b": "sulley",
+      "source": "atlas_editor_order",
+      "reference_object": "asianelephant",
+      "is_first_ten": false,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 0.8509090909090908
+    },
+    {
+      "id": "unique-079",
+      "order": 79,
+      "a": "dachshund",
+      "b": "rabbit",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "new_pair_concept",
+      "ratio": 0.6666666666666667
+    },
+    {
+      "id": "unique-080",
+      "order": 80,
+      "a": "greatdane",
+      "b": "cow",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "new_pair_concept",
+      "ratio": 1.4285714285714286
+    },
+    {
+      "id": "unique-081",
+      "order": 81,
+      "a": "seaturtle",
+      "b": "sup_board",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "new_pair_concept",
+      "previous_pair": [
+        "seaturtle",
+        "octopus"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 2.909090909090909
+    },
+    {
+      "id": "unique-082",
+      "order": 82,
+      "a": "cruiseship",
+      "b": "sydney_harbour_bridge",
+      "source": "measurement_visual_repair_2026-10-20",
+      "source_before_rebalance": "new_pair_concept",
+      "previous_pair": [
+        "cruiseship",
+        "devils_tower"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "atlas_editor_order",
+      "ratio": 7.7384615384615385
+    },
+    {
+      "id": "unique-083",
+      "order": 83,
+      "a": "compact_hatchback",
+      "b": "yurt",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "new_pair_concept",
+      "previous_pair": [
+        "dumptruck",
+        "compact_hatchback"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.25
+    },
+    {
+      "id": "unique-084",
+      "order": 84,
+      "a": "refrigerator",
+      "b": "suburban_house",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "new_pair_concept",
+      "ratio": 5.0
+    },
+    {
+      "id": "unique-085",
+      "order": 85,
+      "a": "kayak",
+      "b": "playground_slide",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "new_pair_concept",
+      "previous_pair": [
+        "kayak",
+        "personal_watercraft"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.5
+    },
+    {
+      "id": "unique-086",
+      "order": 86,
+      "a": "boomerang",
+      "b": "cartoon_raccoon",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "new_pair_concept",
+      "ratio": 1.3
+    },
+    {
+      "id": "unique-087",
+      "order": 87,
+      "a": "delicate_arch",
+      "b": "leaning_tower_pisa",
+      "source": "measurement_visual_repair_2026-10-20",
+      "is_first_ten": false,
+      "source_before_reorder": "atlas_editor_order",
+      "ratio": 3.5625,
+      "previous_pair": [
+        "delicate_arch",
+        "lincoln_memorial"
+      ]
+    },
+    {
+      "id": "unique-088",
+      "order": 88,
+      "a": "whale",
+      "b": "cloud_gate",
+      "source": "pair_repair_2026-10-23",
+      "reference_object": "whale",
+      "is_first_ten": false,
+      "source_before_reorder": "atlas_editor_order",
+      "ratio": 0.67056,
+      "previous_pair": [
+        "whale",
+        "great_wall_75m_segment"
+      ],
+      "note": "re-paired 2026-10-23: partners within a few times of each other"
+    },
+    {
+      "id": "unique-089",
+      "order": 89,
+      "a": "clownfish",
+      "b": "bonsai",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "seahorse",
+        "clownfish"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 2.727272727272727
+    },
+    {
+      "id": "unique-090",
+      "order": 90,
+      "a": "sparrow",
+      "b": "paper_plane",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "sparrow",
+        "toucan"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.3333333333333335
+    },
+    {
+      "id": "unique-091",
+      "order": 91,
+      "a": "hamster",
+      "b": "basketball",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "hamster",
+        "goldfish"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 3.0
+    },
+    {
+      "id": "unique-092",
+      "order": 92,
+      "a": "chicken",
+      "b": "delivery_robot",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "chicken",
+        "duck"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.5555555555555554
+    },
+    {
+      "id": "unique-093",
+      "order": 93,
+      "a": "greenland",
+      "b": "california",
+      "source": "user_requested_2026-10-22",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "greenland",
+        "mexico"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "user_selected_pair",
+      "ratio": 0.46441947565543074
+    },
+    {
+      "id": "unique-094",
+      "order": 94,
+      "a": "ladybug",
+      "b": "salt",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "ladybug",
+        "housefly"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.04285714285714285
+    },
+    {
+      "id": "unique-095",
+      "order": 95,
+      "a": "poison_dart_frog",
+      "b": "lego_brick",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "poison_dart_frog",
+        "tree_frog"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.28
+    },
+    {
+      "id": "unique-096",
+      "order": 96,
+      "a": "velociraptor",
+      "b": "pickup",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "velociraptor",
+        "compsognathus"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 2.9
+    },
+    {
+      "id": "unique-097",
+      "order": 97,
+      "a": "florida",
+      "b": "great_britain",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "hawaii_big_island",
+        "sri_lanka"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.3900472616068946
+    },
+    {
+      "id": "unique-098",
+      "order": 98,
+      "a": "kick_scooter",
+      "b": "lion",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "kick_scooter",
+        "formula1_car"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.5555555555555554
+    },
+    {
+      "id": "unique-099",
+      "order": 99,
+      "a": "subway_car",
+      "b": "tenniscourt",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "forklift",
+        "backhoe_loader"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.3222222222222222
+    },
+    {
+      "id": "unique-100",
+      "order": 100,
+      "a": "atat",
+      "b": "chinook_helicopter",
+      "source": "atlas_editor_order",
+      "reference_object": "atat",
+      "is_first_ten": false,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 1.3377777777777777
+    },
+    {
+      "id": "unique-101",
+      "order": 101,
+      "a": "wright_flyer",
+      "b": "orca",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "paper_plane",
+        "wright_flyer"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.6666666666666666
+    },
+    {
+      "id": "unique-102",
+      "order": 102,
+      "a": "surfboard",
+      "b": "reindeer",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "surfboard",
+        "viking_longship"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.9523809523809523
+    },
+    {
+      "id": "unique-103",
+      "order": 103,
+      "a": "iceland",
+      "b": "sri_lanka",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "iceland",
+        "florida"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.87
+    },
+    {
+      "id": "unique-104",
+      "order": 104,
+      "a": "igloo",
+      "b": "tank",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "igloo",
+        "yurt"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 3.266666666666667
+    },
+    {
+      "id": "unique-105",
+      "order": 105,
+      "a": "washing_machine",
+      "b": "owl",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "washing_machine",
+        "chair"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.5882352941176471
+    },
+    {
+      "id": "unique-106",
+      "order": 106,
+      "a": "swing",
+      "b": "floatplane",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "swing",
+        "playground_slide"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 4.36
+    },
+    {
+      "id": "unique-107",
+      "order": 107,
+      "a": "rope_bridge",
+      "b": "helicopter",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "rope_bridge",
+        "leaning_tower_pisa"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.625
+    },
+    {
+      "id": "unique-108",
+      "order": 108,
+      "a": "dandelion",
+      "b": "housecat",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "dandelion",
+        "bonsai"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 3.125
+    },
+    {
+      "id": "unique-109",
+      "order": 109,
+      "a": "india",
+      "b": "contiguous_united_states",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "japan",
+        "india"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.4054138145612944
+    },
+    {
+      "id": "unique-110",
+      "order": 110,
+      "a": "harmonica",
+      "b": "bat",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "harmonica",
+        "triangle_instrument"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 2.5
+    },
+    {
+      "id": "unique-111",
+      "order": 111,
+      "a": "screwdriver",
+      "b": "budgie",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "screwdriver",
+        "drill"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.8999999999999999
+    },
+    {
+      "id": "unique-112",
+      "order": 112,
+      "a": "scarlet_macaw",
+      "b": "steerable_snow_sled",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "scarlet_macaw",
+        "flamingo"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.4444444444444444
+    },
+    {
+      "id": "unique-113",
+      "order": 113,
+      "a": "guinea_pig",
+      "b": "drill",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "budgie",
+        "guinea_pig"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.92
+    },
+    {
+      "id": "unique-114",
+      "order": 114,
+      "a": "goat",
+      "b": "chair",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "goose",
+        "goat"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.125
+    },
+    {
+      "id": "unique-115",
+      "order": 115,
+      "a": "mammoth",
+      "b": "tie",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "mammoth",
+        "pteranodon"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.8
+    },
+    {
+      "id": "unique-116",
+      "order": 116,
+      "a": "texas",
+      "b": "mexico",
+      "source": "user_requested_2026-10-22",
+      "is_first_ten": false,
+      "source_before_reorder": "approved_batch_group",
+      "ratio": 2.5806451612903225,
+      "previous_pair": [
+        "texas",
+        "california"
+      ]
+    },
+    {
+      "id": "unique-117",
+      "order": 117,
+      "a": "axolotl",
+      "b": "penny_farthing",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "gecko",
+        "axolotl"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 6.0
+    },
+    {
+      "id": "unique-118",
+      "order": 118,
+      "a": "mouse",
+      "b": "key",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "mouse",
+        "bat"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.0833333333333335
+    },
+    {
+      "id": "unique-119",
+      "order": 119,
+      "a": "wheel_loader",
+      "b": "octopus",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "wheel_loader",
+        "mobile_crane"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.375
+    },
+    {
+      "id": "unique-120",
+      "order": 120,
+      "a": "hang_glider",
+      "b": "mangrove_tree",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "hang_glider",
+        "antonov_an225"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.2
+    },
+    {
+      "id": "unique-121",
+      "order": 121,
+      "a": "handcar",
+      "b": "horse",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "handcar",
+        "cable_car_cabin"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.96
+    },
+    {
+      "id": "unique-122",
+      "order": 122,
+      "a": "godzilla",
+      "b": "gateway_arch",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "existing_curated_pair",
+      "ratio": 1.6
+    },
+    {
+      "id": "unique-123",
+      "order": 123,
+      "a": "museum_of_the_future",
+      "b": "luxury_yacht_65m",
+      "source": "atlas_editor_order",
+      "previous_pair": [
+        "museum_of_the_future",
+        "niagara_american_falls"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "user_selected_pair",
+      "ratio": 0.8441558441558441
+    },
+    {
+      "id": "unique-124",
+      "order": 124,
+      "a": "smart_speaker",
+      "b": "gecko",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "smart_speaker",
+        "robot_vacuum"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.2
+    },
+    {
+      "id": "unique-125",
+      "order": 125,
+      "a": "tram",
+      "b": "sphinx",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "tram",
+        "subway_car"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 2.433333333333333
+    },
+    {
+      "id": "unique-126",
+      "order": 126,
+      "a": "large_bulldozer",
+      "b": "windmill",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "delivery_robot",
+        "robot_dog"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 2.5
+    },
+    {
+      "id": "unique-127",
+      "order": 127,
+      "a": "tiny_house",
+      "b": "speedboat",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "tiny_house",
+        "log_cabin"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.1666666666666667
+    },
+    {
+      "id": "unique-128",
+      "order": 128,
+      "a": "trampoline",
+      "b": "dumptruck",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "trampoline",
+        "bouncy_castle"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 2.125
+    },
+    {
+      "id": "unique-129",
+      "order": 129,
+      "a": "tower_bridge",
+      "b": "falcon",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "tower_bridge",
+        "sydney_harbour_bridge"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.5346153846153846
+    },
+    {
+      "id": "unique-130",
+      "order": 130,
+      "a": "mobile_crane",
+      "b": "washington_monument",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "boxing_ring",
+        "halfpipe"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 3.3858800000000002
+    },
+    {
+      "id": "unique-131",
+      "order": 131,
+      "a": "rafflesia",
+      "b": "compsognathus",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "rafflesia",
+        "christmas_tree"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.9
+    },
+    {
+      "id": "unique-132",
+      "order": 132,
+      "a": "airliner",
+      "b": "lincoln_memorial",
+      "source": "measurement_visual_repair_2026-10-20",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "airliner",
+        "leaning_tower_pisa"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "atlas_editor_order",
+      "ratio": 1.9148936170212765
+    },
+    {
+      "id": "unique-133",
+      "order": 133,
+      "a": "plant_cell",
+      "b": "cotton_fiber",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "new_cross_group_pair_300",
+      "ratio": 0.4
+    },
+    {
+      "id": "unique-134",
+      "order": 134,
+      "a": "paperclip",
+      "b": "tree_frog",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "paperclip",
+        "key"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.6666666666666667
+    },
+    {
+      "id": "unique-135",
+      "order": 135,
+      "a": "louvre_pyramid",
+      "b": "saguaro_cactus",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "new_cross_group_pair_300",
+      "ratio": 0.5635103926096998
+    },
+    {
+      "id": "unique-136",
+      "order": 136,
+      "a": "glucose_molecule",
+      "b": "carbon_fullerene",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "new_cross_group_pair_300",
+      "ratio": 0.71
+    },
+    {
+      "id": "unique-137",
+      "order": 137,
+      "a": "swan",
+      "b": "guitar",
+      "source": "atlas_editor_user_edit_2026-10-20",
+      "is_first_ten": false,
+      "source_before_reorder": "atlas_editor_order",
+      "ratio": 0.8333333333333334,
+      "previous_pair": [
+        "pencil",
+        "guitar"
+      ]
+    },
+    {
+      "order": 138,
+      "a": "flatiron_building",
+      "b": "old_faithful_geyser",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.5063291139240506,
+      "is_first_ten": false,
+      "id": "unique-138"
+    },
+    {
+      "order": 139,
+      "a": "pineapple",
+      "b": "dog",
+      "source": "atlas_editor_user_edit_2026-10-20",
+      "ratio": 1.9333333333333333,
+      "is_first_ten": false,
+      "id": "unique-139",
+      "previous_pair": [
+        "pineapple",
+        "red_panda"
+      ]
+    },
+    {
+      "order": 140,
+      "a": "antelope_canyon",
+      "b": "sphere_las_vegas",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.56,
+      "is_first_ten": false,
+      "id": "unique-140"
+    },
+    {
+      "order": 141,
+      "a": "grand_canyon",
+      "b": "phobos",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.06053811659192825,
+      "is_first_ten": false,
+      "id": "unique-141"
+    },
+    {
+      "order": 142,
+      "a": "beluga_whale",
+      "b": "camping_tent",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.4666666666666667,
+      "is_first_ten": false,
+      "id": "unique-142"
+    },
+    {
+      "order": 143,
+      "a": "dna_double_helix",
+      "b": "hemoglobin_molecule",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 3.25,
+      "is_first_ten": false,
+      "id": "unique-143"
+    },
+    {
+      "id": "unique-144",
+      "order": 144,
+      "a": "santa_sleigh_team",
+      "b": "nessie",
+      "source": "atlas_editor_order",
+      "reference_object": "santa_sleigh_team",
+      "is_first_ten": false,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 1.3333333333333333
+    },
+    {
+      "order": 145,
+      "a": "james_webb_telescope",
+      "b": "petra_treasury",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 1.8443396226415096,
+      "is_first_ten": false,
+      "id": "unique-145"
+    },
+    {
+      "order": 146,
+      "a": "hoover_dam",
+      "b": "mount_fuji",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 17.055103884372176,
+      "is_first_ten": false,
+      "id": "unique-146"
+    },
+    {
+      "order": 147,
+      "a": "burger",
+      "b": "housefly",
+      "source": "atlas_editor_user_edit_2026-10-20",
+      "ratio": 0.06666666666666667,
+      "is_first_ten": false,
+      "id": "unique-147",
+      "previous_pair": [
+        "burger",
+        "transistor"
+      ]
+    },
+    {
+      "order": 148,
+      "a": "microchip",
+      "b": "snow_globe",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 12.0,
+      "is_first_ten": false,
+      "id": "unique-148"
+    },
+    {
+      "order": 149,
+      "a": "earth",
+      "b": "saturn",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 9.459739444357243,
+      "is_first_ten": false,
+      "id": "unique-149"
+    },
+    {
+      "order": 150,
+      "a": "half_dome",
+      "b": "sagrada_familia",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.11945983379501385,
+      "is_first_ten": false,
+      "id": "unique-150"
+    },
+    {
+      "order": 151,
+      "a": "asteroid_bennu",
+      "b": "mount_etna",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 6.851020408163265,
+      "is_first_ten": false,
+      "id": "unique-151"
+    },
+    {
+      "order": 152,
+      "a": "chrysler_building",
+      "b": "mount_vesuvius",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 4.016933207902164,
+      "is_first_ten": false,
+      "id": "unique-152"
+    },
+    {
+      "order": 153,
+      "a": "mars",
+      "b": "pluto",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.3499705535924617,
+      "is_first_ten": false,
+      "id": "unique-153"
+    },
+    {
+      "order": 154,
+      "a": "chameleon",
+      "b": "seashell",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.4,
+      "is_first_ten": false,
+      "id": "unique-154"
+    },
+    {
+      "order": 155,
+      "a": "brooklyn_bridge",
+      "b": "us_capitol",
+      "source": "measurement_visual_repair_2026-10-20",
+      "ratio": 0.47091589553773394,
+      "is_first_ten": false,
+      "id": "unique-155",
+      "previous_pair": [
+        "brooklyn_bridge",
+        "meteor_crater"
+      ],
+      "source_before_reorder": "size_checked_cross_family_matching"
+    },
+    {
+      "order": 156,
+      "a": "oak_tree",
+      "b": "parade_float",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.4,
+      "is_first_ten": false,
+      "id": "unique-156"
+    },
+    {
+      "order": 157,
+      "a": "guggenheim_museum_nyc",
+      "b": "water_slide",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.4444444444444444,
+      "is_first_ten": false,
+      "id": "unique-157"
+    },
+    {
+      "order": 158,
+      "a": "hot_dog",
+      "b": "vintage_film_camera",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.9375,
+      "is_first_ten": false,
+      "id": "unique-158"
+    },
+    {
+      "order": 159,
+      "a": "garden_gnome",
+      "b": "popcorn_machine",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 4.285714285714286,
+      "is_first_ten": false,
+      "id": "unique-159"
+    },
+    {
+      "order": 160,
+      "a": "snow_groomer",
+      "b": "tidal_turbine",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 2.0930232558139537,
+      "is_first_ten": false,
+      "id": "unique-160"
+    },
+    {
+      "id": "unique-161",
+      "order": 161,
+      "a": "basketball_player",
+      "b": "bear",
+      "source": "atlas_editor_user_edit_2026-10-20",
+      "reference_object": "yoda",
+      "is_first_ten": false,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 1.5,
+      "previous_pair": [
+        "yoda",
+        "bear"
+      ]
+    },
+    {
+      "order": 162,
+      "a": "hammerhead_shark",
+      "b": "pinball_machine",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.475,
+      "is_first_ten": false,
+      "id": "unique-162"
+    },
+    {
+      "order": 163,
+      "a": "pencil",
+      "b": "baseball_bat",
+      "source": "atlas_editor_user_edit_2026-10-20",
+      "ratio": 4.526315789473684,
+      "is_first_ten": false,
+      "id": "unique-163",
+      "previous_pair": [
+        "arcade_cabinet",
+        "baseball_bat"
+      ],
+      "source_before_reorder": "size_checked_cross_family_matching"
+    },
+    {
+      "order": 164,
+      "a": "kingfisher",
+      "b": "watermelon",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 2.0588235294117645,
+      "is_first_ten": false,
+      "id": "unique-164"
+    },
+    {
+      "order": 165,
+      "a": "arc_de_triomphe",
+      "b": "iceberg",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 2.0202020202020203,
+      "is_first_ten": false,
+      "id": "unique-165"
+    },
+    {
+      "id": "unique-166",
+      "order": 166,
+      "a": "jabba",
+      "b": "hippo",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "existing_curated_pair",
+      "ratio": 1.0256410256410258
+    },
+    {
+      "id": "unique-167",
+      "order": 167,
+      "a": "penguin",
+      "b": "child",
+      "source": "atlas_editor_order",
+      "reference_object": "penguin",
+      "is_first_ten": false,
+      "source_before_reorder": "saved_favorite",
+      "ratio": 0.9166666666666667
+    },
+    {
+      "order": 168,
+      "a": "camping_lantern",
+      "b": "pinata",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 2.0,
+      "is_first_ten": false,
+      "id": "unique-168"
+    },
+    {
+      "order": 169,
+      "a": "diatom",
+      "b": "neuron",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 2.0,
+      "is_first_ten": false,
+      "id": "unique-169"
+    },
+    {
+      "order": 170,
+      "a": "drop_tower",
+      "b": "steel_water_tower",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.5,
+      "is_first_ten": false,
+      "id": "unique-170"
+    },
+    {
+      "order": 171,
+      "a": "espresso_machine",
+      "b": "fire_hydrant",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 2.0,
+      "is_first_ten": false,
+      "id": "unique-171"
+    },
+    {
+      "id": "unique-172",
+      "order": 172,
+      "a": "eagle",
+      "b": "human",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "existing_curated_pair",
+      "ratio": 2.058823529411765
+    },
+    {
+      "order": 173,
+      "a": "pollen_grain",
+      "b": "white_blood_cell",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.5,
+      "is_first_ten": false,
+      "id": "unique-173"
+    },
+    {
+      "order": 174,
+      "a": "diving_bell",
+      "b": "snowboard",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.43333333333333335,
+      "is_first_ten": false,
+      "id": "unique-174"
+    },
+    {
+      "order": 175,
+      "a": "hubble_telescope",
+      "b": "silver_camping_trailer",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.5303030303030303,
+      "is_first_ten": false,
+      "id": "unique-175"
+    },
+    {
+      "order": 176,
+      "a": "christ_the_redeemer",
+      "b": "graveyard_angel_statue",
+      "source": "same_dimension_split_2026-10-21",
+      "ratio": 0.07894736842105263,
+      "is_first_ten": false,
+      "id": "unique-176",
+      "previous_pair": [
+        "christ_the_redeemer",
+        "giant_satellite_dish"
+      ]
+    },
+    {
+      "id": "unique-177",
+      "order": 177,
+      "a": "chef",
+      "b": "personal_watercraft",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "chef",
+        "firefighter"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.8857142857142857
+    },
+    {
+      "order": 178,
+      "a": "giant_satellite_dish",
+      "b": "lunar_crater_140m",
+      "source": "same_dimension_split_2026-10-21",
+      "ratio": 2.0,
+      "is_first_ten": false,
+      "id": "unique-178"
+    },
+    {
+      "order": 179,
+      "a": "coral_branch",
+      "b": "zipline_trolley",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.5555555555555556,
+      "is_first_ten": false,
+      "id": "unique-179"
+    },
+    {
+      "order": 180,
+      "a": "beach_umbrella",
+      "b": "firefighter",
+      "source": "measurement_visual_repair_2026-10-20",
+      "ratio": 0.8571428571428571,
+      "is_first_ten": false,
+      "id": "unique-180",
+      "previous_pair": [
+        "beach_umbrella",
+        "galapagos_tortoise"
+      ],
+      "source_before_reorder": "size_checked_cross_family_matching"
+    },
+    {
+      "order": 181,
+      "a": "cheese_wheel",
+      "b": "teapot",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.5714285714285715,
+      "is_first_ten": false,
+      "id": "unique-181"
+    },
+    {
+      "id": "unique-182",
+      "order": 182,
+      "a": "newborn_baby",
+      "b": "seahorse",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "newborn_baby",
+        "toddler"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.3
+    },
+    {
+      "order": 183,
+      "a": "bowling_pin",
+      "b": "coconut",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.5789473684210527,
+      "is_first_ten": false,
+      "id": "unique-183"
+    },
+    {
+      "order": 184,
+      "a": "apollo_lunar_module",
+      "b": "giants_causeway_column",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 1.7142857142857142,
+      "is_first_ten": false,
+      "id": "unique-184"
+    },
+    {
+      "order": 185,
+      "a": "antique_globe",
+      "b": "football_helmet",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.6,
+      "is_first_ten": false,
+      "id": "unique-185"
+    },
+    {
+      "order": 186,
+      "a": "dragon_capsule",
+      "b": "solar_panel_array",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 1.1363636363636362,
+      "is_first_ten": false,
+      "id": "unique-186"
+    },
+    {
+      "id": "unique-187",
+      "order": 187,
+      "a": "scuba_diver",
+      "b": "pedal_boat",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "scuba_diver",
+        "pirate"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 1.3333333333333333
+    },
+    {
+      "id": "unique-188",
+      "order": 188,
+      "a": "farquaad",
+      "b": "mario",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "source_before_reorder": "new_pair_concept",
+      "ratio": 1.1313868613138685
+    },
+    {
+      "order": 189,
+      "a": "brass_telescope",
+      "b": "weather_balloon",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 1.6666666666666667,
+      "is_first_ten": false,
+      "id": "unique-189"
+    },
+    {
+      "order": 190,
+      "a": "baseball_glove",
+      "b": "rolling_pin",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 1.5,
+      "is_first_ten": false,
+      "id": "unique-190"
+    },
+    {
+      "order": 191,
+      "a": "grandfather_clock",
+      "b": "us_mailbox",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.6,
+      "is_first_ten": false,
+      "id": "unique-191"
+    },
+    {
+      "order": 192,
+      "a": "cast_iron_skillet",
+      "b": "watering_can",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.8,
+      "is_first_ten": false,
+      "id": "unique-192"
+    },
+    {
+      "id": "unique-193",
+      "order": 193,
+      "a": "combine_harvester",
+      "b": "pirate",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "combine_harvester",
+        "large_bulldozer"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.175
+    },
+    {
+      "order": 194,
+      "a": "bumper_car",
+      "b": "sunflower",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 1.1111111111111112,
+      "is_first_ten": false,
+      "id": "unique-194"
+    },
+    {
+      "order": 195,
+      "a": "sand_grain",
+      "b": "poppy_seed",
+      "source": "user_requested_object_replacement_2026-10-20",
+      "ratio": 2.0,
+      "is_first_ten": false,
+      "id": "unique-195",
+      "previous_pair": [
+        "sand_grain",
+        "tardigrade"
+      ]
+    },
+    {
+      "order": 196,
+      "a": "skis",
+      "b": "vending_machine",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 1.3214285714285716,
+      "is_first_ten": false,
+      "id": "unique-196"
+    },
+    {
+      "id": "unique-197",
+      "order": 197,
+      "a": "unicycle",
+      "b": "great_wall_watchtower",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "existing_curated_pair",
+      "previous_pair": [
+        "unicycle",
+        "penny_farthing"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 8.0,
+      "note": "Great Wall watchtower compared with unicycle by height."
+    },
+    {
+      "id": "unique-198",
+      "order": 198,
+      "a": "toddler",
+      "b": "toucan",
+      "source": "atlas_editor_order",
+      "source_before_rebalance": "approved_batch_group",
+      "previous_pair": [
+        "road_train",
+        "belaz_75710"
+      ],
+      "is_first_ten": false,
+      "source_before_reorder": "cross_group_rebalance",
+      "ratio": 0.7058823529411765
+    },
+    {
+      "id": "unique-199",
+      "order": 199,
+      "a": "parthenon",
+      "b": "titanic",
+      "ratio": 3.870503597122302,
+      "source": "approved_width_landmarks_2026-10-20",
+      "is_first_ten": false
+    },
+    {
+      "order": 200,
+      "a": "hockey_player",
+      "b": "river_otter",
+      "source": "size_checked_cross_family_matching",
+      "ratio": 0.5,
+      "is_first_ten": false,
+      "id": "unique-200"
+    },
+    {
+      "id": "unique-201",
+      "order": 201,
+      "a": "halloween_jack_o_lantern",
+      "b": "bronze_whale_tail_sculpture",
+      "ratio": 7.8125,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-202",
+      "order": 202,
+      "a": "ice_cave_entrance",
+      "b": "red_sandstone_arch",
+      "ratio": 2.5,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-203",
+      "order": 203,
+      "a": "christmas_red_truck",
+      "b": "kinetic_wind_sculpture",
+      "ratio": 2.0,
+      "source": "pair_repair_2026-10-23",
+      "is_first_ten": false,
+      "previous_pair": [
+        "christmas_red_truck",
+        "canoe_paddle"
+      ],
+      "note": "re-paired 2026-10-23: partners within a few times of each other"
+    },
+    {
+      "id": "unique-204",
+      "order": 204,
+      "a": "silicon_via",
+      "b": "protein_ring",
+      "ratio": 0.125,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-205",
+      "order": 205,
+      "a": "marble_apple",
+      "b": "giant_snowflake_decoration",
+      "ratio": 6.5625,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-206",
+      "order": 206,
+      "a": "glowing_star_topper",
+      "b": "canoe_paddle",
+      "ratio": 4.666666666666667,
+      "source": "pair_repair_2026-10-23",
+      "is_first_ten": false,
+      "previous_pair": [
+        "glowing_star_topper",
+        "giant_storybook_mushroom"
+      ],
+      "note": "re-paired 2026-10-23: partners within a few times of each other"
+    },
+    {
+      "id": "unique-207",
+      "order": 207,
+      "a": "raw_emerald",
+      "b": "loaf_of_bread",
+      "ratio": 7.5,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-208",
+      "order": 208,
+      "a": "enchanted_rose_cloche",
+      "b": "candy_bucket",
+      "ratio": 0.3125,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-209",
+      "order": 209,
+      "a": "mountain_cableway_station",
+      "b": "naica_gypsum_crystal",
+      "ratio": 0.275,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "order": 210,
+      "a": "yoda",
+      "b": "arcade_cabinet",
+      "source": "atlas_editor_user_edit_2026-10-20",
+      "ratio": 2.6515151515151514,
+      "is_first_ten": false,
+      "id": "unique-210",
+      "previous_pair": [
+        "basketball_player",
+        "arcade_cabinet"
+      ],
+      "source_before_reorder": "size_checked_cross_family_matching"
+    },
+    {
+      "id": "unique-211",
+      "order": 211,
+      "a": "winter_mitten",
+      "b": "javelin",
+      "ratio": 10.0,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-212",
+      "order": 212,
+      "a": "enchanted_apple",
+      "b": "amethyst_geode",
+      "ratio": 5.0,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-213",
+      "order": 213,
+      "a": "cellulose_nanocrystal",
+      "b": "carbon_nanoribbon",
+      "ratio": 0.10416666666666667,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-214",
+      "order": 214,
+      "a": "new_290_b",
+      "b": "colosseum_facade_section",
+      "ratio": 1.1162790697674418,
+      "source": "pair_repair_2026-10-23",
+      "is_first_ten": false,
+      "previous_pair": [
+        "colosseum_facade_section",
+        "new_year_countdown_clock"
+      ],
+      "note": "re-paired 2026-10-23: partners within a few times of each other"
+    },
+    {
+      "id": "unique-215",
+      "order": 215,
+      "a": "roast_turkey",
+      "b": "jeweled_brooch",
+      "ratio": 0.22222222222222224,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-216",
+      "order": 216,
+      "a": "dragon_egg",
+      "b": "dragonfly",
+      "ratio": 0.16666666666666669,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-217",
+      "order": 217,
+      "a": "snow_shovel",
+      "b": "taco",
+      "ratio": 0.15384615384615385,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-218",
+      "order": 218,
+      "a": "fluorite_cube",
+      "b": "coral_fan",
+      "ratio": 5.0,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-219",
+      "order": 219,
+      "a": "haunted_mausoleum",
+      "b": "modern_bridge_pylon",
+      "ratio": 6.25,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-220",
+      "order": 220,
+      "a": "storybook_bridge",
+      "b": "go_kart",
+      "ratio": 0.23809523809523808,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-221",
+      "order": 221,
+      "a": "fortune_crystal_ball",
+      "b": "tide_pool",
+      "ratio": 10.0,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-222",
+      "order": 222,
+      "a": "fairytale_dragon",
+      "b": "toy_sailboat",
+      "ratio": 0.125,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-223",
+      "order": 223,
+      "a": "new_year_handbell",
+      "b": "miniature_potted_cactus",
+      "ratio": 0.84,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-224",
+      "order": 224,
+      "a": "fairytale_clocktower",
+      "b": "portable_ferris_wheel",
+      "ratio": 2.9411764705882355,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-225",
+      "order": 225,
+      "a": "ice_sculpture_swan",
+      "b": "postcard",
+      "ratio": 0.125,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-226",
+      "order": 226,
+      "a": "rose_quartz_cluster",
+      "b": "ballet_shoe",
+      "ratio": 0.3125,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-227",
+      "order": 227,
+      "a": "snowman_scarf",
+      "b": "marshmallow_monster",
+      "ratio": 10.0,
+      "source": "user_requested_2026-10-22",
+      "is_first_ten": false,
+      "previous_pair": [
+        "snowman_scarf",
+        "goose"
+      ],
+      "note": "Snowman compared with goose by height."
+    },
+    {
+      "id": "unique-228",
+      "order": 228,
+      "a": "storybook_royal_throne",
+      "b": "christmas_fireplace_gifts",
+      "ratio": 1.2941176470588236,
+      "source": "pair_repair_2026-10-23",
+      "is_first_ten": false,
+      "previous_pair": [
+        "storybook_royal_throne",
+        "kinetic_wind_sculpture"
+      ],
+      "note": "re-paired 2026-10-23: partners within a few times of each other"
+    },
+    {
+      "id": "unique-229",
+      "order": 229,
+      "a": "giant_torii_gate",
+      "b": "winter_street_lantern",
+      "ratio": 0.15,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-230",
+      "order": 230,
+      "a": "silicon_interconnect_patch",
+      "b": "titanium_dioxide_particle",
+      "ratio": 0.2,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-231",
+      "order": 231,
+      "a": "firework_shell",
+      "b": "acorn_cap",
+      "ratio": 0.15,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-232",
+      "order": 232,
+      "a": "camera_quadcopter",
+      "b": "scrat",
+      "source": "atlas_editor_order",
+      "is_first_ten": false,
+      "reference_object": "camera_quadcopter",
+      "source_before_reorder": "saved_first_ten",
+      "ratio": 1.2
+    },
+    {
+      "id": "unique-233",
+      "order": 233,
+      "a": "basalt_fiber_cross_section",
+      "b": "skin_cell",
+      "ratio": 2.857142857142857,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-234",
+      "order": 234,
+      "a": "glass_ornament",
+      "b": "citrine_tower",
+      "ratio": 3.4999999999999996,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-235",
+      "order": 235,
+      "a": "big_bad_wolf",
+      "b": "wind_up_toy_car",
+      "ratio": 0.16666666666666669,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-236",
+      "order": 236,
+      "a": "geyser_basin",
+      "b": "art_deco_radio_tower",
+      "ratio": 1.7142857142857142,
+      "source": "pair_repair_2026-10-23",
+      "is_first_ten": false,
+      "previous_pair": [
+        "machu_picchu_citadel",
+        "geyser_basin"
+      ],
+      "note": "re-paired 2026-10-23: partners within a few times of each other"
+    },
+    {
+      "id": "unique-237",
+      "order": 237,
+      "a": "talking_frog",
+      "b": "witch_hat",
+      "ratio": 3.7500000000000004,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-238",
+      "order": 238,
+      "a": "wooden_nutcracker_doll",
+      "b": "museum_display_pedestal",
+      "ratio": 5.999999999999999,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-239",
+      "order": 239,
+      "a": "leaf_stoma",
+      "b": "microscopic_air_bubble",
+      "ratio": 2.8,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-240",
+      "order": 240,
+      "a": "garnet_specimen",
+      "b": "spiderweb_wreath",
+      "ratio": 3.75,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-241",
+      "order": 241,
+      "a": "champagne_fountain",
+      "b": "royal_crown",
+      "ratio": 0.16666666666666666,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-242",
+      "order": 242,
+      "a": "xylem_vessel_cross_section",
+      "b": "bakers_yeast_cell",
+      "ratio": 0.33333333333333337,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-243",
+      "order": 243,
+      "a": "new_year_countdown_clock",
+      "b": "holiday_light_arch",
+      "ratio": 3.666666666666667,
+      "source": "pair_repair_2026-10-23",
+      "is_first_ten": false,
+      "previous_pair": [
+        "holiday_light_arch",
+        "alpine_observation_tower"
+      ],
+      "note": "re-paired 2026-10-23: partners within a few times of each other"
+    },
+    {
+      "id": "unique-244",
+      "order": 244,
+      "a": "holiday_dining_table",
+      "b": "jewelry_chest",
+      "ratio": 0.2962962962962963,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-245",
+      "order": 245,
+      "a": "holiday_parade_float",
+      "b": "rescue_drone",
+      "ratio": 0.125,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-246",
+      "order": 246,
+      "a": "stonehenge_trilithon",
+      "b": "little_mermaid_statue",
+      "ratio": 0.19230769230769232,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-247",
+      "order": 247,
+      "a": "coastal_kite",
+      "b": "toy_train_engine",
+      "ratio": 0.15,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-248",
+      "order": 248,
+      "a": "party_popper",
+      "b": "mineral_cabinet",
+      "ratio": 8.166666666666668,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-249",
+      "order": 249,
+      "a": "cellulose_fibril_cross_section",
+      "b": "lipid_vesicle",
+      "ratio": 2.4,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-250",
+      "order": 250,
+      "a": "great_wall_75m_segment",
+      "b": "alpine_observation_tower",
+      "ratio": 1.8666666666666667,
+      "source": "pair_repair_2026-10-23",
+      "is_first_ten": false,
+      "previous_pair": [
+        "christmas_fireplace_gifts",
+        "art_deco_radio_tower"
+      ],
+      "note": "re-paired 2026-10-23: partners within a few times of each other"
+    },
+    {
+      "id": "unique-251",
+      "order": 251,
+      "a": "new_262_b",
+      "b": "glass_slipper",
+      "ratio": 1.2,
+      "source": "pair_repair_2026-10-23",
+      "is_first_ten": false,
+      "previous_pair": [
+        "glass_slipper",
+        "harvest_scarecrow"
+      ],
+      "note": "re-paired 2026-10-23: partners within a few times of each other"
+    },
+    {
+      "id": "unique-252",
+      "order": 252,
+      "a": "gothic_rose_window",
+      "b": "illuminated_moon_prop",
+      "ratio": 0.2333333333333333,
+      "source": "next100_reviewed_2026-10-21",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-253",
+      "order": 253,
+      "a": "tireman",
+      "b": "monster_truck_wheel",
+      "ratio": 0.7083333333333334,
+      "source": "user_requested_2026-10-22_replacement",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-254",
+      "order": 254,
+      "a": "ghost_hunter",
+      "b": "haunted_manor_door",
+      "ratio": 2.0,
+      "source": "user_requested_2026-10-22",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-255",
+      "order": 255,
+      "a": "new_273_a",
+      "b": "new_255_b",
+      "ratio": 2.5,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-256",
+      "order": 256,
+      "a": "new_255_a",
+      "b": "new_260_a",
+      "ratio": 5.258333333333334,
+      "source": "pair_audit_2026-10-23",
+      "is_first_ten": false,
+      "previous_pair": [
+        "new_255_a",
+        "new_261_b"
+      ],
+      "note": "swapped 2026-10-23 pair audit"
+    },
+    {
+      "id": "unique-257",
+      "order": 257,
+      "a": "new_256_b",
+      "b": "new_269_b",
+      "ratio": 0.14285714285714288,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-258",
+      "order": 258,
+      "a": "new_271_a",
+      "b": "new_256_a",
+      "ratio": 4.8,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-259",
+      "order": 259,
+      "a": "new_257_a",
+      "b": "new_292_b",
+      "ratio": 2.4545454545454546,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-260",
+      "order": 260,
+      "a": "new_257_b",
+      "b": "new_295_b",
+      "ratio": 0.21052631578947367,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-261",
+      "order": 261,
+      "a": "new_272_b",
+      "b": "new_258_a",
+      "ratio": 0.8333333333333334,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-262",
+      "order": 262,
+      "a": "new_296_b",
+      "b": "new_258_b",
+      "ratio": 0.1,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-263",
+      "order": 263,
+      "a": "new_259_a",
+      "b": "new_295_a",
+      "ratio": 0.3,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-264",
+      "order": 264,
+      "a": "new_294_b",
+      "b": "new_259_b",
+      "ratio": 3.0,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-265",
+      "order": 265,
+      "a": "new_260_b",
+      "b": "new_274_a",
+      "ratio": 0.25,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-266",
+      "order": 266,
+      "a": "new_261_b",
+      "b": "new_288_a",
+      "ratio": 3.5686274509803924,
+      "source": "pair_audit_2026-10-23",
+      "is_first_ten": false,
+      "previous_pair": [
+        "new_260_a",
+        "new_288_a"
+      ],
+      "note": "swapped 2026-10-23 pair audit"
+    },
+    {
+      "id": "unique-267",
+      "order": 267,
+      "a": "new_261_a",
+      "b": "new_286_a",
+      "ratio": 4.187946884576098,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-268",
+      "order": 268,
+      "a": "new_262_a",
+      "b": "new_281_a",
+      "ratio": 0.25,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-269",
+      "order": 269,
+      "a": "new_276_a",
+      "b": "new_278_a",
+      "ratio": 1.5,
+      "source": "pair_repair_2026-10-23",
+      "is_first_ten": false,
+      "previous_pair": [
+        "new_262_b",
+        "new_276_a"
+      ],
+      "note": "re-paired 2026-10-23: partners within a few times of each other"
+    },
+    {
+      "id": "unique-270",
+      "order": 270,
+      "a": "new_263_a",
+      "b": "new_270_b",
+      "ratio": 0.8333333333333334,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-271",
+      "order": 271,
+      "a": "new_294_a",
+      "b": "new_263_b",
+      "ratio": 0.2631578947368421,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-272",
+      "order": 272,
+      "a": "new_264_a",
+      "b": "new_299_b",
+      "ratio": 0.3333333333333333,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-273",
+      "order": 273,
+      "a": "new_264_b",
+      "b": "new_297_b",
+      "ratio": 4.166666666666667,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-274",
+      "order": 274,
+      "a": "new_265_a",
+      "b": "new_293_b",
+      "ratio": 0.20833333333333334,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-275",
+      "order": 275,
+      "a": "new_283_a",
+      "b": "new_265_b",
+      "ratio": 0.4,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-276",
+      "order": 276,
+      "a": "new_266_a",
+      "b": "new_300_a",
+      "ratio": 0.15424657534246575,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-277",
+      "order": 277,
+      "a": "new_266_b",
+      "b": "new_300_b",
+      "ratio": 0.06796116504854369,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-278",
+      "order": 278,
+      "a": "new_267_b",
+      "b": "new_278_b",
+      "ratio": 0.18888888888888888,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-279",
+      "order": 279,
+      "a": "new_281_b",
+      "b": "new_267_a",
+      "ratio": 3.5,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-280",
+      "order": 280,
+      "a": "new_268_a",
+      "b": "new_285_b",
+      "ratio": 0.4,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-281",
+      "order": 281,
+      "a": "new_268_b",
+      "b": "new_277_a",
+      "ratio": 3.4999999999999996,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-282",
+      "order": 282,
+      "a": "new_273_b",
+      "b": "new_269_a",
+      "ratio": 0.9333333333333335,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-283",
+      "order": 283,
+      "a": "new_270_a",
+      "b": "new_288_b",
+      "ratio": 4.29042904290429,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-284",
+      "order": 284,
+      "a": "new_271_b",
+      "b": "new_283_b",
+      "ratio": 6.0,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-285",
+      "order": 285,
+      "a": "new_296_a",
+      "b": "new_272_a",
+      "ratio": 1.4000000000000001,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-286",
+      "order": 286,
+      "a": "new_274_b",
+      "b": "new_284_b",
+      "ratio": 3.6666666666666665,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-287",
+      "order": 287,
+      "a": "new_298_a",
+      "b": "new_275_b",
+      "ratio": 0.5,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-288",
+      "order": 288,
+      "a": "new_298_b",
+      "b": "new_275_a",
+      "ratio": 10.0,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-289",
+      "order": 289,
+      "a": "new_276_b",
+      "b": "new_297_a",
+      "ratio": 4.0,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-290",
+      "order": 290,
+      "a": "new_277_b",
+      "b": "new_287_a",
+      "ratio": 16.0,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-291",
+      "order": 291,
+      "a": "harvest_scarecrow",
+      "b": "giant_storybook_mushroom",
+      "ratio": 1.8285714285714287,
+      "source": "pair_repair_2026-10-23",
+      "is_first_ten": false,
+      "previous_pair": [
+        "new_278_a",
+        "new_290_b"
+      ],
+      "note": "re-paired 2026-10-23: partners within a few times of each other"
+    },
+    {
+      "id": "unique-292",
+      "order": 292,
+      "a": "new_279_b",
+      "b": "new_287_b",
+      "ratio": 0.19999999999999998,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-293",
+      "order": 293,
+      "a": "new_279_a",
+      "b": "new_290_a",
+      "ratio": 4.443333333333333,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-294",
+      "order": 294,
+      "a": "new_280_b",
+      "b": "new_282_b",
+      "ratio": 2.0,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-295",
+      "order": 295,
+      "a": "new_280_a",
+      "b": "new_291_a",
+      "ratio": 1.8,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-296",
+      "order": 296,
+      "a": "new_291_b",
+      "b": "new_282_a",
+      "ratio": 2.909090909090909,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-297",
+      "order": 297,
+      "a": "new_284_a",
+      "b": "new_289_b",
+      "ratio": 4.247311827956989,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-298",
+      "order": 298,
+      "a": "new_292_a",
+      "b": "new_285_a",
+      "ratio": 2.9523809523809526,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-299",
+      "order": 299,
+      "a": "new_286_b",
+      "b": "new_289_a",
+      "ratio": 0.6144444444444445,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    },
+    {
+      "id": "unique-300",
+      "order": 300,
+      "a": "new_299_a",
+      "b": "new_293_a",
+      "ratio": 4.0,
+      "source": "user_requested_2026-10-22_expansion600",
+      "is_first_ten": false
+    }
+  ],
+  "rebalance_plan": "content-atlas/iterations/2026-10-19/rebalanced-pair-plan.json",
+  "archived_keys": [
+    "everest",
+    "goose",
+    "japan",
+    "niagara_american_falls"
+  ],
+  "previous_order_signatures": [
+    "liberty__starship",
+    "australia__moon",
+    "atst__vader",
+    "concert_harp__red_phone_kiosk",
+    "chessking__thumbelina",
+    "italy__madagascar",
+    "hollywood_sign__hotairballoon",
+    "hummingbird__strawberry",
+    "footballfield__iss",
+    "b747__mount_rushmore",
+    "charging_bull__two_seat_helicopter",
+    "giant_sequoia__london_eye",
+    "duck__snow_tube",
+    "flying_carpet__giant_waterlily_leaf",
+    "mantaray__rhino",
+    "lighthouse__palm",
+    "baba_yaga_hut__moai",
+    "narwhal__pumpkin_carriage",
+    "giantsquid__schoolbus",
+    "asianelephant__sulley",
+    "africa__neptune",
+    "bigben__bus",
+    "flamingo_pool_float__wooden_sled",
+    "airship__eiffel",
+    "atat__chinook_helicopter",
+    "snowmobile__vintage_jukebox",
+    "burj__empire_state",
+    "gorilla__santa",
+    "jupiter__sun",
+    "crop_duster_biplane__elephant",
+    "inflatable_dinghy__life_ring",
+    "balanced_rock__pirate_ship",
+    "koala__tennisball",
+    "buffalo__tracked_bulldozer",
+    "deathstar__sicily",
+    "grizzly__knight",
+    "beetle__shark",
+    "gateway_arch__godzilla",
+    "antonov_an225__space_needle",
+    "halfpipe__paraglider",
+    "christmas_tree__road_roller",
+    "nessie__santa_sleigh_team",
+    "cartoon_beaver__quad_roller_skate",
+    "ant__raindrop",
+    "giraffe__trex",
+    "red_panda__robot_dog",
+    "cable_car_cabin__moose",
+    "giant_pumpkin__liberty_bell",
+    "hair__rbc",
+    "forklift__tiger",
+    "circus_big_top__horse_carousel",
+    "kangaroo__ostrich",
+    "banana__smartphone",
+    "coin__golfball",
+    "rice__transistor",
+    "cement_mixer_truck__pteranodon",
+    "stardestroyer__uluru",
+    "baobab_tree__submarine",
+    "boxing_ring__xwing",
+    "hippo__jabba",
+    "babygroot__soccerball",
+    "button__goldfish",
+    "dolphin__salmon",
+    "backhoe_loader__tuna",
+    "costa_rica__hawaii_big_island",
+    "flamingo__motorcycle",
+    "astronaut__bb8",
+    "pyramid__road_train",
+    "camel__formula1_car",
+    "belaz_75710__court",
+    "bowling__skateboard",
+    "bumblebee__triangle_instrument",
+    "pigeon__robot_vacuum",
+    "brachiosaurus__crocodile",
+    "log_cabin__tracked_excavator",
+    "devils_tower__saturnv",
+    "cloud_gate__colosseum",
+    "goldengate__meteor_crater",
+    "mosquito__snowflake",
+    "bicycle__galapagos_tortoise",
+    "bouncy_castle__firetruck",
+    "viking_longship__windturbine",
+    "dachshund__rabbit",
+    "cow__greatdane",
+    "seaturtle__sup_board",
+    "farquaad__mario",
+    "cruiseship__sydney_harbour_bridge",
+    "compact_hatchback__yurt",
+    "refrigerator__suburban_house",
+    "kayak__playground_slide",
+    "boomerang__cartoon_raccoon",
+    "delicate_arch__leaning_tower_pisa",
+    "great_wall_75m_segment__whale",
+    "bonsai__clownfish",
+    "paper_plane__sparrow",
+    "basketball__hamster",
+    "chicken__delivery_robot",
+    "greenland__mexico",
+    "ladybug__salt",
+    "lego_brick__poison_dart_frog",
+    "pickup__velociraptor",
+    "florida__great_britain",
+    "kick_scooter__lion",
+    "subway_car__tenniscourt",
+    "orca__wright_flyer",
+    "reindeer__surfboard",
+    "iceland__sri_lanka",
+    "igloo__tank",
+    "owl__washing_machine",
+    "floatplane__swing",
+    "helicopter__rope_bridge",
+    "dandelion__housecat",
+    "contiguous_united_states__india",
+    "bat__harmonica",
+    "budgie__screwdriver",
+    "scarlet_macaw__steerable_snow_sled",
+    "drill__guinea_pig",
+    "chair__goat",
+    "mammoth__tie",
+    "california__texas",
+    "axolotl__penny_farthing",
+    "key__mouse",
+    "octopus__wheel_loader",
+    "hang_glider__mangrove_tree",
+    "handcar__horse",
+    "luxury_yacht_65m__museum_of_the_future",
+    "gecko__smart_speaker",
+    "sphinx__tram",
+    "large_bulldozer__windmill",
+    "speedboat__tiny_house",
+    "dumptruck__trampoline",
+    "falcon__tower_bridge",
+    "mobile_crane__washington_monument",
+    "compsognathus__rafflesia",
+    "airliner__lincoln_memorial",
+    "cotton_fiber__plant_cell",
+    "paperclip__tree_frog",
+    "louvre_pyramid__saguaro_cactus",
+    "carbon_fullerene__glucose_molecule",
+    "guitar__swan",
+    "flatiron_building__old_faithful_geyser",
+    "dog__pineapple",
+    "antelope_canyon__sphere_las_vegas",
+    "grand_canyon__phobos",
+    "beluga_whale__camping_tent",
+    "arcade_cabinet__yoda",
+    "dna_double_helix__hemoglobin_molecule",
+    "james_webb_telescope__petra_treasury",
+    "hoover_dam__mount_fuji",
+    "burger__housefly",
+    "microchip__snow_globe",
+    "earth__saturn",
+    "half_dome__sagrada_familia",
+    "asteroid_bennu__mount_etna",
+    "chrysler_building__mount_vesuvius",
+    "mars__pluto",
+    "chameleon__seashell",
+    "brooklyn_bridge__us_capitol",
+    "oak_tree__parade_float",
+    "guggenheim_museum_nyc__water_slide",
+    "hot_dog__vintage_film_camera",
+    "garden_gnome__popcorn_machine",
+    "snow_groomer__tidal_turbine",
+    "basketball_player__bear",
+    "hammerhead_shark__pinball_machine",
+    "baseball_bat__pencil",
+    "kingfisher__watermelon",
+    "arc_de_triomphe__iceberg",
+    "child__penguin",
+    "camping_lantern__pinata",
+    "diatom__neuron",
+    "drop_tower__steel_water_tower",
+    "espresso_machine__fire_hydrant",
+    "eagle__human",
+    "pollen_grain__white_blood_cell",
+    "diving_bell__snowboard",
+    "hubble_telescope__silver_camping_trailer",
+    "christ_the_redeemer__graveyard_angel_statue",
+    "chef__personal_watercraft",
+    "giant_satellite_dish__lunar_crater_140m",
+    "coral_branch__zipline_trolley",
+    "beach_umbrella__firefighter",
+    "cheese_wheel__teapot",
+    "newborn_baby__seahorse",
+    "bowling_pin__coconut",
+    "apollo_lunar_module__giants_causeway_column",
+    "antique_globe__football_helmet",
+    "dragon_capsule__solar_panel_array",
+    "pedal_boat__scuba_diver",
+    "brass_telescope__weather_balloon",
+    "camera_quadcopter__scrat",
+    "baseball_glove__rolling_pin",
+    "grandfather_clock__us_mailbox",
+    "cast_iron_skillet__watering_can",
+    "combine_harvester__pirate",
+    "bumper_car__sunflower",
+    "poppy_seed__sand_grain",
+    "skis__vending_machine",
+    "goose__unicycle",
+    "toddler__toucan",
+    "parthenon__titanic",
+    "hockey_player__river_otter",
+    "bronze_whale_tail_sculpture__halloween_jack_o_lantern",
+    "ice_cave_entrance__red_sandstone_arch",
+    "canoe_paddle__christmas_red_truck",
+    "protein_ring__silicon_via",
+    "giant_snowflake_decoration__marble_apple",
+    "giant_storybook_mushroom__glowing_star_topper",
+    "loaf_of_bread__raw_emerald",
+    "candy_bucket__enchanted_rose_cloche",
+    "mountain_cableway_station__naica_gypsum_crystal",
+    "javelin__winter_mitten",
+    "amethyst_geode__enchanted_apple",
+    "carbon_nanoribbon__cellulose_nanocrystal",
+    "colosseum_facade_section__new_year_countdown_clock",
+    "jeweled_brooch__roast_turkey",
+    "dragon_egg__dragonfly",
+    "snow_shovel__taco",
+    "coral_fan__fluorite_cube",
+    "haunted_mausoleum__modern_bridge_pylon",
+    "go_kart__storybook_bridge",
+    "fortune_crystal_ball__tide_pool",
+    "fairytale_dragon__toy_sailboat",
+    "miniature_potted_cactus__new_year_handbell",
+    "fairytale_clocktower__portable_ferris_wheel",
+    "ice_sculpture_swan__postcard",
+    "ballet_shoe__rose_quartz_cluster",
+    "great_wall_watchtower__snowman_scarf",
+    "kinetic_wind_sculpture__storybook_royal_throne",
+    "giant_torii_gate__winter_street_lantern",
+    "silicon_interconnect_patch__titanium_dioxide_particle",
+    "acorn_cap__firework_shell",
+    "basalt_fiber_cross_section__skin_cell",
+    "citrine_tower__glass_ornament",
+    "big_bad_wolf__wind_up_toy_car",
+    "geyser_basin__machu_picchu_citadel",
+    "talking_frog__witch_hat",
+    "museum_display_pedestal__wooden_nutcracker_doll",
+    "leaf_stoma__microscopic_air_bubble",
+    "garnet_specimen__spiderweb_wreath",
+    "champagne_fountain__royal_crown",
+    "bakers_yeast_cell__xylem_vessel_cross_section",
+    "alpine_observation_tower__holiday_light_arch",
+    "holiday_dining_table__jewelry_chest",
+    "holiday_parade_float__rescue_drone",
+    "little_mermaid_statue__stonehenge_trilithon",
+    "coastal_kite__toy_train_engine",
+    "mineral_cabinet__party_popper",
+    "cellulose_fibril_cross_section__lipid_vesicle",
+    "art_deco_radio_tower__christmas_fireplace_gifts",
+    "glass_slipper__harvest_scarecrow",
+    "gothic_rose_window__illuminated_moon_prop"
+  ],
+  "selection_source": "SizeMatch-Atlas-Selection (2).json",
+  "selection_source_sha256": "bc188a5b2582dbd7016f281a2c9db82788b21c118decc8e327d33cfd08cc2745",
+  "selection_catalog_sha256": "afe89d76905702ed8cee1720701f94787b44267895aed8b37577e7cd288efd44",
+  "size_unit": "m",
+  "size_semantics": "authored_measurement_dimension"
+}

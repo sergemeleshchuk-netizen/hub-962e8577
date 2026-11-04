@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Arrow Jam · v2 — заказы</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    height:100dvh;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;user-select:none;touch-action:none;
+    background:radial-gradient(120% 120% at 50% 0%,#222838,#10131c 80%);}
+
+  /* ===== РАМКА-ТЕЛЕФОН 9:16 ===== */
+  #phone{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;
+         background:linear-gradient(180deg,#bfe3f7 0%,#dff1fb 55%,#cfe9f6 100%);}
+  @media (max-aspect-ratio:1/1){ #phone{width:100vw;height:100dvh;border-radius:0;} }
+  @media (min-aspect-ratio:1/1){
+    #phone{height:96dvh;aspect-ratio:9/16;width:auto;
+           border-radius:32px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 8px #0c0e15;}
+  }
+
+  #bg{position:absolute;inset:0;z-index:0;pointer-events:none;}
+  #bg .cloud{position:absolute;background:#ffffffaa;border-radius:999px;filter:blur(2px);}
+
+  #hud{width:100%;padding:14px 16px 4px;z-index:3;display:flex;align-items:center;justify-content:space-between;}
+  #hud .lvl{font-weight:800;font-size:17px;color:#134;background:#ffffffcc;border-radius:12px;padding:7px 14px;box-shadow:0 3px 10px #0002;}
+  #hud .left{font-weight:700;font-size:14px;color:#356;background:#ffffff99;border-radius:12px;padding:8px 12px;}
+  #hud .re{font:inherit;font-size:18px;font-weight:800;border:none;background:#ffffffcc;color:#134;
+    width:38px;height:38px;border-radius:12px;cursor:pointer;box-shadow:0 3px 10px #0002;}
+
+  /* ===== Заказы ===== */
+  #ordersBar{width:100%;display:flex;justify-content:center;align-items:center;gap:14px;padding:4px 0 2px;z-index:3;}
+  #curOrder{display:flex;align-items:center;gap:10px;background:#fff;border-radius:16px;padding:8px 16px;
+    box-shadow:0 5px 14px #0003;border:3px solid #ffd54f;}
+  #curOrder .sq{width:34px;height:34px;border-radius:9px;background:linear-gradient(180deg,var(--lt),var(--c) 60%);
+    box-shadow:0 2px 0 var(--dk), inset 0 2px 0 #ffffff60;}
+  #curOrder .cnt{font-weight:900;font-size:22px;color:#134;}
+  #curOrder.donePop{animation:opop .3s ease-out;}
+  @keyframes opop{40%{transform:scale(1.15)}100%{transform:scale(1)}}
+  #nextOrder{display:flex;align-items:center;gap:6px;background:#ffffff88;border-radius:12px;padding:6px 10px;opacity:.75;}
+  #nextOrder .sq{width:20px;height:20px;border-radius:6px;background:linear-gradient(180deg,var(--lt),var(--c) 60%);}
+  #nextOrder .lbl{font-weight:700;font-size:12px;color:#356;}
+
+  #stage{flex:1;width:100%;position:relative;z-index:2;min-height:0;}
+  #board{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);transform-origin:center;}
+
+  #panel{position:absolute;background:#2b3350;border-radius:22px;box-shadow:0 14px 30px #1c274040, inset 0 2px 0 #ffffff14;}
+  .cell{position:absolute;background:#3a4467;border-radius:10px;box-shadow:inset 0 2px 4px #00000030;}
+
+  .blk{position:absolute;border-radius:13px;display:flex;align-items:center;justify-content:center;
+       cursor:pointer;z-index:5;
+       box-shadow:0 4px 0 var(--dk), 0 6px 10px #0004, inset 0 2px 0 #ffffff60;
+       background:linear-gradient(180deg,var(--lt),var(--c) 60%);
+       transition:left .18s cubic-bezier(.2,.7,.3,1), top .18s cubic-bezier(.2,.7,.3,1), transform .18s, opacity .18s;}
+  .blk .ar{width:30px;height:30px;pointer-events:none;filter:drop-shadow(0 2px 2px #0005);}
+  .blk.gone{opacity:0;transform:scale(.4);}
+  @keyframes shake{0%,100%{margin-left:0}25%{margin-left:-5px}75%{margin-left:5px}}
+  .blk.no{animation:shake .22s linear;}
+
+  /* скамейка ожидания */
+  #tray{position:absolute;background:#22293f;border-radius:16px;box-shadow:inset 0 3px 8px #0006, 0 4px 12px #0003;
+        display:flex;align-items:center;justify-content:center;gap:8px;}
+  .slot{width:52px;height:52px;border-radius:11px;background:#333c5c;box-shadow:inset 0 2px 5px #00000045;
+        display:flex;align-items:center;justify-content:center;}
+  .slot .tb{width:44px;height:44px;border-radius:9px;background:linear-gradient(180deg,var(--lt),var(--c) 60%);
+        box-shadow:0 2px 0 var(--dk), inset 0 2px 0 #ffffff60;animation:pop .18s ease-out;}
+  @keyframes pop{from{transform:scale(.3)}to{transform:scale(1)}}
+  .slot .tb.boarding{animation:boardp .3s ease-in forwards;}
+  @keyframes boardp{40%{transform:scale(1.15) translateY(-6px)}100%{transform:scale(0) translateY(-18px);opacity:0}}
+
+  .ov{position:absolute;inset:0;z-index:20;background:#10162add;display:none;align-items:center;justify-content:center;flex-direction:column;gap:18px;}
+  .ov.show{display:flex;}
+  .ov .card{background:#fff;border-radius:22px;padding:30px 34px;text-align:center;box-shadow:0 20px 50px #0007;max-width:78%;}
+  .ov h2{margin:0 0 6px;font-size:24px;color:#134;}
+  .ov p{margin:0 0 18px;color:#568;font-size:14.5px;}
+  .ov button{font:inherit;font-weight:800;font-size:17px;color:#fff;background:linear-gradient(180deg,#66d06c,#3fae4b);
+    border:none;border-radius:14px;padding:13px 34px;cursor:pointer;box-shadow:0 5px 0 #2e8a39,0 8px 16px #0004;}
+  .ov.lose button{background:linear-gradient(180deg,#f37f6f,#e05545);box-shadow:0 5px 0 #b03d30,0 8px 16px #0004;}
+  .conf{position:absolute;width:10px;height:10px;border-radius:3px;z-index:19;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(130vh) rotate(540deg);opacity:.6}}
+
+  #home h2{font-size:30px;}
+</style>
+</head>
+<body>
+<div id="phone">
+  <div id="bg">
+    <div class="cloud" style="left:8%;top:6%;width:120px;height:34px"></div>
+    <div class="cloud" style="right:10%;top:13%;width:90px;height:26px"></div>
+    <div class="cloud" style="left:22%;top:22%;width:70px;height:20px;opacity:.6"></div>
+  </div>
+  <div id="hud">
+    <div class="lvl" id="lvl">Уровень 1/5</div>
+    <div class="left" id="left">Блоков: 0</div>
+    <button class="re" id="re" title="Заново">↻</button>
+  </div>
+  <div id="ordersBar">
+    <div id="curOrder"><div class="sq"></div><div class="cnt">0/0</div></div>
+    <div id="nextOrder"><span class="lbl">next</span><div class="sq"></div></div>
+  </div>
+  <div id="stage"><div id="board"></div></div>
+
+  <div class="ov" id="win"><div class="card"><h2>Все заказы собраны! 🎉</h2><p id="winTxt"></p><button id="winBtn">Дальше ▶</button></div></div>
+  <div class="ov lose" id="lose"><div class="card"><h2>Скамейка переполнена 😿</h2><p>Блоки не своего заказа ждут на скамейке — не выпускай лишние цвета.</p><button id="loseBtn">Заново ↻</button></div></div>
+  <div class="ov show" id="home"><div class="card"><h2>ARROW JAM 2</h2>
+    <p>Выпускай блоки стрелками с поля.<br>Сверху — заказ на цвет: попал в заказ — засчитан,
+    чужой цвет — ждёт на скамейке (5 мест).<br>Скамейка переполнена = проигрыш.</p>
+    <button id="playBtn">PLAY ▶</button></div></div>
+</div>
+
+<script>
+/* ================= Arrow Jam v2 — заказы вместо ворот =================
+   Поля и блоки — из v1 (порядок извлечения проверен солвером). Ворот нет:
+   блок, выехавший за ЛЮБОЙ край, идёт в текущий заказ (если цвет совпал
+   и заказ не полон) или на скамейку (5 мест). Заказ собран — следующий;
+   блоки нужного цвета со скамейки заезжают в заказ сами.
+   Скамейка переполнена = проигрыш (сразу). Все блоки развезены = победа (~1с пауза).
+   Заказы строятся симуляцией решения v1 и валидируются реплеем. */
+
+const LEVELS = [{"w":5,"h":7,"cap":5,"colors":3,"gates":{"T:1":0,"T:2":2,"T:3":2,"B:1":2,"B:2":0,"B:3":0,"T:4":2,"R:1":1,"R:2":1,"R:3":1,"B:0":2},"blocks":[{"x":1,"y":3,"c":2,"d":"D"},{"x":3,"y":6,"c":0,"d":"D"},{"x":3,"y":3,"c":2,"d":"U"},{"x":2,"y":1,"c":0,"d":"D"},{"x":1,"y":2,"c":2,"d":"D"},{"x":2,"y":2,"c":0,"d":"D"},{"x":3,"y":0,"c":2,"d":"U"},{"x":1,"y":4,"c":2,"d":"D"}],"sol":[{"x":3,"y":6,"type":"sort"},{"x":2,"y":2,"type":"sort"},{"x":2,"y":1,"type":"sort"},{"x":3,"y":0,"type":"sort"},{"x":3,"y":3,"type":"sort"},{"x":1,"y":4,"type":"sort"},{"x":1,"y":3,"type":"sort"},{"x":1,"y":2,"type":"sort"}],"meta":{"name":"L1","taps":8,"slides":0,"trays":0,"nodes":8,"tries":312,"seed":20261020}},{"w":6,"h":8,"cap":5,"colors":3,"gates":{"T:3":1,"T:4":1,"L:4":0,"L:5":0,"L:6":0,"B:0":1,"B:1":1,"B:2":1,"T:0":2,"T:1":2},"blocks":[{"x":2,"y":0,"c":1,"d":"D"},{"x":3,"y":7,"c":1,"d":"U"},{"x":0,"y":7,"c":1,"d":"R"},{"x":0,"y":4,"c":2,"d":"U"},{"x":3,"y":1,"c":1,"d":"U"},{"x":3,"y":6,"c":0,"d":"L"},{"x":4,"y":2,"c":1,"d":"U"},{"x":1,"y":4,"c":0,"d":"L"},{"x":0,"y":6,"c":1,"d":"D"},{"x":2,"y":2,"c":2,"d":"R"},{"x":1,"y":5,"c":0,"d":"L"},{"x":1,"y":0,"c":1,"d":"D"}],"sol":[{"x":0,"y":4,"type":"sort"},{"x":3,"y":1,"type":"sort"},{"x":4,"y":2,"type":"sort"},{"x":1,"y":4,"type":"sort"},{"x":1,"y":5,"type":"sort"},{"x":1,"y":0,"type":"sort"},{"x":2,"y":2,"type":"tray"},{"x":2,"y":0,"type":"sort"},{"x":0,"y":7,"type":"slide"},{"x":0,"y":6,"type":"sort"},{"x":3,"y":6,"type":"sort"},{"x":3,"y":7,"type":"sort"},{"x":2,"y":7,"type":"tray"}],"meta":{"name":"L2","taps":13,"slides":1,"trays":2,"nodes":13,"tries":671,"seed":20261691}},{"w":6,"h":8,"cap":5,"colors":4,"gates":{"B:0":0,"B:1":3,"L:2":2,"L:3":1,"L:4":3,"R:1":1,"R:2":1,"L:0":2,"L:1":2,"L:5":3,"B:2":3},"blocks":[{"x":4,"y":4,"c":2,"d":"U"},{"x":4,"y":1,"c":1,"d":"R"},{"x":4,"y":7,"c":3,"d":"U"},{"x":5,"y":4,"c":1,"d":"R"},{"x":3,"y":6,"c":3,"d":"R"},{"x":5,"y":5,"c":1,"d":"R"},{"x":3,"y":7,"c":2,"d":"D"},{"x":1,"y":7,"c":3,"d":"D"},{"x":3,"y":4,"c":2,"d":"D"},{"x":2,"y":6,"c":3,"d":"R"},{"x":5,"y":2,"c":1,"d":"L"},{"x":3,"y":0,"c":1,"d":"D"},{"x":1,"y":3,"c":1,"d":"U"},{"x":2,"y":1,"c":3,"d":"D"},{"x":2,"y":3,"c":0,"d":"D"},{"x":2,"y":2,"c":3,"d":"D"}],"sol":[{"x":4,"y":1,"type":"sort"},{"x":1,"y":7,"type":"sort"},{"x":4,"y":4,"type":"tray"},{"x":4,"y":7,"type":"tray"},{"x":5,"y":4,"type":"tray"},{"x":3,"y":6,"type":"tray"},{"x":2,"y":6,"type":"pack"},{"x":5,"y":5,"type":"tray"},{"x":1,"y":3,"type":"pack"},{"x":3,"y":7,"type":"tray"},{"x":3,"y":4,"type":"pack"},{"x":3,"y":0,"type":"tray"},{"x":2,"y":3,"type":"tray"},{"x":2,"y":2,"type":"sort"},{"x":2,"y":1,"type":"sort"},{"x":5,"y":2,"type":"tray"}],"meta":{"name":"L3","taps":16,"slides":0,"trays":12,"nodes":16,"tries":43,"seed":20261734}},{"w":6,"h":9,"cap":5,"colors":4,"gates":{"B:4":0,"B:5":0,"R:2":1,"R:3":1,"R:4":3,"R:0":1,"R:1":1,"L:3":2,"L:4":2,"R:5":3,"R:6":3,"R:7":3},"blocks":[{"x":1,"y":1,"c":2,"d":"D"},{"x":3,"y":2,"c":0,"d":"U"},{"x":4,"y":3,"c":2,"d":"L"},{"x":5,"y":5,"c":0,"d":"D"},{"x":4,"y":7,"c":0,"d":"D"},{"x":2,"y":8,"c":3,"d":"R"},{"x":0,"y":4,"c":3,"d":"R"},{"x":4,"y":5,"c":2,"d":"L"},{"x":0,"y":2,"c":1,"d":"U"},{"x":2,"y":6,"c":2,"d":"U"},{"x":2,"y":0,"c":3,"d":"R"},{"x":5,"y":1,"c":1,"d":"R"},{"x":5,"y":7,"c":2,"d":"R"},{"x":3,"y":3,"c":3,"d":"D"},{"x":2,"y":7,"c":2,"d":"R"},{"x":0,"y":0,"c":1,"d":"R"},{"x":4,"y":4,"c":2,"d":"R"},{"x":0,"y":7,"c":0,"d":"U"},{"x":1,"y":5,"c":0,"d":"L"},{"x":4,"y":0,"c":3,"d":"D"}],"sol":[{"x":4,"y":7,"type":"sort"},{"x":5,"y":1,"type":"sort"},{"x":3,"y":2,"type":"tray"},{"x":2,"y":8,"type":"tray"},{"x":5,"y":7,"type":"tray"},{"x":5,"y":5,"type":"sort"},{"x":3,"y":3,"type":"tray"},{"x":4,"y":3,"type":"sort"},{"x":1,"y":1,"type":"slide"},{"x":4,"y":5,"type":"slide"},{"x":0,"y":2,"type":"slide"},{"x":2,"y":0,"type":"slide"},{"x":0,"y":0,"type":"slide"},{"x":4,"y":0,"type":"slide"},{"x":3,"y":0,"type":"pack"},{"x":2,"y":0,"type":"sort"},{"x":0,"y":1,"type":"tray"},{"x":2,"y":7,"type":"tray"},{"x":4,"y":4,"type":"pack"},{"x":1,"y":5,"type":"tray"},{"x":1,"y":4,"type":"tray"},{"x":0,"y":4,"type":"sort"},{"x":0,"y":7,"type":"pack"},{"x":2,"y":5,"type":"tray"},{"x":2,"y":6,"type":"pack"},{"x":4,"y":3,"type":"tray"}],"meta":{"name":"L4","taps":26,"slides":6,"trays":14,"nodes":74,"tries":104,"seed":20261838}},{"w":6,"h":9,"cap":5,"colors":5,"gates":{"T:2":3,"T:3":0,"T:4":0,"T:1":3,"R:4":1,"R:5":1,"R:6":1,"L:6":2,"L:7":2,"L:8":2,"R:1":3,"R:2":3,"B:3":4,"B:4":4,"L:1":4,"L:2":4,"L:3":4},"blocks":[{"x":4,"y":2,"c":4,"d":"R"},{"x":3,"y":6,"c":2,"d":"U"},{"x":4,"y":7,"c":4,"d":"U"},{"x":5,"y":8,"c":2,"d":"D"},{"x":1,"y":6,"c":0,"d":"R"},{"x":5,"y":4,"c":4,"d":"R"},{"x":2,"y":6,"c":4,"d":"D"},{"x":1,"y":4,"c":3,"d":"D"},{"x":5,"y":7,"c":4,"d":"L"},{"x":3,"y":8,"c":4,"d":"D"},{"x":5,"y":5,"c":1,"d":"R"},{"x":2,"y":7,"c":1,"d":"D"},{"x":5,"y":0,"c":1,"d":"R"},{"x":2,"y":1,"c":3,"d":"U"},{"x":4,"y":1,"c":3,"d":"U"},{"x":0,"y":6,"c":4,"d":"L"},{"x":1,"y":0,"c":1,"d":"D"},{"x":2,"y":5,"c":1,"d":"R"},{"x":3,"y":3,"c":3,"d":"R"},{"x":5,"y":6,"c":1,"d":"R"},{"x":4,"y":8,"c":0,"d":"D"},{"x":3,"y":0,"c":2,"d":"R"},{"x":4,"y":4,"c":4,"d":"R"},{"x":2,"y":8,"c":2,"d":"D"}],"sol":[{"x":3,"y":8,"type":"sort"},{"x":5,"y":5,"type":"sort"},{"x":2,"y":1,"type":"sort"},{"x":2,"y":5,"type":"sort"},{"x":5,"y":6,"type":"sort"},{"x":4,"y":2,"type":"tray"},{"x":5,"y":8,"type":"tray"},{"x":5,"y":4,"type":"tray"},{"x":0,"y":6,"type":"pack"},{"x":5,"y":0,"type":"tray"},{"x":3,"y":0,"type":"tray"},{"x":2,"y":8,"type":"pack"},{"x":2,"y":7,"type":"tray"},{"x":2,"y":6,"type":"tray"},{"x":4,"y":4,"type":"tray"},{"x":3,"y":6,"type":"slide"},{"x":4,"y":7,"type":"slide"},{"x":5,"y":7,"type":"pack"},{"x":1,"y":6,"type":"tray"},{"x":1,"y":4,"type":"tray"},{"x":1,"y":0,"type":"pack"},{"x":4,"y":1,"type":"tray"},{"x":3,"y":3,"type":"pack"},{"x":3,"y":4,"type":"tray"},{"x":4,"y":2,"type":"tray"},{"x":4,"y":8,"type":"tray"}],"meta":{"name":"L5","taps":26,"slides":2,"trays":19,"nodes":6282,"tries":292,"seed":20262130}}];
+
+const PAL = [
+  ['#ef5350','#ff8a80','#b23530'],
+  ['#42a5f5','#90caf9','#2a6db0'],
+  ['#66bb6a','#a5d6a7','#3f8043'],
+  ['#f5b942','#ffd54f','#b57f1e'],
+  ['#ab47bc','#ce93d8','#7a2f8a'],
+];
+const ROT = {U:0, R:90, D:180, L:270};
+const DV = {U:[0,-1], D:[0,1], L:[-1,0], R:[1,0]};
+const CELL=72, PAD=8, GM=10;
+const BENCH=5;
+
+const board=document.getElementById('board'), stage=document.getElementById('stage');
+let li=parseInt(localStorage.getItem('arrowJam2.level')||'0');
+if(!(li>=0&&li<LEVELS.length)) li=0;
+let st=null, lvl=null, busy=false, over=false, playing=false;
+let blkEls=new Map(), uid=0;
+
+/* ---------- построение заказов из решения v1 ---------- */
+function simExitSeq(lv){
+  /* реплей sol в геометрии без ворот → последовательность цветов выездов */
+  const blocks=lv.blocks.map(b=>({...b}));
+  const seq=[];
+  for(const s of lv.sol){
+    const bi=blocks.findIndex(b=>b.x===s.x&&b.y===s.y);
+    if(bi<0)return null;
+    const b=blocks[bi];
+    const [dx,dy]=DV[b.d];
+    let nx=b.x, ny=b.y, exit=false;
+    while(true){
+      const tx=nx+dx, ty=ny+dy;
+      if(tx<0||ty<0||tx>=lv.w||ty>=lv.h){exit=true;break;}
+      if(blocks.some((o,j)=>j!==bi&&o.x===tx&&o.y===ty))break;
+      nx=tx;ny=ty;
+    }
+    if(exit){seq.push(b.c);blocks.splice(bi,1);}
+    else{b.x=nx;b.y=ny;}
+  }
+  return blocks.length?null:seq;
+}
+function modeOf(arr){
+  const cnt={};arr.forEach(b=>cnt[b]=(cnt[b]||0)+1);
+  return +Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];
+}
+function buildOrders(seq,closeAt){
+  const orders=[];const bench=[];let cur=null;
+  const openFromBench=()=>{
+    if(!bench.length)return;
+    const col=modeOf(bench);
+    let got=0;
+    for(let i=bench.length-1;i>=0;i--)if(bench[i]===col){bench.splice(i,1);got++;}
+    cur={color:col,got};
+    if(cur.got>=closeAt){orders.push({c:cur.color,n:cur.got});cur=null;openFromBench();}
+  };
+  for(const c of seq){
+    if(cur&&c===cur.color)cur.got++;
+    else if(!cur)cur={color:c,got:1};
+    else bench.push(c);
+    if(cur&&(cur.got>=closeAt||bench.length>=BENCH-1)){
+      orders.push({c:cur.color,n:cur.got});cur=null;
+      openFromBench();
+    }
+  }
+  if(cur)orders.push({c:cur.color,n:cur.got});
+  while(bench.length)openFromBench(),cur&&(orders.push({c:cur.color,n:cur.got}),cur=null);
+  return orders;
+}
+function validateOrders(seq,orders){
+  let oi=0,got=0;const bench=[];
+  const drain=()=>{
+    let adv=true;
+    while(adv&&oi<orders.length){
+      adv=false;
+      while(got<orders[oi].n){
+        const idx=bench.indexOf(orders[oi].c);
+        if(idx<0)break;
+        bench.splice(idx,1);got++;
+      }
+      if(got>=orders[oi].n){oi++;got=0;adv=true;}
+    }
+  };
+  drain();
+  for(const c of seq){
+    if(oi<orders.length&&c===orders[oi].c&&got<orders[oi].n)got++;
+    else bench.push(c);
+    if(bench.length>=BENCH)return false;   // строго: решение не заполняет скамейку до отказа
+    drain();
+  }
+  return oi>=orders.length&&bench.length===0;
+}
+function makeOrders(lv){
+  const seq=simExitSeq(lv);
+  if(!seq)return null;
+  for(const closeAt of [4,3,5,2]){
+    const orders=buildOrders(seq,closeAt);
+    if(validateOrders(seq,orders))return orders;
+  }
+  return null;
+}
+
+function fit(){
+  const b=document.getElementById('board');
+  if(!b.offsetWidth) return;
+  const sw=stage.clientWidth-16, sh=stage.clientHeight-16;
+  const s=Math.max(.3, Math.min(sw/b.offsetWidth, sh/b.offsetHeight, 1.4));
+  b.style.transform=`translate(-50%,-50%) scale(${s})`;
+}
+window.addEventListener('resize',fit);
+
+function px(x){ return GM + PAD + x*CELL; }
+function py(y){ return GM + PAD + y*CELL; }
+
+function build(){
+  lvl=LEVELS[li];
+  const orders=makeOrders(lvl)||[{c:lvl.blocks[0].c,n:lvl.blocks.length}];
+  st={blocks: lvl.blocks.map(b=>({...b, id:++uid})), bench:[], orders:orders.map(o=>({...o,got:0})), oi:0};
+  busy=false; over=false; blkEls=new Map();
+  const W=GM*2+PAD*2+lvl.w*CELL, H=GM*2+PAD*2+lvl.h*CELL;
+  const trayW=BENCH*60+24;
+  board.style.width=Math.max(W,trayW)+'px';
+  board.style.height=(H+26+72)+'px';
+  board.innerHTML='';
+  const ox=(Math.max(W,trayW)-W)/2;
+  const panel=document.createElement('div'); panel.id='panel';
+  panel.style.cssText=`left:${ox}px;top:0;width:${W}px;height:${H}px;`;
+  board.appendChild(panel);
+  for(let y=0;y<lvl.h;y++)for(let x=0;x<lvl.w;x++){
+    const c=document.createElement('div'); c.className='cell';
+    c.style.cssText=`left:${ox+px(x)+3}px;top:${py(y)+3}px;width:${CELL-6}px;height:${CELL-6}px;`;
+    board.appendChild(c);
+  }
+  for(const b of st.blocks){
+    const e=document.createElement('div'); e.className='blk';
+    const p=PAL[b.c];
+    e.style.setProperty('--c',p[0]); e.style.setProperty('--lt',p[1]); e.style.setProperty('--dk',p[2]);
+    e.style.cssText+=`left:${ox+px(b.x)+5}px;top:${py(b.y)+5}px;width:${CELL-10}px;height:${CELL-10}px;`;
+    e.innerHTML=`<svg class="ar" viewBox="0 0 24 24" style="transform:rotate(${ROT[b.d]}deg)"><path d="M12 3.5 L20.5 19 Q12 15.5 3.5 19 Z" fill="#fff"/></svg>`;
+    e.addEventListener('pointerdown',()=>tapBlock(b.id));
+    board.appendChild(e); blkEls.set(b.id,e);
+  }
+  const tray=document.createElement('div'); tray.id='tray';
+  tray.style.cssText=`left:${(Math.max(W,trayW)-trayW)/2}px;top:${H+26}px;width:${trayW}px;height:68px;`;
+  tray.innerHTML=Array.from({length:BENCH},(_,i)=>`<div class="slot" data-i="${i}"></div>`).join('');
+  board.appendChild(tray);
+  board.dataset.ox=ox;
+  hud(); renderBench(); renderOrders(); requestAnimationFrame(fit);
+}
+
+function hud(){
+  document.getElementById('lvl').textContent=`Уровень ${li+1}/${LEVELS.length}`;
+  document.getElementById('left').textContent=`Блоков: ${st.blocks.length}`;
+}
+function renderBench(){
+  document.querySelectorAll('#tray .slot').forEach((s,i)=>{
+    const c=st.bench[i];
+    if(c===undefined){ s.innerHTML=''; return; }
+    const p=PAL[c];
+    s.innerHTML=`<div class="tb" style="--c:${p[0]};--lt:${p[1]};--dk:${p[2]}"></div>`;
+  });
+}
+function renderOrders(){
+  const cur=st.orders[st.oi], nxt=st.orders[st.oi+1];
+  const co=document.getElementById('curOrder');
+  if(cur){
+    const p=PAL[cur.c];
+    co.style.display='flex';
+    co.querySelector('.sq').style.cssText=`--c:${p[0]};--lt:${p[1]};--dk:${p[2]}`;
+    co.querySelector('.cnt').textContent=`${cur.got}/${cur.n}`;
+  }else co.style.display='none';
+  const no=document.getElementById('nextOrder');
+  if(nxt){
+    const p=PAL[nxt.c];
+    no.style.display='flex';
+    no.querySelector('.sq').style.cssText=`--c:${p[0]};--lt:${p[1]};--dk:${p[2]}`;
+  }else no.style.display='none';
+}
+
+function calcMove(bi){
+  const b=st.blocks[bi]; const [dx,dy]=DV[b.d];
+  let nx=b.x, ny=b.y;
+  while(true){
+    const tx=nx+dx, ty=ny+dy;
+    if(tx<0||ty<0||tx>=lvl.w||ty>=lvl.h) return {exit:true, nx, ny};
+    if(st.blocks.some((o,j)=>j!==bi&&o.x===tx&&o.y===ty)) break;
+    nx=tx; ny=ty;
+  }
+  if(nx===b.x&&ny===b.y) return {none:true};
+  return {exit:false, nx, ny};
+}
+
+/* добор скамейки в текущий заказ (каскадом) */
+function drainBench(cb){
+  const cur=st.orders[st.oi];
+  if(!cur){cb();return;}
+  const idx=st.bench.indexOf(cur.c);
+  if(idx<0||cur.got>=cur.n){cb();return;}
+  const slot=document.querySelectorAll('#tray .slot')[idx];
+  const tb=slot&&slot.querySelector('.tb');
+  if(tb)tb.classList.add('boarding');
+  setTimeout(()=>{
+    st.bench.splice(idx,1);
+    cur.got++;
+    renderBench(); renderOrders();
+    if(cur.got>=cur.n){orderDone(cb);return;}
+    drainBench(cb);
+  },240);
+}
+function orderDone(cb){
+  const co=document.getElementById('curOrder');
+  co.classList.remove('donePop'); void co.offsetWidth; co.classList.add('donePop');
+  st.oi++;
+  renderOrders();
+  setTimeout(()=>drainBench(cb),200);
+}
+
+function tapBlock(id){
+  if(busy||over||!playing) return;
+  const bi=st.blocks.findIndex(b=>b.id===id);
+  if(bi<0) return;
+  const b=st.blocks[bi], e=blkEls.get(id);
+  const m=calcMove(bi);
+  if(m.none){ e.classList.remove('no'); void e.offsetWidth; e.classList.add('no'); return; }
+  busy=true;
+  const ox=+board.dataset.ox;
+  if(!m.exit){
+    b.x=m.nx; b.y=m.ny;
+    e.style.left=(ox+px(m.nx)+5)+'px'; e.style.top=(py(m.ny)+5)+'px';
+    setTimeout(()=>{busy=false;},190);
+    return;
+  }
+  const [dx,dy]=DV[b.d];
+  e.style.left=(ox+px(m.nx)+5)+'px'; e.style.top=(py(m.ny)+5)+'px';
+  setTimeout(()=>{
+    e.style.left=(ox+px(m.nx)+5+dx*(CELL*0.9))+'px';
+    e.style.top=(py(m.ny)+5+dy*(CELL*0.9))+'px';
+    e.classList.add('gone');
+    setTimeout(()=>{
+      e.remove(); blkEls.delete(id);
+      st.blocks.splice(bi,1);
+      const cur=st.orders[st.oi];
+      if(cur&&cur.c===b.c&&cur.got<cur.n){
+        cur.got++;
+        renderOrders(); hud();
+        if(cur.got>=cur.n){orderDone(()=>afterMove());return;}
+        afterMove();
+      }else{
+        st.bench.push(b.c);
+        renderBench(); hud();
+        if(st.bench.length>BENCH-0.5&&st.bench.length>=BENCH){
+          /* прежде чем фейлить — вдруг добор освободит место */
+          drainBench(()=>{
+            if(st.bench.length>=BENCH){doLose();return;}
+            afterMove();
+          });
+          return;
+        }
+        afterMove();
+      }
+    },200);
+  },Math.max(60, 30+18*Math.abs((m.nx-b.x)+(m.ny-b.y))));
+}
+
+function afterMove(){
+  hud(); busy=false;
+  if(st.blocks.length===0&&st.oi>=st.orders.length) doWin();
+}
+
+function doWin(){
+  over=true;
+  confetti();
+  setTimeout(()=>{
+    document.getElementById('winTxt').textContent = li+1<LEVELS.length ? `Уровень ${li+2} ждёт` : 'Все уровни пройдены!';
+    document.getElementById('winBtn').textContent = li+1<LEVELS.length ? 'Дальше ▶' : 'С начала ↻';
+    document.getElementById('win').classList.add('show');
+  },1000);
+}
+function doLose(){ over=true; busy=false; document.getElementById('lose').classList.add('show'); }
+
+function confetti(){
+  const ph=document.getElementById('phone');
+  for(let i=0;i<16;i++){
+    const c=document.createElement('div'); c.className='conf';
+    c.style.cssText=`left:${8+Math.random()*84}%;top:-3%;background:${PAL[i%PAL.length][0]};
+      animation:fall ${1.4+Math.random()*0.9}s ${Math.random()*0.3}s ease-in forwards;`;
+    ph.appendChild(c); setTimeout(()=>c.remove(),2800);
+  }
+}
+
+document.getElementById('winBtn').onclick=()=>{
+  document.getElementById('win').classList.remove('show');
+  li=(li+1)%LEVELS.length;
+  localStorage.setItem('arrowJam2.level',li);
+  build();
+};
+document.getElementById('loseBtn').onclick=()=>{
+  document.getElementById('lose').classList.remove('show'); build();
+};
+document.getElementById('re').onclick=()=>{ if(!over&&playing) build(); };
+document.getElementById('playBtn').onclick=()=>{
+  document.getElementById('home').classList.remove('show');
+  playing=true; build();
+};
+
+/* --- тест-хук для PLAY-проверки (CDP) --- */
+window.__game={
+  get state(){ return {blocks:st.blocks.map(b=>({x:b.x,y:b.y,c:b.c,d:b.d})),
+    bench:[...st.bench], orders:st.orders.map(o=>({...o})), oi:st.oi, level:li, busy, over, playing}; },
+  tapAt(x,y){ const b=st.blocks.find(b=>b.x===x&&b.y===y); if(b) tapBlock(b.id); return !!b; },
+  solution(){ return LEVELS[li].sol; },
+  load(i){ li=i; playing=true; build();
+    document.getElementById('win').classList.remove('show');
+    document.getElementById('lose').classList.remove('show'); },
+};
+
+build();
+</script>
+</body>
+</html>
