@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bookshelf Art Review</title>
+<meta name="description" content="All Bookshelf paintings as one reorderable grid, 10 per row.">
+<style>
+:root{--bg:#17120e;--panel:#241b15;--panel2:#2e241c;--line:#4a3a2c;--text:#f1e6d6;--muted:#b49f88;--brass:#d2ab63;--accent:#e2b86a;--danger:#d26b5a}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 "Instrument Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:rgba(23,18,14,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:8px 14px}
+.hwrap{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+h1{font:600 18px/1.1 "Bodoni Moda",Georgia,serif;margin:0;color:var(--brass)}
+.sub{color:var(--muted);font-size:12px}
+.spacer{flex:1}
+button,select{font:inherit;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:9px;padding:6px 10px;cursor:pointer}
+button:hover{border-color:var(--brass)}
+button.primary{background:var(--brass);color:#1b1309;border-color:var(--brass);font-weight:600}
+button.danger{color:var(--danger)}
+button:disabled{opacity:.4;cursor:default}
+.status{font-size:12px;color:var(--muted)}
+.status.dirty{color:var(--accent)}
+.grade{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:600}
+.grade.R{background:#5a2a24;color:#ffb3a8}.grade.Y{background:#5a4a1e;color:#ffd98a}.grade.G{background:#1f4a2e;color:#9fe3b4}
+main{padding:10px 14px 70px}
+#grid{display:grid;grid-template-columns:repeat(10,1fr);gap:8px}
+@media (max-width:1100px){#grid{grid-template-columns:repeat(6,1fr)}}
+@media (max-width:640px){#grid{grid-template-columns:repeat(3,1fr)}}
+.tile{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:#000;border:2px solid transparent;cursor:grab;user-select:none;-webkit-user-drag:element}
+.tile:active{cursor:grabbing}
+.tile img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.tile .pos{position:absolute;left:5px;top:4px;font:700 15px/1 "Bodoni Moda",Georgia,serif;color:#fff;text-shadow:0 1px 3px #000,0 0 6px #000}
+.tile .orig{position:absolute;right:5px;top:5px;font-size:10px;color:#fff;background:rgba(0,0,0,.55);border-radius:6px;padding:1px 5px}
+.tile .dot{position:absolute;left:5px;bottom:5px;width:11px;height:11px;border-radius:50%;border:1.5px solid #000}
+.dot.R{background:#e5574a}.dot.Y{background:#f0c050}.dot.G{background:#4ec46f}
+.tile .cap{position:absolute;left:0;right:0;bottom:0;padding:14px 5px 4px;font-size:10px;line-height:1.15;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.75));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile.moved{border-color:var(--accent)}
+.tile.dragging{opacity:.3}
+.tile.over-l{box-shadow:-4px 0 0 var(--accent)}
+.tile.over-r{box-shadow:4px 0 0 var(--accent)}
+.tile.dim{opacity:.18}
+.tile.selected{outline:3px solid #fff0b0;outline-offset:2px}
+.tile .play-tile{position:absolute;right:5px;bottom:24px;z-index:2;padding:3px 7px;border-color:var(--brass);background:rgba(25,17,10,.9);font-size:11px;font-weight:700}
+.curve-panel{margin:0 0 14px;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--panel);display:grid;grid-template-columns:minmax(0,2fr) minmax(245px,1fr);gap:16px}
+.curve-heading{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:5px}
+.curve-heading h2{font:600 19px/1.2 "Bodoni Moda",Georgia,serif;color:var(--brass);margin:0}
+.curve-heading small,.curve-note{color:var(--muted);font-size:11px}
+#curveSvg{display:block;width:100%;height:auto;overflow:visible;touch-action:manipulation}
+.curve-hit{fill:transparent;cursor:pointer}.curve-hit:hover{fill:rgba(255,255,255,.12)}
+.curve-detail{border-left:1px solid var(--line);padding-left:16px;display:flex;flex-direction:column;gap:7px}
+.curve-detail .level-no{font:700 26px/1 "Bodoni Moda",Georgia,serif;color:var(--brass)}
+.curve-detail .art-name{font-weight:700;line-height:1.2}
+.curve-detail .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.curve-detail .metric{background:var(--panel2);border-radius:8px;padding:6px 7px}
+.curve-detail .metric b{display:block;font-size:18px;color:#fff}
+.curve-detail .metric span{color:var(--muted);font-size:10px}
+.curve-detail .mechanics{font-size:11px;color:var(--muted);min-height:16px}
+.curve-detail button{align-self:flex-start}
+.curve-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:3px;font-size:11px;color:var(--muted)}
+.curve-legend i{display:inline-block;width:12px;height:3px;vertical-align:middle;margin-right:4px}
+@media(max-width:760px){.curve-panel{grid-template-columns:1fr}.curve-detail{border-left:0;border-top:1px solid var(--line);padding:10px 0 0}}
+footer{position:fixed;left:0;right:0;bottom:0;background:rgba(23,18,14,.95);border-top:1px solid var(--line);padding:8px 14px;backdrop-filter:blur(8px)}
+.fwrap{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.fwrap .hint{color:var(--muted);font-size:12px;flex:1;min-width:200px}
+#lb{position:fixed;inset:0;background:rgba(0,0,0,.93);display:none;z-index:20;padding:12px;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:center}
+#lb.on{display:grid}
+#lb .imgbox{display:flex;align-items:center;justify-content:center;height:calc(100vh - 24px)}
+#lb img{max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.6);cursor:zoom-out}
+#lb .info{color:var(--text);display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 24px);overflow:auto}
+#lb .info h2{font:600 22px/1.15 "Bodoni Moda",Georgia,serif;margin:0;color:var(--brass)}
+#lb .info .pos{font:700 40px/1 "Bodoni Moda",Georgia,serif;color:#fff}
+#lb .note{font-size:13px;background:var(--panel2);border-radius:10px;padding:8px 10px;line-height:1.35}
+#lb .note b{color:var(--muted)}
+#lb .nav{display:flex;gap:8px;flex-wrap:wrap}
+#lb .ctl{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+#lb input{width:64px;font:inherit;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:8px;padding:6px 8px}
+@media (max-width:900px){#lb.on{grid-template-columns:1fr;overflow:auto}#lb .imgbox{height:auto}#lb img{max-height:60vh}}
+</style>
+</head>
+<body>
+<header><div class="hwrap">
+  <div><h1>Bookshelf · Art Review</h1><div class="sub" id="sub"></div></div>
+  <span id="sum"></span>
+  <div class="spacer"></div>
+  <label class="sub">Sort: <select id="sortSel"><option value="custom">my order</option><option value="n">original №</option><option value="v">readability V</option><option value="album">album</option><option value="grade">grade 🔴→🟢</option></select></label>
+  <label class="sub">Highlight: <select id="gradeSel"><option value="all">all</option><option value="R">🔴 redo</option><option value="Y">🟡 caveats</option><option value="G">🟢 good</option></select></label>
+  <span class="status" id="status"></span>
+</div></header>
+
+<main>
+  <section class="curve-panel" aria-label="Difficulty curve">
+    <div>
+      <div class="curve-heading"><h2>Difficulty curve · 350 levels</h2><small>Click a point to inspect its painting</small></div>
+      <svg id="curveSvg" viewBox="0 0 900 180" role="img" aria-label="Configured difficulty for levels 1 to 350"></svg>
+      <div class="curve-legend"><span><i style="background:#e2b86a"></i>difficulty 2–9</span><span><i style="background:#79bce8"></i>moves (25% mistakes)</span><span><i style="background:#b48ae4"></i>mechanic</span></div>
+    </div>
+    <div class="curve-detail" id="curveDetail"></div>
+  </section>
+  <div id="grid"></div>
+</main>
+
+<footer><div class="fwrap">
+  <button class="primary" id="btnCopy">Copy order</button>
+  <button id="btnSave">Save order</button>
+  <button id="btnExport">Export JSON</button>
+  <button id="btnImport">Import JSON</button>
+  <input type="file" id="fileIn" accept="application/json" hidden>
+  <button class="danger" id="btnReset">Reset to game order</button>
+  <span class="hint">Drag a tile and drop it on another tile (left half = before, right half = after). “Copy order” puts the order into the clipboard as painting numbers; paste it to Claude. Click a tile for the big preview and the verdict. Dot: 🔴 crowds of identical objects or flat areas, 🟡 partly, 🟢 every zone distinct. Orange frame = moved.</span>
+</div></footer>
+
+<div id="lb">
+  <div class="imgbox"><img id="lbImg" alt=""></div>
+  <div class="info">
+    <div class="pos" id="lbPos"></div>
+    <h2 id="lbTitle"></h2>
+    <div id="lbMeta" class="sub"></div>
+    <div id="lbGrade"></div>
+    <div class="note" id="lbNote"></div>
+    <div class="note" id="lbLevel"></div>
+    <button class="primary" id="lbPlay">▶ Play this painting at this level</button>
+    <div class="ctl">move to № <input type="number" id="lbPosIn" min="1"> <button id="lbFirst">⇈ first</button></div>
+    <div class="nav"><button id="lbPrev">← prev</button><button id="lbNext">next →</button><button id="lbClose">close (Esc)</button></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="game_order.js"></script>
+<script src="review.js"></script>
+<script src="curve_data.js"></script>
+<script>
+(function(){
+  const P = window.PAINTINGS, RV = window.REVIEW || {}; const byId = {}; P.forEach(p => byId[p.id] = p);
+  const GL = {R:'🔴 redo for puzzle',Y:'🟡 ok with caveats',G:'🟢 good for puzzle'};
+  /* base order = the order the game uses right now (game_order.js is written by build_v12.py from order_v12.txt) */
+  const GO = (window.GAME_ORDER || []).map(n => (P.find(p => p.n === n) || {}).id).filter(Boolean);
+  const orig = GO.concat(P.map(p => p.id).filter(id => !GO.includes(id)));
+  const KEY = 'bookshelf_review_order_v2_' + orig.join(',').length + '_' + orig.slice(0, 20).join('.');
+  let order = orig.slice(), saved = orig.slice(), sortMode = 'custom', gradeF = 'all', selectedLevel = 1;
+  try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (Array.isArray(s) && s.length === orig.length && s.every(id => byId[id])) { order = s.slice(); saved = s.slice(); } } catch (e) {}
+  const $ = s => document.querySelector(s); const grid = $('#grid'), status = $('#status');
+  const dirty = () => order.some((id, i) => id !== saved[i]);
+  const gr = id => (RV[byId[id].n] || {}).g || '';
+  const GR = {R:0,Y:1,G:2};
+  function view(){
+    const arr = order.slice();
+    if (sortMode === 'n') arr.sort((a, b) => byId[a].n - byId[b].n);
+    if (sortMode === 'v') arr.sort((a, b) => byId[a].v - byId[b].v || byId[a].n - byId[b].n);
+    if (sortMode === 'album') arr.sort((a, b) => byId[a].album.localeCompare(byId[b].album) || byId[a].n - byId[b].n);
+    if (sortMode === 'grade') arr.sort((a, b) => (GR[gr(a)] ?? 3) - (GR[gr(b)] ?? 3) || byId[a].v - byId[b].v);
+    return arr;
+  }
+  function setStatus(){
+    const d = dirty(); status.textContent = d ? 'unsaved changes' : (saved.some((id, i) => id !== orig[i]) ? 'saved (custom order)' : 'original order');
+    status.className = 'status' + (d ? ' dirty' : ''); $('#btnSave').disabled = !d;
+    const cnt = {R:0,Y:0,G:0}; P.forEach(p => { const g = (RV[p.n]||{}).g; if (g) cnt[g]++; });
+    $('#sum').innerHTML = `<span class="grade R">🔴 ${cnt.R}</span> <span class="grade Y">🟡 ${cnt.Y}</span> <span class="grade G">🟢 ${cnt.G}</span>`;
+    $('#sub').textContent = `${P.length} paintings · order = game v12 (level 1, 2, 3…) · 10 per row · ${sortMode === 'custom' ? 'drag to rank' : 'sorted view (drag disabled, switch to “my order”)'}`;
+  }
+  function moveTo(id, pos){
+    const from = order.indexOf(id); if (from < 0) return;
+    pos = Math.max(0, Math.min(order.length - 1, pos)); order.splice(from, 1); order.splice(pos, 0, id); render();
+  }
+  const curve = window.LEVEL_CURVE || [];
+  const MECH_NAME = {stars:'Star book',hidden:'Hidden book',links:'Tied books',locks:'Locked book',ticks:'Ticking book',keyBook:'Key book'};
+  function syncPlayOrder(){try{localStorage.setItem('bookshelf_play_order_v1',JSON.stringify(order.map(id=>byId[id].n)))}catch(e){}}
+  function launchLevel(level){
+    syncPlayOrder();
+    const art=byId[order[level-1]];
+    window.open(`playable/index.html?level=${level}&art=${art.n}`,'_blank','noopener');
+  }
+  function renderCurve(){
+    if(curve.length!==order.length)return;
+    const svg=$('#curveSvg'), x=L=>32+(L-1)*850/349, yD=d=>140-(d-2)*15.5, yM=m=>140-m*1.45;
+    const path=(key,y)=>curve.map((r,i)=>`${i?'L':'M'}${x(r.level).toFixed(1)},${y(r[key]).toFixed(1)}`).join(' ');
+    const selected=curve[selectedLevel-1];
+    svg.innerHTML=`<g stroke="#4a3a2c" stroke-width="1">${[2,4,6,8].map(d=>`<line x1="32" x2="882" y1="${yD(d)}" y2="${yD(d)}"/>`).join('')}</g>
+      <g fill="#b49f88" font-size="10" font-family="system-ui"><text x="3" y="${yD(9)+4}">9</text><text x="3" y="${yD(2)+4}">2</text>${[1,50,100,150,200,250,300,350].map(L=>`<text x="${x(L)}" y="163" text-anchor="middle">${L}</text>`).join('')}</g>
+      <path d="${path('moves',yM)}" fill="none" stroke="#79bce8" stroke-opacity=".67" stroke-width="1.5"/>
+      <path d="${path('difficulty',yD)}" fill="none" stroke="#e2b86a" stroke-width="2.2"/>
+      ${curve.filter(r=>r.mechanics.length).map(r=>`<circle cx="${x(r.level)}" cy="${yD(r.difficulty)}" r="2.5" fill="#b48ae4"/>`).join('')}
+      <line x1="${x(selectedLevel)}" x2="${x(selectedLevel)}" y1="15" y2="141" stroke="#fff2c8" stroke-opacity=".8"/>
+      <circle cx="${x(selectedLevel)}" cy="${yD(selected.difficulty)}" r="5" fill="#fff2c8" stroke="#593a20" stroke-width="2"/>
+      ${curve.map(r=>`<rect class="curve-hit" data-level="${r.level}" x="${x(r.level)-1.25}" y="10" width="2.5" height="133"><title>Level ${r.level} · d${r.difficulty} · ${r.moves} moves</title></rect>`).join('')}`;
+    svg.onclick=e=>{const bounds=svg.getBoundingClientRect(),point=(e.clientX-bounds.left)*900/bounds.width;
+      selectLevel(Math.round((point-32)*349/850)+1)};
+    const art=byId[order[selectedLevel-1]], mech=selected.mechanics.map(k=>MECH_NAME[k]).join(' · ');
+    $('#curveDetail').innerHTML=`<div class="level-no">Level ${selectedLevel}</div><div class="art-name"></div>
+      <div class="metrics"><div class="metric"><b>${selected.difficulty}</b><span>difficulty</span></div><div class="metric"><b>${selected.moves}</b><span>moves</span></div><div class="metric"><b>${selected.books}</b><span>books</span></div></div>
+      <div class="curve-note">${selected.rows} shelves × ${selected.cols} books · clean path ${selected.cleanMoves} moves · +25% mistake allowance</div>
+      <div class="mechanics">${mech||'No extra mechanics'}</div><button class="primary" id="curvePlay">▶ Play level ${selectedLevel}</button>`;
+    $('#curveDetail .art-name').textContent=art.title;
+    $('#curvePlay').onclick=()=>launchLevel(selectedLevel);
+  }
+  function selectLevel(level){
+    selectedLevel=Math.max(1,Math.min(order.length,level));
+    document.querySelectorAll('.tile.selected').forEach(el=>el.classList.remove('selected'));
+    const tile=grid.querySelector(`.tile[data-id="${order[selectedLevel-1]}"]`);if(tile)tile.classList.add('selected');
+    renderCurve();
+  }
+  let dragId = null;
+  function render(){
+    setStatus(); syncPlayOrder(); const arr = view(); grid.innerHTML = '';
+    arr.forEach(id => {
+      const p = byId[id], pos = order.indexOf(id), g = gr(id);
+      const t = document.createElement('div'); t.className = 'tile' + (id !== orig[pos] ? ' moved' : '') + (gradeF !== 'all' && g !== gradeF ? ' dim' : '') + (pos+1===selectedLevel ? ' selected' : '');
+      t.dataset.id = id; t.draggable = sortMode === 'custom';
+      t.innerHTML = `<img loading="lazy" src="${p.file}" alt="${p.title}"><span class="pos">${pos + 1}</span><span class="orig">№${p.n}</span><span class="dot ${g}" title="${GL[g]||''}"></span><button class="play-tile" title="Play level ${pos+1}">▶</button><div class="cap">${p.title}</div>`;
+      t.querySelector('.play-tile').onclick=e=>{e.stopPropagation();launchLevel(pos+1)};
+      t.ondragstart = e => { if (sortMode !== 'custom') { e.preventDefault(); return; } dragId = id; t.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', id); };
+      t.ondragend = () => { dragId = null; document.querySelectorAll('.dragging,.over-l,.over-r').forEach(x => x.classList.remove('dragging', 'over-l', 'over-r')); };
+      t.ondragover = e => { if (!dragId || dragId === id) return; e.preventDefault(); const r = t.getBoundingClientRect(); const left = e.clientX < r.left + r.width / 2; t.classList.toggle('over-l', left); t.classList.toggle('over-r', !left); };
+      t.ondragleave = () => t.classList.remove('over-l', 'over-r');
+      t.ondrop = e => { e.preventDefault(); if (!dragId || dragId === id) return; const r = t.getBoundingClientRect(); const left = e.clientX < r.left + r.width / 2; const from = order.indexOf(dragId); let to = order.indexOf(id) + (left ? 0 : 1); if (from < to) to--; moveTo(dragId, to); dragId = null; };
+      t.onclick = () => openLb(arr, arr.indexOf(id));
+      // touch drag
+      t.addEventListener('pointerdown', e => {
+        if (e.pointerType === 'mouse' || sortMode !== 'custom') return;
+        let moved = false, target = null, left = true; const start = [e.clientX, e.clientY];
+        const mv = ev => { if (Math.hypot(ev.clientX - start[0], ev.clientY - start[1]) < 8 && !moved) return; moved = true; t.classList.add('dragging'); ev.preventDefault();
+          const el = document.elementFromPoint(ev.clientX, ev.clientY); const tile = el && el.closest('.tile'); document.querySelectorAll('.over-l,.over-r').forEach(x => x.classList.remove('over-l', 'over-r'));
+          target = tile && tile !== t ? tile : null; if (target) { const r = target.getBoundingClientRect(); left = ev.clientX < r.left + r.width / 2; target.classList.add(left ? 'over-l' : 'over-r'); } };
+        const up = () => { t.removeEventListener('pointermove', mv); t.removeEventListener('pointerup', up); t.removeEventListener('pointercancel', up); t.classList.remove('dragging');
+          if (moved && target) { const from = order.indexOf(id); let to = order.indexOf(target.dataset.id) + (left ? 0 : 1); if (from < to) to--; moveTo(id, to); } else if (!moved) { /* click handled by onclick */ } };
+        t.setPointerCapture(e.pointerId); t.addEventListener('pointermove', mv); t.addEventListener('pointerup', up); t.addEventListener('pointercancel', up);
+      });
+      grid.appendChild(t);
+    });
+    renderCurve();
+  }
+  // lightbox
+  const lb = $('#lb'); let lbArr = [], lbI = 0;
+  function openLb(arr, i){ lbArr = arr; lbI = i; showLb(); }
+  function showLb(){
+    const id = lbArr[lbI], p = byId[id], r = RV[p.n];
+    $('#lbImg').src = p.file; $('#lbPos').textContent = order.indexOf(id) + 1; $('#lbTitle').textContent = p.title;
+    $('#lbMeta').textContent = `${p.after} · original №${p.n} · ${p.album} · V ${p.v.toFixed(2)} · ${p.file.replace('art/', '')}`;
+    $('#lbGrade').innerHTML = r ? `<span class="grade ${r.g}">${GL[r.g]}</span>` : '';
+    $('#lbNote').innerHTML = r ? `<b>Issue:</b> ${r.issue}${r.fix ? `<br><b>Fix:</b> ${r.fix}` : ''}` : '';
+    const level=order.indexOf(id)+1, cfg=curve[level-1];
+    $('#lbLevel').textContent=cfg?`Level ${level} · difficulty ${cfg.difficulty} · ${cfg.rows} × ${cfg.cols} = ${cfg.books} books · ${cfg.moves} moves · ${cfg.mechanics.map(k=>MECH_NAME[k]).join(', ')||'no extra mechanics'}`:'';
+    $('#lbPlay').onclick=()=>launchLevel(level);selectLevel(level);
+    $('#lbPosIn').value = order.indexOf(id) + 1; $('#lbPosIn').max = order.length; lb.classList.add('on');
+  }
+  const closeLb = () => lb.classList.remove('on');
+  $('#lbClose').onclick = closeLb; $('#lbImg').onclick = closeLb;
+  $('#lbPrev').onclick = () => { lbI = (lbI - 1 + lbArr.length) % lbArr.length; showLb(); };
+  $('#lbNext').onclick = () => { lbI = (lbI + 1) % lbArr.length; showLb(); };
+  $('#lbPosIn').onchange = e => { const id = lbArr[lbI]; moveTo(id, (+e.target.value || 1) - 1); lbArr = view(); lbI = lbArr.indexOf(id); showLb(); };
+  $('#lbFirst').onclick = () => { const id = lbArr[lbI]; moveTo(id, 0); lbArr = view(); lbI = lbArr.indexOf(id); showLb(); };
+  document.addEventListener('keydown', e => { if (!lb.classList.contains('on')) return; if (e.key === 'Escape') closeLb(); if (e.key === 'ArrowLeft') $('#lbPrev').click(); if (e.key === 'ArrowRight') $('#lbNext').click(); });
+  // footer
+  $('#btnSave').onclick = () => { try { localStorage.setItem(KEY, JSON.stringify(order)); } catch (e) {} saved = order.slice(); setStatus(); };
+  $('#btnExport').onclick = () => { const out = order.map((id, i) => ({ pos: i + 1, id, n: byId[id].n, file: byId[id].file.replace('art/', ''), title: byId[id].title, grade: gr(id) }));
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], { type: 'application/json' })); a.download = 'bookshelf_art_order.json'; a.click(); };
+  $('#btnCopy').onclick = async () => {
+    const txt = 'bookshelf-order: ' + order.map(id => byId[id].n).join(',');
+    const b = $('#btnCopy'); const done = ok => { b.textContent = ok ? 'Copied ✓' : 'Copy failed, select below'; setTimeout(() => b.textContent = 'Copy order', 2000); };
+    try { await navigator.clipboard.writeText(txt); done(true); }
+    catch (e) { const ta = document.createElement('textarea'); ta.value = txt; ta.style.cssText = 'position:fixed;left:8px;bottom:60px;width:60vw;height:80px;z-index:30'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(true); } catch (e2) { done(false); } setTimeout(() => ta.remove(), 4000); }
+  };
+  $('#btnImport').onclick = () => $('#fileIn').click();
+  $('#fileIn').onchange = e => { const f = e.target.files[0]; if (!f) return; f.text().then(t => { const j = JSON.parse(t); const ids = j.map(x => typeof x === 'string' ? x : x.id); if (ids.length === orig.length && ids.every(id => byId[id])) { order = ids; render(); } else alert('Not a full order list'); }); e.target.value = ''; };
+  $('#btnReset').onclick = () => { if (confirm('Reset to the order used in the game and forget the saved one?')) { order = orig.slice(); saved = orig.slice(); try { localStorage.removeItem(KEY); } catch (e) {} render(); } };
+  $('#sortSel').onchange = e => { sortMode = e.target.value; render(); };
+  $('#gradeSel').onchange = e => { gradeF = e.target.value; render(); };
+  window.addEventListener('beforeunload', e => { if (dirty()) { e.preventDefault(); e.returnValue = ''; } });
+  render();
+})();
+</script>
+</body>
+</html>

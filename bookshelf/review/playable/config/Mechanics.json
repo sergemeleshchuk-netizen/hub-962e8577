@@ -1,0 +1,46 @@
+{
+  "mechanics": [
+    {
+      "mechanicId": "locks",
+      "name": "Locked Book",
+      "introLevel": 61,
+      "tutorialText": "Make <b>2 merges next to this book</b>. The counter goes down; then a key opens its lock."
+    },
+    {
+      "mechanicId": "stars",
+      "name": "Star Book",
+      "introLevel": 31,
+      "tutorialText": "Put it in its spot to get <b>+3 moves</b>."
+    },
+    {
+      "mechanicId": "links",
+      "name": "Tied Books",
+      "introLevel": 51,
+      "tutorialText": "They move <b>together</b>. Make a merge <b>beside either book</b> to untie them."
+    },
+    {
+      "mechanicId": "hidden",
+      "name": "Hidden Book",
+      "introLevel": 41,
+      "tutorialText": "Make a merge <b>beside this book</b> to uncover its picture."
+    },
+    {
+      "mechanicId": "ticks",
+      "name": "Ticking Book",
+      "introLevel": 71,
+      "tutorialText": "Each move counts down. Put it in its spot <b>before 0</b> or lose 3 moves."
+    },
+    {
+      "mechanicId": "keyBook",
+      "name": "Key Book",
+      "introLevel": 80,
+      "tutorialText": "Put it in its spot to open <b>every lock</b> at once."
+    },
+    {
+      "mechanicId": "doubleLock",
+      "name": "Double Lock",
+      "introLevel": 0,
+      "tutorialText": "Locks now start with a counter: two nearby merges open them."
+    }
+  ]
+}
