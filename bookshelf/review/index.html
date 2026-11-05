@@ -93,7 +93,7 @@ footer{position:fixed;left:0;right:0;bottom:0;background:rgba(23,18,14,.95);bord
     <div>
       <div class="curve-heading"><h2>Difficulty curve · 350 levels</h2><small>Click a point to inspect its painting</small></div>
       <svg id="curveSvg" viewBox="0 0 900 180" role="img" aria-label="Configured difficulty for levels 1 to 350"></svg>
-      <div class="curve-legend"><span><i style="background:#e2b86a"></i>difficulty 2–9</span><span><i style="background:#79bce8"></i>moves (25% mistakes)</span><span><i style="background:#b48ae4"></i>mechanic</span></div>
+      <div class="curve-legend"><span><i style="background:#e2b86a"></i>difficulty 2-9</span><span><i style="background:#79bce8"></i>moves (clean path + spare)</span><span><i style="background:#b48ae4"></i>mechanic</span></div>
     </div>
     <div class="curve-detail" id="curveDetail"></div>
   </section>
@@ -188,7 +188,7 @@ footer{position:fixed;left:0;right:0;bottom:0;background:rgba(23,18,14,.95);bord
     const art=byId[order[selectedLevel-1]], mech=selected.mechanics.map(k=>MECH_NAME[k]).join(' · ');
     $('#curveDetail').innerHTML=`<div class="level-no">Level ${selectedLevel}</div><div class="art-name"></div>
       <div class="metrics"><div class="metric"><b>${selected.difficulty}</b><span>difficulty</span></div><div class="metric"><b>${selected.moves}</b><span>moves</span></div><div class="metric"><b>${selected.books}</b><span>books</span></div></div>
-      <div class="curve-note">${selected.rows} shelves × ${selected.cols} books · clean path ${selected.cleanMoves} moves · +25% mistake allowance</div>
+      <div class="curve-note">${selected.rows} shelves × ${selected.cols} books · clean path ${selected.cleanMoves} moves · +${selected.moves-selected.cleanMoves} spare moves</div>
       <div class="mechanics">${mech||'No extra mechanics'}</div><button class="primary" id="curvePlay">▶ Play level ${selectedLevel}</button>`;
     $('#curveDetail .art-name').textContent=art.title;
     $('#curvePlay').onclick=()=>launchLevel(selectedLevel);
