@@ -169,15 +169,14 @@ const MOVE_BUFFER=.5,MOVE_BUFFER_MIN=3;function movesWithBuffer(c){return Math.m
 /* 2026-11-04: the first five levels give +2 moves on top of the formula: the player is still learning */
 /* levels 1-50: buffer % and hand extra moves come from the level table (CURVE50 columns 5-6) */
 const earlyBonus=L=>L<=CURVE50.length?CURVE50[L-1][5]:0;
-/* 2026-11-06: levels 11-20 move formula by category, tightened after a hand playtest (easy and medium left too many moves).
-   Calibrated on a careful bot (10% mistakes, 100 plays per level): easy ~10% fails, medium ~20-25%.
-   easy (d<=3) books x1.10, medium (d 4-6) books x1.08 +2 per shelf over three, hard (d>=7) books x1.10 */
-const BOOKS_BUFFER={from:11,to:20,easy:1.1,medium:1.08,hard:1.1,mediumShelf:2};
-const booksBudget=L=>{const [d,r,c]=CURVE50[L-1],n=r*c,B=BOOKS_BUFFER;return d<=3?Math.ceil(n*B.easy):d<=6?Math.ceil(n*B.medium)+B.mediumShelf*Math.max(0,r-3):Math.ceil(n*B.hard)};
-const levelBudget=(L,c)=>L>=BOOKS_BUFFER.from&&L<=BOOKS_BUFFER.to&&L<=CURVE50.length?booksBudget(L)+earlyBonus(L):L<=CURVE50.length?Math.max(3,Math.ceil(c*(1+CURVE50[L-1][4]/100)),c+MOVE_BUFFER_MIN)+earlyBonus(L):movesWithBuffer(c);
+/* 2026-11-06: moves for levels 1-300 from a playtest bot (block-first player, 15% mistaken moves, 200 plays per level):
+   the smallest budget where easy (d<=3) loses ~10% of plays, medium (d 4-6) ~25%, hard (d 7-8) ~45%, super hard (d 9) ~50%;
+   never fewer moves than books. Stars and ticking books are already counted in. Levels 1-5 keep their +2 learning moves. */
+const LEVEL_MOVES=Object.freeze([8,8,11,10,13,16,12,16,18,14,13,18,20,16,17,20,19,21,23,24,16,18,20,21,16,21,20,22,25,18,16,20,22,26,17,21,21,27,30,19,17,23,22,20,19,21,22,26,31,21,25,24,21,29,24,21,25,22,31,30,29,31,28,26,31,26,30,26,29,38,39,29,27,26,39,27,31,30,30,43,29,37,29,31,29,32,35,27,39,46,29,30,26,34,32,32,40,28,41,40,43,46,40,49,47,48,54,43,58,63,43,47,42,49,48,46,73,42,58,62,46,46,41,62,46,46,56,43,57,65,48,58,42,48,47,49,57,41,59,59,46,42,44,48,49,50,58,44,56,64,47,48,41,52,50,49,55,40,56,62,45,45,43,49,48,48,73,41,54,63,48,46,39,59,47,49,54,41,55,62,46,62,43,44,48,49,54,41,56,67,49,44,39,49,50,48,56,43,60,64,49,52,43,51,46,50,54,43,54,63,47,42,41,49,49,51,74,45,56,63,48,45,41,61,42,51,55,43,56,63,47,59,43,46,43,49,54,47,55,58,47,43,44,49,48,50,55,42,56,64,45,43,43,51,47,51,57,43,56,61,46,45,39,49,46,49,71,43,58,61,44,42,42,62,43,51,53,43,57,63,46,63,44,48,48,49,56,41,55,65,45,43,40,52,47,48,57,41,58,59]);
+const levelBudget=(L,c)=>Number.isFinite(LEVEL_MOVES[L-1])?LEVEL_MOVES[L-1]+earlyBonus(L):L<=CURVE50.length?Math.max(3,Math.ceil(c*(1+CURVE50[L-1][4]/100)),c+MOVE_BUFFER_MIN)+earlyBonus(L):movesWithBuffer(c);
 function plannedMoves(L,opt,def,stars,ticks){
   const clean=SOLVED_MOVE_COST[L-1];
-  if(Number.isFinite(clean))return levelBudget(L,clean);
+  if(Number.isFinite(clean)||Number.isFinite(LEVEL_MOVES[L-1]))return levelBudget(L,clean);
   /* A reshuffle has a new order. Keep its original conservative budget as a safety floor. */
   const old=Math.max(3,Math.ceil(opt*(def.n>=FRAME_MIN?MOVE_K_FRAME[def.d]:1+def.slack)))+(L<=3?1:0)+(def.n>=FRAME_MIN?2:0)-stars.length*2+Object.keys(ticks).length*2;
   return Math.max(old,movesWithBuffer(opt)-stars.length*2+Object.keys(ticks).length*2)+earlyBonus(L);
