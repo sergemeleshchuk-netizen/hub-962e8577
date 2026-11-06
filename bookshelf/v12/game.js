@@ -169,9 +169,10 @@ const MOVE_BUFFER=.5,MOVE_BUFFER_MIN=3;function movesWithBuffer(c){return Math.m
 /* 2026-11-04: the first five levels give +2 moves on top of the formula: the player is still learning */
 /* levels 1-50: buffer % and hand extra moves come from the level table (CURVE50 columns 5-6) */
 const earlyBonus=L=>L<=CURVE50.length?CURVE50[L-1][5]:0;
-/* 2026-11-06: levels 11-20 move formula by category (bot: 100 plays per level, 20% mistakes -> easy ~10% fails, medium ~25%, hard ~45%):
-   easy (d<=3) books x1.25, medium (d 4-6) books x1.18 +2 per shelf over three, hard (d>=7) books x1.10 */
-const BOOKS_BUFFER={from:11,to:20,easy:1.25,medium:1.18,hard:1.1,mediumShelf:2};
+/* 2026-11-06: levels 11-20 move formula by category, tightened after a hand playtest (easy and medium left too many moves).
+   Calibrated on a careful bot (10% mistakes, 100 plays per level): easy ~10% fails, medium ~20-25%.
+   easy (d<=3) books x1.10, medium (d 4-6) books x1.08 +2 per shelf over three, hard (d>=7) books x1.10 */
+const BOOKS_BUFFER={from:11,to:20,easy:1.1,medium:1.08,hard:1.1,mediumShelf:2};
 const booksBudget=L=>{const [d,r,c]=CURVE50[L-1],n=r*c,B=BOOKS_BUFFER;return d<=3?Math.ceil(n*B.easy):d<=6?Math.ceil(n*B.medium)+B.mediumShelf*Math.max(0,r-3):Math.ceil(n*B.hard)};
 const levelBudget=(L,c)=>L>=BOOKS_BUFFER.from&&L<=BOOKS_BUFFER.to&&L<=CURVE50.length?booksBudget(L)+earlyBonus(L):L<=CURVE50.length?Math.max(3,Math.ceil(c*(1+CURVE50[L-1][4]/100)),c+MOVE_BUFFER_MIN)+earlyBonus(L):movesWithBuffer(c);
 function plannedMoves(L,opt,def,stars,ticks){
