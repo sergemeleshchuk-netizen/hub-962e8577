@@ -203,6 +203,8 @@ function prepareLevel(L){const def=levelDef(L);/* 2026-11-04: a retry replays th
 function prePinnedIds(def,pre){const ids=[];const {rows,cols}=def;
   if(pre.corners&&rows>=2&&cols>=2)ids.push(0,cols-1,(rows-1)*cols,rows*cols-1);
   if(pre.center&&rows>=3&&cols>=3){const r=Math.floor(rows/2),c=Math.floor(cols/2);ids.push((r-1)*cols+c,r*cols+c-1,r*cols+c,r*cols+c+1,(r+1)*cols+c)}
+  /* 2026-11-06: two shelves have no plus of five, so pin the five middle books (three on top, two below) */
+  else if(pre.center&&rows===2&&cols>=3){const c=Math.floor(cols/2);ids.push(c-1,c,c+1,cols+c-1,cols+c)}
   return [...new Set(ids)]}
 function prePinnedOrder(order,ids){const out=order.slice();for(const id of ids){const p=out.indexOf(id);[out[id],out[p]]=[out[p],out[id]]}return out}
 
