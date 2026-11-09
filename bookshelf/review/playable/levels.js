@@ -6,46 +6,79 @@
 const ART=[
  {id:'mona',file:'../art/01_mona_capybara.jpg',title:'Mona Capybara',after:'after Leonardo da Vinci',album:'Old Masters'},
  {id:'alps',file:'../art/35_corgi_alps.jpg',title:'Corgi Crossing the Alps',after:'after Jacques-Louis David',album:'Grand Tour'},
- {id:'wave',file:'../art/02_boba_wave.jpg',title:'The Great Boba Wave',after:'after Katsushika Hokusai',album:'Old Masters'},
  {id:'starry',file:'../art/03_starry_catstronaut.jpg',title:'Starry Night Cat-stronaut',after:'after Vincent van Gogh',album:'Old Masters'},
+ {id:'wave',file:'../art/02_boba_wave.jpg',title:'The Great Boba Wave',after:'after Katsushika Hokusai',album:'Old Masters'},
  {id:'clocks',file:'../art/42_sloth_persistence.jpg',title:'The Persistence of Napping',after:'after Salvador Dali',album:'Modern Moods'},
  {id:'pearl',file:'../art/04_axolotl_pearl.jpg',title:'Axolotl with a Pearl Earring',after:'after Johannes Vermeer',album:'Old Masters'},
  {id:'venus',file:'../art/08_birth_of_otter.jpg',title:'The Birth of Otter',after:'after Sandro Botticelli',album:'Modern Moods'},
  {id:'sun',file:'../art/07_sunflower_hamsters.jpg',title:'Sunflowers & Hamsters',after:'after Vincent van Gogh',album:'Modern Moods'},
- {id:'kiss',file:'../art/06_raccoon_kiss.jpg',title:'The Raccoon Kiss',after:'after Gustav Klimt',album:'Modern Moods'},
- {id:'son',file:'../art/33_penguin_son_of_man.jpg',title:'The Son of Penguin',after:'after Rene Magritte',album:'Modern Moods'},
- {id:'vitruvian',file:'../art/88_leonardo_frog_vitruvian.jpg',title:'Vitruvian Frog',after:'after Leonardo da Vinci',album:'Old Masters'},
+ {id:'cherubs',file:'../art/94_raphael_puppy_cherubs.jpg',title:'The Bored Cherub Puppies',after:'after Raphael',album:'Old Masters'},
+ {id:'hotspring',file:'../art/304_capybara_hot_spring.jpg',title:'Hot Spring in the Snow',after:'original scene',album:'Toon World'},
+ {id:'scream',file:'../art/05_monday_scream.jpg',title:'The Monday Scream',after:'after Edvard Munch',album:'Modern Moods'},
  {id:'liberty',file:'../art/36_goose_liberty.jpg',title:'Goose Leading the People',after:'after Eugene Delacroix',album:'Salon de Paris'},
  {id:'goat',file:'../art/31_goat_gothic.jpg',title:'American Goat-hic',after:'after Grant Wood',album:'Modern Moods'},
+ {id:'vitruvian',file:'../art/88_leonardo_frog_vitruvian.jpg',title:'Vitruvian Frog',after:'after Leonardo da Vinci',album:'Old Masters'},
  {id:'turtle',file:'../art/26_turtle_temeraire.jpg',title:'The Turtle Temeraire',after:'after J. M. W. Turner',album:'Far Horizons'},
- {id:'adam',file:'../art/12_creation_of_cat.jpg',title:'The Creation of Cat',after:'after Michelangelo',album:'Grand Tour'},
- {id:'ermine',file:'../art/49_red_panda_ermine.jpg',title:'Red Panda with an Ermine',after:'after Leonardo da Vinci',album:'Old Masters'},
- {id:'hawks',file:'../art/32_raccoon_nighthawks.jpg',title:'Night Paws',after:'after Edward Hopper',album:'Modern Moods'},
  {id:'rainy',file:'../art/46_dachshund_rainy_paris.jpg',title:'Paris Street, Rainy Dachshunds',after:'after Gustave Caillebotte',album:'Salon de Paris'},
- {id:'scream',file:'../art/05_monday_scream.jpg',title:'The Monday Scream',after:'after Edvard Munch',album:'Modern Moods'},
+ {id:'adam',file:'../art/12_creation_of_cat.jpg',title:'The Creation of Cat',after:'after Michelangelo',album:'Grand Tour'},
+ {id:'hawks',file:'../art/32_raccoon_nighthawks.jpg',title:'Night Paws',after:'after Edward Hopper',album:'Modern Moods'},
+ {id:'son',file:'../art/33_penguin_son_of_man.jpg',title:'The Son of Penguin',after:'after Rene Magritte',album:'Modern Moods'},
+ {id:'kiss',file:'../art/06_raccoon_kiss.jpg',title:'The Raccoon Kiss',after:'after Gustav Klimt',album:'Modern Moods'},
  {id:'sloth',file:'../art/13_sloth_bedroom.jpg',title:'The Sloth\'s Bedroom',after:'after Vincent van Gogh',album:'Impressionist Garden'},
  {id:'fog',file:'../art/09_penguin_fog.jpg',title:'Penguin above the Fog',after:'after Caspar David Friedrich',album:'Grand Tour'},
- {id:'watch',file:'../art/17_meerkat_watch.jpg',title:'The Meerkat Night Watch',after:'after Rembrandt',album:'Grand Gallery'},
- {id:'babel',file:'../art/30_tower_of_books.jpg',title:'The Tower of Books',after:'after Pieter Bruegel',album:'Far Horizons'},
+ {id:'oculus',file:'../art/329_mantegna_animals_oculus.jpg',title:'The Painted Ceiling',after:'after Andrea Mantegna',album:'Grand Gallery'},
+ {id:'zebrastubbs',file:'../art/346_stubbs_zebra_forest.jpg',title:'The Zebra in the Forest',after:'after George Stubbs',album:'Grand Gallery'},
+ {id:'puffinlight',file:'../art/301_puffin_lighthouse_sunrise.jpg',title:'The Puffin Lighthouse',after:'original scene',album:'Toon World'},
  {id:'fuji',file:'../art/10_red_fuji_corgi.jpg',title:'Red Fuji Corgi',after:'after Katsushika Hokusai',album:'Grand Tour'},
+ {id:'watch',file:'../art/17_meerkat_watch.jpg',title:'The Meerkat Night Watch',after:'after Rembrandt',album:'Grand Gallery'},
  {id:'greenbugatti',file:'../art/338_lempicka_cat_green_racer.jpg',title:'The Cat in the Green Racer',after:'after Tamara de Lempicka',album:'Grand Gallery'},
- {id:'blue',file:'../art/25_blue_bunny.jpg',title:'The Blue Bunny Boy',after:'after Thomas Gainsborough',album:'Salon de Paris'},
+ {id:'flowers',file:'../art/100_rivera_armadillo_flowers.jpg',title:'The Flower Carrier',after:'after Diego Rivera',album:'Far Horizons'},
  {id:'glean',file:'../art/16_hedgehog_gleaners.jpg',title:'The Hedgehog Gleaners',after:'after Jean-François Millet',album:'Impressionist Garden'},
+ {id:'roulin',file:'../art/204_vangogh_bear_postman.jpg',title:'The Postman Bear',after:'after Vincent van Gogh',album:'Impressionist Garden'},
  {id:'delaware',file:'../art/102_leutze_beavers_delaware.jpg',title:'Beavers Crossing the Delaware',after:'after Emanuel Leutze',album:'Grand Gallery'},
+ {id:'sainteadresse',file:'../art/323_monet_garden_sainte_adresse.jpg',title:'The Terrace at Sainte-Adresse',after:'after Claude Monet',album:'Grand Gallery'},
+ {id:'peaceablekingdom',file:'../art/325_hicks_peaceable_kingdom.jpg',title:'The Peaceable Kingdom',after:'after Edward Hicks',album:'Grand Gallery'},
  {id:'snow',file:'../art/18_fox_hunters.jpg',title:'Fox Hunters in the Snow',after:'after Pieter Bruegel',album:'Grand Gallery'},
+ {id:'duke',file:'../art/168_piero_hamster_duke.jpg',title:'The Duke Hamster of Urbino',after:'after Piero della Francesca',album:'Old Masters'},
+ {id:'island',file:'../art/310_turtle_island_topdown.jpg',title:'The Tiny Island',after:'original scene',album:'Toon World'},
+ {id:'zojoji',file:'../art/347_hasui_redpanda_snow_temple.jpg',title:'Snow at the Temple Gate',after:'after Kawase Hasui',album:'Grand Gallery'},
+ {id:'babel',file:'../art/30_tower_of_books.jpg',title:'The Tower of Books',after:'after Pieter Bruegel',album:'Far Horizons'},
+ {id:'balthasar',file:'../art/314_velazquez_lioncub_pony.jpg',title:'The Little Prince on a Pony',after:'after Diego Velazquez',album:'Grand Gallery'},
+ {id:'stnicholas',file:'../art/334_steen_hedgehogs_st_nicholas.jpg',title:'The Feast of Saint Nicholas',after:'after Jan Steen',album:'Grand Gallery'},
+ {id:'strawhat',file:'../art/185_vigee_fox_straw_hat.jpg',title:'Self-Portrait Fox in a Straw Hat',after:'after Elisabeth Vigee Le Brun',album:'Grand Gallery'},
+ {id:'openwindow',file:'../art/265_matisse_cat_open_window.jpg',title:'The Open Window Cat',after:'after Henri Matisse',album:'Modern Moods'},
+ {id:'orrery',file:'../art/327_wrightderby_owl_orrery.jpg',title:'The Owl and the Orrery',after:'after Joseph Wright of Derby',album:'Grand Gallery'},
+ {id:'redhorse',file:'../art/284_petrovvodkin_hare_red_horse.jpg',title:'Bathing of a Red Horse',after:'after Kuzma Petrov-Vodkin',album:'Modern Moods'},
+ {id:'scull',file:'../art/273_eakins_otter_scull.jpg',title:'The Otter in the Single Scull',after:'after Thomas Eakins',album:'Grand Tour'},
+ {id:'throne',file:'../art/179_ingres_pug_throne.jpg',title:'Emperor Pug on his Throne',after:'after Jean-Auguste-Dominique Ingres',album:'Grand Gallery'},
+ {id:'venusmars',file:'../art/330_botticelli_lion_venus_mars.jpg',title:'The Sleeping Lion Knight',after:'after Sandro Botticelli',album:'Grand Gallery'},
+ {id:'melon',file:'../art/220_murillo_raccoons_grapes_melon.jpg',title:'Raccoons Eating Grapes and Melon',after:'after Bartolome Esteban Murillo',album:'Grand Gallery'},
+ {id:'rhino',file:'../art/230_durer_rhinoceros.jpg',title:'The Armoured Rhinoceros',after:'after Albrecht Durer',album:'Old Masters'},
+ {id:'racehorses',file:'../art/184_degas_corgis_racehorses.jpg',title:'Racehorse Corgis before the Start',after:'after Edgar Degas',album:'Salon de Paris'},
+ {id:'bubbles',file:'../art/56_chardin_otter_bubbles.jpg',title:'Otter Blowing Bubbles',after:'after Jean-Simeon Chardin',album:'Grand Gallery'},
+ {id:'tiger',file:'../art/192_minhwa_tiger_magpie.jpg',title:'Tiger and Magpie',after:'after Korean minhwa folk painting',album:'Far Horizons'},
  {id:'jungle',file:'../art/19_surprised_kitten.jpg',title:'Surprised! Kitten',after:'after Henri Rousseau',album:'Grand Gallery'},
+ {id:'fireplace',file:'../art/148_magritte_mouse_fireplace.jpg',title:'Time Transfixed Mouse',after:'after Rene Magritte',album:'Modern Moods'},
+ {id:'canal',file:'../art/159_canaletto_otters_grand_canal.jpg',title:'Grand Canal of the Gondolier Otters',after:'after Canaletto',album:'Grand Tour'},
+ {id:'ermine',file:'../art/49_red_panda_ermine.jpg',title:'Red Panda with an Ermine',after:'after Leonardo da Vinci',album:'Old Masters'},
  {id:'constructors',file:'../art/337_leger_beavers_constructors.jpg',title:'The Beaver Builders',after:'after Fernand Leger',album:'Grand Gallery'},
+ {id:'oath',file:'../art/120_david_roosters_oath.jpg',title:'The Oath of the Roosters',after:'after Jacques-Louis David',album:'Grand Gallery'},
+ {id:'noahsark',file:'../art/345_bassano_animals_ark.jpg',title:'Animals Boarding the Ark',after:'after Jacopo Bassano',album:'Grand Gallery'},
+ {id:'proserpine',file:'../art/112_rossetti_fox_proserpine.jpg',title:'Proserpine Fox',after:'after Dante Gabriel Rossetti',album:'Grand Gallery'},
+ {id:'relativity',file:'../art/98_escher_hamsters_stairs.jpg',title:'Relativity Hamsters',after:'after M. C. Escher',album:'Modern Moods'},
  {id:'flyingcarpet',file:'../art/319_vasnetsov_hare_flying_carpet.jpg',title:'The Flying Carpet',after:'after Viktor Vasnetsov',album:'Grand Gallery'},
  {id:'threatenedswan',file:'../art/321_asselijn_swan_puppy.jpg',title:'The Threatened Swan',after:'after Jan Asselijn',album:'Grand Gallery'},
- {id:'dragonfly',file:'../art/339_repin_hare_dragonfly.jpg',title:'The Dragonfly',after:'after Ilya Repin',album:'Grand Gallery'},
+ {id:'turtlesub',file:'../art/303_turtle_submarine_reef.jpg',title:'The Turtle Submarine',after:'original scene',album:'Toon World'},
+ {id:'cavalier',file:'../art/130_hals_cat_laughing_cavalier.jpg',title:'The Laughing Cavalier Cat',after:'after Frans Hals',album:'Old Masters'},
  {id:'saintesmaries',file:'../art/312_vangogh_crabs_boats.jpg',title:'Boats at Saintes-Maries',after:'after Vincent van Gogh',album:'Grand Gallery'},
  {id:'menin',file:'../art/20_puppy_meninas.jpg',title:'Las Puppy Meninas',after:'after Diego Velázquez',album:'Grand Gallery'},
+ {id:'blue',file:'../art/25_blue_bunny.jpg',title:'The Blue Bunny Boy',after:'after Thomas Gainsborough',album:'Salon de Paris'},
+ {id:'narcissus',file:'../art/91_caravaggio_fox_narcissus.jpg',title:'Narcissus Fox',after:'after Caravaggio',album:'Old Masters'},
+ {id:'nightcafe',file:'../art/69_vangogh_cat_bandaged.jpg',title:'Cat with a Bandaged Ear',after:'after Vincent van Gogh',album:'Modern Moods'},
  {id:'milk',file:'../art/21_milkmaid_cat.jpg',title:'The Milkmaid Cat',after:'after Johannes Vermeer',album:'Salon de Paris'},
- {id:'oculus',file:'../art/329_mantegna_animals_oculus.jpg',title:'The Painted Ceiling',after:'after Andrea Mantegna',album:'Grand Gallery'},
+ {id:'fogwarning',file:'../art/272_homer_seal_fog_warning.jpg',title:'The Fog Warning',after:'after Winslow Homer',album:'Far Horizons'},
  {id:'dance',file:'../art/22_flamingo_dance.jpg',title:'Flamingo Dance Class',after:'after Edgar Degas',album:'Salon de Paris'},
- {id:'turtlesub',file:'../art/303_turtle_submarine_reef.jpg',title:'The Turtle Submarine',after:'original scene',album:'Toon World'},
- {id:'boat',file:'../art/23_beaver_boating.jpg',title:'The Beavers\' Boating Party',after:'after Pierre-Auguste Renoir',album:'Salon de Paris'},
- {id:'swing',file:'../art/24_koala_swing.jpg',title:'Koala on the Swing',after:'after Jean-Honoré Fragonard',album:'Salon de Paris'},
+ {id:'dragonfly',file:'../art/339_repin_hare_dragonfly.jpg',title:'The Dragonfly',after:'after Ilya Repin',album:'Grand Gallery'},
  {id:'personalvalues',file:'../art/316_magritte_hamster_giant_room.jpg',title:'The Room of Giant Things',after:'after Rene Magritte',album:'Grand Gallery'},
  {id:'shower',file:'../art/27_duckling_shower.jpg',title:'Ducklings in the Shower',after:'after Utagawa Hiroshige',album:'Far Horizons'},
  {id:'tree',file:'../art/28_owl_tree_of_life.jpg',title:'Owl in the Tree of Life',after:'after Gustav Klimt',album:'Far Horizons'},
@@ -79,7 +112,6 @@ const ART=[
  {id:'goldfish',file:'../art/53_matisse_cat_goldfish.jpg',title:'Cat with Goldfish',after:'after Henri Matisse',album:'Modern Moods'},
  {id:'crows',file:'../art/54_vangogh_crows_wheatfield.jpg',title:'Wheatfield with Parrots',after:'after Vincent van Gogh',album:'Impressionist Garden'},
  {id:'sunrise',file:'../art/55_monet_pelican_sunrise.jpg',title:'Impression, Pelican Rising',after:'after Claude Monet',album:'Impressionist Garden'},
- {id:'bubbles',file:'../art/56_chardin_otter_bubbles.jpg',title:'Otter Blowing Bubbles',after:'after Jean-Simeon Chardin',album:'Grand Gallery'},
  {id:'pierrot',file:'../art/57_watteau_dog_pierrot.jpg',title:'Pierrot the Puppy',after:'after Antoine Watteau',album:'Grand Gallery'},
  {id:'angelus',file:'../art/58_millet_hedgehog_angelus.jpg',title:'The Hedgehog Angelus',after:'after Jean-Francois Millet',album:'Impressionist Garden'},
  {id:'golconda',file:'../art/60_magritte_penguin_golconda.jpg',title:'Golconda Penguins',after:'after Rene Magritte',album:'Modern Moods'},
@@ -89,7 +121,6 @@ const ART=[
  {id:'folies',file:'../art/64_manet_bunny_folies.jpg',title:'A Bar at the Bunnies-Bergere',after:'after Edouard Manet',album:'Salon de Paris'},
  {id:'adele',file:'../art/67_klimt_golden_cat.jpg',title:'Golden Cat Adele',after:'after Gustav Klimt',album:'Modern Moods'},
  {id:'birthday',file:'../art/68_chagall_rabbits_flying.jpg',title:'The Flying Rabbits',after:'after Marc Chagall',album:'Far Horizons'},
- {id:'nightcafe',file:'../art/69_vangogh_cat_bandaged.jpg',title:'Cat with a Bandaged Ear',after:'after Vincent van Gogh',album:'Modern Moods'},
  {id:'potato',file:'../art/70_vangogh_moles_potato.jpg',title:'The Potato Eater Moles',after:'after Vincent van Gogh',album:'Far Horizons'},
  {id:'rouen',file:'../art/71_monet_pigeons_cathedral.jpg',title:'Pigeon Cathedral at Noon',after:'after Claude Monet',album:'Impressionist Garden'},
  {id:'poppies',file:'../art/72_monet_bunnies_poppies.jpg',title:'Bunnies in the Poppy Field',after:'after Claude Monet',album:'Impressionist Garden'},
@@ -110,16 +141,12 @@ const ART=[
  {id:'medusa',file:'../art/87_gericault_ducks_raft.jpg',title:'The Raft of the Ducklings',after:'after Theodore Gericault',album:'Grand Tour'},
  {id:'hare',file:'../art/89_durer_capybara_hare.jpg',title:'Young Capybara',after:'after Albrecht Durer',album:'Old Masters'},
  {id:'ambassadors',file:'../art/90_holbein_foxes_ambassadors.jpg',title:'The Fox Ambassadors',after:'after Hans Holbein',album:'Old Masters'},
- {id:'narcissus',file:'../art/91_caravaggio_fox_narcissus.jpg',title:'Narcissus Fox',after:'after Caravaggio',album:'Old Masters'},
  {id:'wedding',file:'../art/92_bruegel_pigs_wedding.jpg',title:'The Piglet Wedding',after:'after Pieter Bruegel',album:'Old Masters'},
  {id:'vertumnus',file:'../art/93_arcimboldo_bunny_fruit.jpg',title:'Fruit Bunny',after:'after Giuseppe Arcimboldo',album:'Old Masters'},
- {id:'cherubs',file:'../art/94_raphael_puppy_cherubs.jpg',title:'The Bored Cherub Puppies',after:'after Raphael',album:'Old Masters'},
  {id:'anatomy',file:'../art/95_rembrandt_owls_anatomy.jpg',title:'The Anatomy Lesson of Dr Owl',after:'after Rembrandt',album:'Old Masters'},
  {id:'christina',file:'../art/96_wyeth_fox_christina.jpg',title:'Fox\'s World',after:'after Andrew Wyeth',album:'Grand Gallery'},
  {id:'triple',file:'../art/97_rockwell_dog_triple.jpg',title:'Triple Self-Portrait Dog',after:'after Norman Rockwell',album:'Modern Moods'},
- {id:'relativity',file:'../art/98_escher_hamsters_stairs.jpg',title:'Relativity Hamsters',after:'after M. C. Escher',album:'Modern Moods'},
  {id:'walk',file:'../art/99_sorolla_cats_beach.jpg',title:'Walk on the Beach Cats',after:'after Joaquin Sorolla',album:'Salon de Paris'},
- {id:'flowers',file:'../art/100_rivera_armadillo_flowers.jpg',title:'The Flower Carrier',after:'after Diego Rivera',album:'Far Horizons'},
  {id:'asnieres',file:'../art/103_seurat_capybaras_bathers.jpg',title:'Capybaras at Asnieres',after:'after Georges Seurat',album:'Salon de Paris'},
  {id:'boating',file:'../art/104_renoir_dogs_boating_party.jpg',title:'Luncheon of the Boating Dogs',after:'after Pierre-Auguste Renoir',album:'Salon de Paris'},
  {id:'dream',file:'../art/105_rousseau_sloth_dream.jpg',title:'The Dream of the Sloth',after:'after Henri Rousseau',album:'Modern Moods'},
@@ -128,7 +155,6 @@ const ART=[
  {id:'athens',file:'../art/108_raphael_owls_athens.jpg',title:'The School of Owls',after:'after Raphael',album:'Old Masters'},
  {id:'pinkie',file:'../art/110_lawrence_lamb_pinkie.jpg',title:'Pinkie the Lamb',after:'after Thomas Lawrence',album:'Grand Gallery'},
  {id:'june',file:'../art/111_leighton_cat_flaming_june.jpg',title:'Flaming June Cat',after:'after Frederic Leighton',album:'Grand Gallery'},
- {id:'proserpine',file:'../art/112_rossetti_fox_proserpine.jpg',title:'Proserpine Fox',after:'after Dante Gabriel Rossetti',album:'Grand Gallery'},
  {id:'montmartre',file:'../art/113_pissarro_pigeons_boulevard.jpg',title:'Boulevard Montmartre Pigeons',after:'after Camille Pissarro',album:'Salon de Paris'},
  {id:'haystacks',file:'../art/114_monet_sheep_haystacks.jpg',title:'Haystacks with Sheep',after:'after Claude Monet',album:'Impressionist Garden'},
  {id:'rhone',file:'../art/115_vangogh_otters_rhone.jpg',title:'Starry Night over the Rhone Otters',after:'after Vincent van Gogh',album:'Impressionist Garden'},
@@ -136,7 +162,6 @@ const ART=[
  {id:'thanks',file:'../art/117_rockwell_bears_thanksgiving.jpg',title:'Freedom from Want Bears',after:'after Norman Rockwell',album:'Modern Moods'},
  {id:'steam',file:'../art/118_turner_hare_steam.jpg',title:'Rain, Steam and Speed Hare',after:'after J. M. W. Turner',album:'Grand Tour'},
  {id:'cliffs',file:'../art/119_friedrich_goats_cliffs.jpg',title:'Chalk Cliffs with Goats',after:'after Caspar David Friedrich',album:'Grand Tour'},
- {id:'oath',file:'../art/120_david_roosters_oath.jpg',title:'The Oath of the Roosters',after:'after Jacques-Louis David',album:'Grand Gallery'},
  {id:'watering',file:'../art/122_renoir_kitten_watering_can.jpg',title:'Kitten with a Watering Can',after:'after Pierre-Auguste Renoir',album:'Salon de Paris'},
  {id:'victoire',file:'../art/123_cezanne_marmots_victoire.jpg',title:'Mont Sainte-Victoire with Marmots',after:'after Paul Cezanne',album:'Impressionist Garden'},
  {id:'apples',file:'../art/124_cezanne_mouse_apples.jpg',title:'Still Life with Apples and a Mouse',after:'after Paul Cezanne',album:'Impressionist Garden'},
@@ -145,7 +170,6 @@ const ART=[
  {id:'kahlo',file:'../art/127_kahlo_cat_hummingbird.jpg',title:'Self-Portrait Cat with Hummingbird',after:'after Frida Kahlo',album:'Modern Moods'},
  {id:'skaters',file:'../art/128_avercamp_penguins_skaters.jpg',title:'Winter Landscape with Skating Penguins',after:'after Hendrick Avercamp',album:'Old Masters'},
  {id:'budgie',file:'../art/129_fabritius_budgie_goldfinch.jpg',title:'The Goldfinch Budgie',after:'after Carel Fabritius',album:'Old Masters'},
- {id:'cavalier',file:'../art/130_hals_cat_laughing_cavalier.jpg',title:'The Laughing Cavalier Cat',after:'after Frans Hals',album:'Old Masters'},
  {id:'haulers',file:'../art/131_repin_bears_barge_haulers.jpg',title:'Bear Barge Haulers',after:'after Ilya Repin',album:'Grand Tour'},
  {id:'peaches',file:'../art/132_serov_kitten_peaches.jpg',title:'Kitten with Peaches',after:'after Valentin Serov',album:'Far Horizons'},
  {id:'autumn',file:'../art/133_levitan_fox_golden_autumn.jpg',title:'Golden Autumn Fox',after:'after Isaac Levitan',album:'Far Horizons'},
@@ -164,18 +188,15 @@ const ART=[
  {id:'fortune',file:'../art/231_caravaggio_fox_fortune.jpg',title:'The Fortune Teller Fox',after:'after Caravaggio',album:'Old Masters'},
  {id:'plum',file:'../art/146_hiroshige_red_panda_plum.jpg',title:'Plum Garden Red Panda',after:'after Utagawa Hiroshige',album:'Far Horizons'},
  {id:'bouquet',file:'../art/147_ruysch_mouse_bouquet.jpg',title:'Flower Still Life with Mouse',after:'after Rachel Ruysch',album:'Old Masters'},
- {id:'fireplace',file:'../art/148_magritte_mouse_fireplace.jpg',title:'Time Transfixed Mouse',after:'after Rene Magritte',album:'Modern Moods'},
  {id:'unicorn',file:'../art/149_tapestry_cat_unicorn.jpg',title:'The Cat and the Unicorn',after:'after The Lady and the Unicorn tapestry',album:'Grand Gallery'},
  {id:'icebergs',file:'../art/150_church_polar_bears_icebergs.jpg',title:'The Icebergs with Polar Bears',after:'after Frederic Edwin Church',album:'Far Horizons'},
  {id:'letter',file:'../art/151_vermeer_bunny_letter.jpg',title:'Bunny Reading a Letter',after:'after Johannes Vermeer',album:'Old Masters'},
- {id:'throne',file:'../art/179_ingres_pug_throne.jpg',title:'Emperor Pug on his Throne',after:'after Jean-Auguste-Dominique Ingres',album:'Grand Gallery'},
  {id:'circus',file:'../art/153_seurat_poodles_circus.jpg',title:'The Circus Poodles',after:'after Georges Seurat',album:'Salon de Paris'},
  {id:'tahiti',file:'../art/154_gauguin_parrots_tahiti.jpg',title:'Tahitian Parrots on the Beach',after:'after Paul Gauguin',album:'Far Horizons'},
  {id:'stairs',file:'../art/155_burnejones_birds_golden_stairs.jpg',title:'The Golden Stairs of the Birds',after:'after Edward Burne-Jones',album:'Grand Gallery'},
  {id:'lighthouse',file:'../art/156_hopper_cats_lighthouse.jpg',title:'Lighthouse Cats at Two Lights',after:'after Edward Hopper',album:'Modern Moods'},
  {id:'irises',file:'../art/157_vangogh_kitten_irises.jpg',title:'Irises with a Kitten',after:'after Vincent van Gogh',album:'Impressionist Garden'},
  {id:'prodigal',file:'../art/158_rembrandt_puppy_prodigal.jpg',title:'The Return of the Prodigal Puppy',after:'after Rembrandt',album:'Old Masters'},
- {id:'canal',file:'../art/159_canaletto_otters_grand_canal.jpg',title:'Grand Canal of the Gondolier Otters',after:'after Canaletto',album:'Grand Tour'},
  {id:'lazare',file:'../art/160_monet_pigeons_gare_saint_lazare.jpg',title:'Gare Saint-Lazare with Pigeons',after:'after Claude Monet',album:'Salon de Paris'},
  {id:'empire',file:'../art/161_magritte_cat_empire_of_light.jpg',title:'Empire of Light Cat',after:'after Rene Magritte',album:'Modern Moods'},
  {id:'rooks',file:'../art/162_savrasov_ducks_rooks.jpg',title:'The Ducks Have Returned',after:'after Alexei Savrasov',album:'Far Horizons'},
@@ -184,24 +205,20 @@ const ART=[
  {id:'odalisque',file:'../art/165_ingres_cat_odalisque.jpg',title:'The Grand Odalisque Cat',after:'after Jean-Auguste-Dominique Ingres',album:'Grand Gallery'},
  {id:'village',file:'../art/166_chagall_cat_village.jpg',title:'I and the Village Cat',after:'after Marc Chagall',album:'Modern Moods'},
  {id:'bougival',file:'../art/167_renoir_bears_bougival.jpg',title:'Dance at Bougival Bears',after:'after Pierre-Auguste Renoir',album:'Salon de Paris'},
- {id:'duke',file:'../art/168_piero_hamster_duke.jpg',title:'The Duke Hamster of Urbino',after:'after Piero della Francesca',album:'Old Masters'},
  {id:'toledo',file:'../art/169_elgreco_cats_toledo.jpg',title:'View of Toledo with Cats',after:'after El Greco',album:'Grand Tour'},
  {id:'swan',file:'../art/170_vrubel_goose_swan_princess.jpg',title:'The Swan Princess Goose',after:'after Mikhail Vrubel',album:'Far Horizons'},
  {id:'gas',file:'../art/171_hopper_raccoon_gas.jpg',title:'Gas Station Raccoon',after:'after Edward Hopper',album:'Modern Moods'},
  {id:'cypress',file:'../art/172_vangogh_sheep_cypresses.jpg',title:'Wheatfield with Cypresses and Sheep',after:'after Vincent van Gogh',album:'Impressionist Garden'},
  {id:'fifer',file:'../art/173_manet_penguin_fifer.jpg',title:'The Fifer Penguin',after:'after Edouard Manet',album:'Salon de Paris'},
- {id:'roses',file:'../art/174_almatadema_cats_roses.jpg',title:'The Roses of the Cats',after:'after Lawrence Alma-Tadema',album:'Grand Gallery'},
  {id:'hunters',file:'../art/175_perov_dogs_hunters_rest.jpg',title:'Hunter Dogs at Rest',after:'after Vasily Perov',album:'Far Horizons'},
+ {id:'roses',file:'../art/174_almatadema_cats_roses.jpg',title:'The Roses of the Cats',after:'after Lawrence Alma-Tadema',album:'Grand Gallery'},
  {id:'eggs',file:'../art/176_velazquez_hen_frying_eggs.jpg',title:'Old Hen Frying Eggs',after:'after Diego Velazquez',album:'Old Masters'},
  {id:'louveciennes',file:'../art/177_sisley_cat_snow_louveciennes.jpg',title:'Snow at Louveciennes with a Cat',after:'after Alfred Sisley',album:'Impressionist Garden'},
  {id:'desperate',file:'../art/178_courbet_cat_desperate.jpg',title:'The Desperate Cat',after:'after Gustave Courbet',album:'Salon de Paris'},
  {id:'tempest',file:'../art/180_giorgione_otter_tempest.jpg',title:'The Tempest Otter',after:'after Giorgione',album:'Grand Tour'},
  {id:'yellowcow',file:'../art/181_marc_yellow_cow_bunny.jpg',title:'The Yellow Cow and the Bunny',after:'after Franz Marc',album:'Modern Moods'},
  {id:'seaport',file:'../art/182_lorrain_seals_seaport.jpg',title:'Seaport with Seal Merchants',after:'after Claude Lorrain',album:'Grand Tour'},
- {id:'tiger',file:'../art/192_minhwa_tiger_magpie.jpg',title:'Tiger and Magpie',after:'after Korean minhwa folk painting',album:'Far Horizons'},
  {id:'applepick',file:'../art/183_pissarro_hedgehogs_apple_harvest.jpg',title:'Apple Harvest Hedgehogs',after:'after Camille Pissarro',album:'Impressionist Garden'},
- {id:'racehorses',file:'../art/184_degas_corgis_racehorses.jpg',title:'Racehorse Corgis before the Start',after:'after Edgar Degas',album:'Salon de Paris'},
- {id:'strawhat',file:'../art/185_vigee_fox_straw_hat.jpg',title:'Self-Portrait Fox in a Straw Hat',after:'after Elisabeth Vigee Le Brun',album:'Grand Gallery'},
  {id:'kanbara',file:'../art/186_hiroshige_foxes_night_snow.jpg',title:'Night Snow with Foxes',after:'after Utagawa Hiroshige',album:'Far Horizons'},
  {id:'merry',file:'../art/187_steen_pigs_merry_family.jpg',title:'The Merry Pig Family',after:'after Jan Steen',album:'Old Masters'},
  {id:'football',file:'../art/188_rousseau_bunnies_football.jpg',title:'The Football Bunnies',after:'after Henri Rousseau',album:'Modern Moods'},
@@ -219,7 +236,6 @@ const ART=[
  {id:'littlestreet',file:'../art/201_vermeer_cats_little_street.jpg',title:'The Little Street of Cats',after:'after Johannes Vermeer',album:'Old Masters'},
  {id:'courtyard',file:'../art/202_dehooch_mice_courtyard.jpg',title:'Courtyard of the Mice',after:'after Pieter de Hooch',album:'Old Masters'},
  {id:'yellowhouse',file:'../art/203_vangogh_fox_yellow_house.jpg',title:'The Yellow House Fox',after:'after Vincent van Gogh',album:'Impressionist Garden'},
- {id:'roulin',file:'../art/204_vangogh_bear_postman.jpg',title:'The Postman Bear',after:'after Vincent van Gogh',album:'Impressionist Garden'},
  {id:'icarus',file:'../art/152_bruegel_squirrel_icarus.jpg',title:'Landscape with the Fall of a Flying Squirrel',after:'after Pieter Bruegel',album:'Grand Tour'},
  {id:'trouville',file:'../art/205_monet_cats_trouville.jpg',title:'The Beach at Trouville Cats',after:'after Claude Monet',album:'Impressionist Garden'},
  {id:'renoirswing',file:'../art/206_renoir_rabbits_swing.jpg',title:'The Rabbit on the Swing',after:'after Pierre-Auguste Renoir',album:'Salon de Paris'},
@@ -236,7 +252,6 @@ const ART=[
  {id:'artofpainting',file:'../art/217_vermeer_fox_art_of_painting.jpg',title:'The Art of Painting Fox',after:'after Johannes Vermeer',album:'Old Masters'},
  {id:'spinners',file:'../art/218_velazquez_mice_spinners.jpg',title:'The Mouse Spinners',after:'after Diego Velazquez',album:'Grand Gallery'},
  {id:'snowstorm',file:'../art/219_goya_animals_snowstorm.jpg',title:'The Snowstorm Travellers',after:'after Francisco Goya',album:'Grand Gallery'},
- {id:'melon',file:'../art/220_murillo_raccoons_grapes_melon.jpg',title:'Raccoons Eating Grapes and Melon',after:'after Bartolome Esteban Murillo',album:'Grand Gallery'},
  {id:'grace',file:'../art/221_chardin_mice_grace.jpg',title:'Grace before the Meal Mice',after:'after Jean-Simeon Chardin',album:'Grand Gallery'},
  {id:'salisbury',file:'../art/222_constable_geese_salisbury.jpg',title:'Salisbury Cathedral with Geese',after:'after John Constable',album:'Grand Tour'},
  {id:'blindgirl',file:'../art/223_millais_dogs_rainbow.jpg',title:'The Rainbow Dogs',after:'after John Everett Millais',album:'Grand Gallery'},
@@ -245,7 +260,6 @@ const ART=[
  {id:'sower',file:'../art/226_millet_bear_sower.jpg',title:'The Sower Bear',after:'after Jean-Francois Millet',album:'Impressionist Garden'},
  {id:'lark',file:'../art/227_breton_hen_lark.jpg',title:'The Song of the Lark Hen',after:'after Jules Breton',album:'Impressionist Garden'},
  {id:'horsewoman',file:'../art/229_bryullov_fox_horsewoman.jpg',title:'The Fox Horsewoman',after:'after Karl Bryullov',album:'Far Horizons'},
- {id:'rhino',file:'../art/230_durer_rhinoceros.jpg',title:'The Armoured Rhinoceros',after:'after Albrecht Durer',album:'Old Masters'},
  {id:'stgeorge',file:'../art/232_uccello_mouse_dragon.jpg',title:'Saint Mouse and the Dragon',after:'after Paolo Uccello',album:'Old Masters'},
  {id:'mortefontaine',file:'../art/233_corot_deer_mortefontaine.jpg',title:'Souvenir with Fawns',after:'after Jean-Baptiste-Camille Corot',album:'Impressionist Garden'},
  {id:'thirdclass',file:'../art/234_daumier_animals_train.jpg',title:'The Third-Class Carriage',after:'after Honore Daumier',album:'Salon de Paris'},
@@ -276,17 +290,13 @@ const ART=[
  {id:'sainttropez',file:'../art/260_signac_seagulls_harbour.jpg',title:'Harbour of the Seagulls',after:'after Paul Signac',album:'Modern Moods'},
  {id:'tigerstorm',file:'../art/261_rousseau_tiger_storm.jpg',title:'Tiger Cub in a Storm',after:'after Henri Rousseau',album:'Far Horizons'},
  {id:'snakecharmer',file:'../art/262_rousseau_meerkat_snake_charmer.jpg',title:'The Meerkat Snake Charmer',after:'after Henri Rousseau',album:'Far Horizons'},
- {id:'sunflowergarden',file:'../art/263_klimt_hedgehog_sunflowers.jpg',title:'Farm Garden with Sunflowers',after:'after Gustav Klimt',album:'Modern Moods'},
  {id:'flyingbirthday',file:'../art/264_chagall_cat_birthday.jpg',title:'The Flying Birthday',after:'after Marc Chagall',album:'Modern Moods'},
- {id:'openwindow',file:'../art/265_matisse_cat_open_window.jpg',title:'The Open Window Cat',after:'after Henri Matisse',album:'Modern Moods'},
  {id:'saltimbanques',file:'../art/266_picasso_circus_animal_family.jpg',title:'The Circus Family',after:'after Pablo Picasso',album:'Modern Moods'},
  {id:'giraffelady',file:'../art/267_modigliani_giraffe_lady.jpg',title:'The Long-necked Lady',after:'after Amedeo Modigliani',album:'Modern Moods'},
  {id:'chopsuey',file:'../art/268_hopper_cats_chop_suey.jpg',title:'The Chop Suey Cats',after:'after Edward Hopper',album:'Grand Tour'},
  {id:'newyorkmovie',file:'../art/269_hopper_fox_movie_theatre.jpg',title:'The Fox Usherette',after:'after Edward Hopper',album:'Grand Tour'},
  {id:'barbershop',file:'../art/270_rockwell_animal_barbershop.jpg',title:'The Barbershop Band',after:'after Norman Rockwell',album:'Grand Tour'},
  {id:'threshers',file:'../art/271_grantwood_dinner_threshers.jpg',title:'Dinner for the Threshers',after:'after Grant Wood',album:'Grand Tour'},
- {id:'fogwarning',file:'../art/272_homer_seal_fog_warning.jpg',title:'The Fog Warning',after:'after Winslow Homer',album:'Far Horizons'},
- {id:'scull',file:'../art/273_eakins_otter_scull.jpg',title:'The Otter in the Single Scull',after:'after Thomas Eakins',album:'Grand Tour'},
  {id:'furtraders',file:'../art/274_bingham_fox_fur_traders.jpg',title:'The River Traders',after:'after George Caleb Bingham',album:'Grand Tour'},
  {id:'fiveoclock',file:'../art/275_cassatt_hens_five_oclock_tea.jpg',title:'Five O\'Clock Tea Hens',after:'after Mary Cassatt',album:'Impressionist Garden'},
  {id:'yellowstone',file:'../art/276_moran_elk_canyon.jpg',title:'Elk at the Grand Canyon',after:'after Thomas Moran',album:'Far Horizons'},
@@ -294,12 +304,11 @@ const ART=[
  {id:'roosters',file:'../art/278_jakuchu_roosters_garden.jpg',title:'The Rooster Garden',after:'after Ito Jakuchu',album:'Far Horizons'},
  {id:'qingming',file:'../art/279_qingming_animal_river_market.jpg',title:'The River Festival',after:'after Zhang Zeduan',album:'Far Horizons'},
  {id:'march',file:'../art/280_levitan_horse_march.jpg',title:'March Sunshine',after:'after Isaac Levitan',album:'Far Horizons'},
- {id:'ploughing',file:'../art/281_venetsianov_bunny_ploughing.jpg',title:'Spring Ploughing',after:'after Alexey Venetsianov',album:'Far Horizons'},
  {id:'maslenitsa',file:'../art/282_kustodiev_animals_maslenitsa.jpg',title:'The Pancake Fair',after:'after Boris Kustodiev',album:'Far Horizons'},
  {id:'dressingtable',file:'../art/283_serebriakova_cat_dressing_table.jpg',title:'At the Dressing Table',after:'after Zinaida Serebriakova',album:'Far Horizons'},
- {id:'redhorse',file:'../art/284_petrovvodkin_hare_red_horse.jpg',title:'Bathing of a Red Horse',after:'after Kuzma Petrov-Vodkin',album:'Modern Moods'},
  {id:'lowmarks',file:'../art/285_reshetnikov_puppy_low_marks.jpg',title:'Low Marks Again',after:'after Fyodor Reshetnikov',album:'Modern Moods'},
  {id:'sadko',file:'../art/287_repin_otter_sadko.jpg',title:'Sadko in the Underwater Kingdom',after:'after Ilya Repin',album:'Far Horizons'},
+ {id:'ploughing',file:'../art/281_venetsianov_bunny_ploughing.jpg',title:'Spring Ploughing',after:'after Alexey Venetsianov',album:'Far Horizons'},
  {id:'blindmansbuff',file:'../art/288_goya_blind_mans_buff.jpg',title:'Blind Man\'s Buff',after:'after Francisco Goya',album:'Grand Gallery'},
  {id:'sewingsail',file:'../art/289_sorolla_cats_sewing_sail.jpg',title:'Sewing the Sail',after:'after Joaquin Sorolla',album:'Grand Gallery'},
  {id:'stonemason',file:'../art/290_canaletto_beaver_stonemasons.jpg',title:'The Beaver Stonemasons\' Yard',after:'after Canaletto',album:'Grand Tour'},
@@ -308,71 +317,44 @@ const ART=[
  {id:'youngbull',file:'../art/293_potter_young_bull.jpg',title:'The Young Bull',after:'after Paulus Potter',album:'Old Masters'},
  {id:'birdspark',file:'../art/294_hondecoeter_birds_park.jpg',title:'Birds in a Park',after:'after Melchior d\'Hondecoeter',album:'Old Masters'},
  {id:'fluteconcert',file:'../art/295_menzel_fox_flute_concert.jpg',title:'The Flute Concert',after:'after Adolph Menzel',album:'Old Masters'},
- {id:'poorpoet',file:'../art/296_spitzweg_cat_poor_poet.jpg',title:'The Poor Poet Cat',after:'after Carl Spitzweg',album:'Old Masters'},
  {id:'eden',file:'../art/298_brueghel_garden_paradise.jpg',title:'The Garden of Paradise',after:'after Jan Brueghel the Elder',album:'Old Masters'},
  {id:'horsefair',file:'../art/299_bonheur_horse_fair.jpg',title:'The Horse Fair',after:'after Rosa Bonheur',album:'Salon de Paris'},
+ {id:'poorpoet',file:'../art/296_spitzweg_cat_poor_poet.jpg',title:'The Poor Poet Cat',after:'after Carl Spitzweg',album:'Old Masters'},
  {id:'pantry',file:'../art/300_snyders_raccoons_pantry.jpg',title:'Raccoons in the Pantry',after:'after Frans Snyders',album:'Old Masters'},
- {id:'puffinlight',file:'../art/301_puffin_lighthouse_sunrise.jpg',title:'The Puffin Lighthouse',after:'original scene',album:'Toon World'},
  {id:'treehouse',file:'../art/302_squirrel_treehouse_dusk.jpg',title:'Treehouse at Dusk',after:'original scene',album:'Toon World'},
- {id:'hotspring',file:'../art/304_capybara_hot_spring.jpg',title:'Hot Spring in the Snow',after:'original scene',album:'Toon World'},
  {id:'oasis',file:'../art/305_fennec_desert_oasis.jpg',title:'The Oasis Market',after:'original scene',album:'Toon World'},
  {id:'pumpkinfair',file:'../art/306_pig_pumpkin_harvest.jpg',title:'The Pumpkin Harvest',after:'original scene',album:'Toon World'},
  {id:'icecream',file:'../art/309_goat_ice_cream_truck.jpg',title:'The Ice Cream Truck',after:'original scene',album:'Toon World'},
- {id:'island',file:'../art/310_turtle_island_topdown.jpg',title:'The Tiny Island',after:'original scene',album:'Toon World'},
- {id:'balthasar',file:'../art/314_velazquez_lioncub_pony.jpg',title:'The Little Prince on a Pony',after:'after Diego Velazquez',album:'Grand Gallery'},
  {id:'childdove',file:'../art/315_picasso_lamb_dove.jpg',title:'The Lamb with a Dove',after:'after Pablo Picasso',album:'Grand Gallery'},
  {id:'girlmirror',file:'../art/317_rockwell_piglet_mirror.jpg',title:'The Piglet at the Mirror',after:'after Norman Rockwell',album:'Grand Gallery'},
  {id:'boitdaughters',file:'../art/318_sargent_kittens_vases.jpg',title:'The Kitten Sisters',after:'after John Singer Sargent',album:'Grand Gallery'},
  {id:'chojugiga',file:'../art/320_toba_frogs_rabbits_scroll.jpg',title:'Frogs and Rabbits at Play',after:'after Toba Sojo',album:'Grand Gallery'},
  {id:'brokenpitcher',file:'../art/322_greuze_lamb_broken_pitcher.jpg',title:'The Broken Pitcher',after:'after Jean-Baptiste Greuze',album:'Grand Gallery'},
- {id:'sainteadresse',file:'../art/323_monet_garden_sainte_adresse.jpg',title:'The Terrace at Sainte-Adresse',after:'after Claude Monet',album:'Grand Gallery'},
  {id:'diningcountry',file:'../art/324_bonnard_cat_dining_room.jpg',title:'The Dining Room in the Country',after:'after Pierre Bonnard',album:'Grand Gallery'},
- {id:'peaceablekingdom',file:'../art/325_hicks_peaceable_kingdom.jpg',title:'The Peaceable Kingdom',after:'after Edward Hicks',album:'Grand Gallery'},
  {id:'grahamchildren',file:'../art/326_hogarth_puppies_goldfinch.jpg',title:'The Puppy Children',after:'after William Hogarth',album:'Grand Gallery'},
- {id:'orrery',file:'../art/327_wrightderby_owl_orrery.jpg',title:'The Owl and the Orrery',after:'after Joseph Wright of Derby',album:'Grand Gallery'},
  {id:'zoogarden',file:'../art/328_macke_zoological_garden.jpg',title:'The Zoological Garden',after:'after August Macke',album:'Grand Gallery'},
- {id:'venusmars',file:'../art/330_botticelli_lion_venus_mars.jpg',title:'The Sleeping Lion Knight',after:'after Sandro Botticelli',album:'Grand Gallery'},
  {id:'strangegarden',file:'../art/332_mehoffer_strange_garden.jpg',title:'The Strange Garden',after:'after Jozef Mehoffer',album:'Grand Gallery'},
  {id:'kajikazawa',file:'../art/333_hokusai_heron_kajikazawa.jpg',title:'The Heron Fisherman',after:'after Katsushika Hokusai',album:'Grand Gallery'},
- {id:'stnicholas',file:'../art/334_steen_hedgehogs_st_nicholas.jpg',title:'The Feast of Saint Nicholas',after:'after Jan Steen',album:'Grand Gallery'},
  {id:'butterflychase',file:'../art/335_gainsborough_fox_sisters_butterfly.jpg',title:'The Fox Sisters Chasing a Butterfly',after:'after Thomas Gainsborough',album:'Grand Gallery'},
+ {id:'sunflowergarden',file:'../art/263_klimt_hedgehog_sunflowers.jpg',title:'Farm Garden with Sunflowers',after:'after Gustav Klimt',album:'Modern Moods'},
  {id:'broglie',file:'../art/336_ingres_persian_cat_broglie.jpg',title:'The Princess in Blue Satin',after:'after Jean-Auguste-Dominique Ingres',album:'Grand Gallery'},
  {id:'thunderstorm',file:'../art/340_makovsky_bears_thunderstorm.jpg',title:'Running from the Storm',after:'after Konstantin Makovsky',album:'Grand Gallery'},
- {id:'squirrelsplane',file:'../art/341_abulhasan_squirrels_plane_tree.jpg',title:'Squirrels in the Plane Tree',after:'after Abu\'l Hasan',album:'Grand Gallery'},
- {id:'peterfishing',file:'../art/342_larsson_kitten_fishing.jpg',title:'Fishing from the Jetty',after:'after Carl Larsson',album:'Grand Gallery'},
  {id:'cakes',file:'../art/343_thiebaud_squirrel_cakes.jpg',title:'The Cake Counter',after:'after Wayne Thiebaud',album:'Grand Gallery'},
  {id:'dejeuner',file:'../art/344_monet_rabbit_garden_luncheon.jpg',title:'Luncheon in the Garden',after:'after Claude Monet',album:'Grand Gallery'},
- {id:'noahsark',file:'../art/345_bassano_animals_ark.jpg',title:'Animals Boarding the Ark',after:'after Jacopo Bassano',album:'Grand Gallery'},
- {id:'zebrastubbs',file:'../art/346_stubbs_zebra_forest.jpg',title:'The Zebra in the Forest',after:'after George Stubbs',album:'Grand Gallery'},
- {id:'zojoji',file:'../art/347_hasui_redpanda_snow_temple.jpg',title:'Snow at the Temple Gate',after:'after Kawase Hasui',album:'Grand Gallery'},
+ {id:'peterfishing',file:'../art/342_larsson_kitten_fishing.jpg',title:'Fishing from the Jetty',after:'after Carl Larsson',album:'Grand Gallery'},
+ {id:'swing',file:'../art/24_koala_swing.jpg',title:'Koala on the Swing',after:'after Jean-Honoré Fragonard',album:'Salon de Paris'},
  {id:'overgrownpond',file:'../art/348_polenov_mouse_overgrown_pond.jpg',title:'The Overgrown Pond',after:'after Vasily Polenov',album:'Grand Gallery'},
- {id:'luncheon',file:'../art/121_manet_geese_luncheon.jpg',title:'Luncheon on the Grass Geese',after:'after Edouard Manet',album:'Salon de Paris'},
+ {id:'boat',file:'../art/23_beaver_boating.jpg',title:'The Beavers\' Boating Party',after:'after Pierre-Auguste Renoir',album:'Salon de Paris'},
+ {id:'squirrelsplane',file:'../art/341_abulhasan_squirrels_plane_tree.jpg',title:'Squirrels in the Plane Tree',after:'after Abu\'l Hasan',album:'Grand Gallery'},
  {id:'cafe',file:'../art/11_shiba_cafe.jpg',title:'Shiba Café at Night',after:'after Vincent van Gogh',album:'Grand Tour'},
  {id:'pugs',file:'../art/14_pug_picnic.jpg',title:'Sunday Picnic of the Pugs',after:'after Georges Seurat',album:'Impressionist Garden'},
  {id:'mucha',file:'../art/66_mucha_cat_spring.jpg',title:'Art Nouveau Cat: Spring',after:'after Alphonse Mucha',album:'Grand Gallery'},
  {id:'sisters',file:'../art/63_renoir_kitten_sisters.jpg',title:'Two Kittens on the Terrace',after:'after Pierre-Auguste Renoir',album:'Salon de Paris'},
+ {id:'luncheon',file:'../art/121_manet_geese_luncheon.jpg',title:'Luncheon on the Grass Geese',after:'after Edouard Manet',album:'Salon de Paris'},
  {id:'parasol',file:'../art/50_llama_parasol.jpg',title:'Llama with a Parasol',after:'after Claude Monet',album:'Impressionist Garden'},
  {id:'gypsy',file:'../art/44_kitten_sleeping_gypsy.jpg',title:'The Sleeping Kitten',after:'after Henri Rousseau',album:'Far Horizons'},
  {id:'urbino',file:'../art/109_titian_cat_urbino.jpg',title:'The Cat of Urbino',after:'after Titian',album:'Old Masters'}
 ];
-/* Art Review and the playable share an origin in the review build. Its saved
-   order assigns paintings to level slots; the slot still supplies the level
-   difficulty, board size, mechanics, seed and move budget. */
-if(typeof window!=='undefined'){
-  try{
-    const ordered=JSON.parse(localStorage.getItem('bookshelf_play_order_v1')||'null');
-    if(Array.isArray(ordered)&&ordered.length===ART.length&&new Set(ordered).size===ART.length){
-      const byNumber=new Map(ART.map(a=>[Number(a.file.split('/').pop().split('_')[0]),a]));
-      if(ordered.every(n=>byNumber.has(n)))ART.splice(0,ART.length,...ordered.map(n=>byNumber.get(n)));
-    }
-  }catch(e){console.warn('Art order unavailable',e)}
-  const artNumber=Number(new URLSearchParams(location.search).get('art'));
-  const levelNumber=Number(new URLSearchParams(location.search).get('level'));
-  if(artNumber>0&&levelNumber>=1&&levelNumber<=ART.length){
-    const selected=ART.find(a=>Number(a.file.split('/').pop().split('_')[0])===artNumber);
-    if(selected)ART[levelNumber-1]=selected;
-  }
-}
 /* every collection has its own room and bookcase */
 const THEMES={
  'Old Masters':        {bg:'ui/home_bg.jpg',     cls:'th-walnut', sw:'#A2652F'},
@@ -389,13 +371,16 @@ const themeOf=(art,L)=>{const k=Object.keys(THEMES);if(L&&shelfPreview(L)>=0)ret
 const CADENCE=[2,3,4,6,3,5,7,4,8,9];
 const ROLE={2:'easy',3:'easy',4:'normal',5:'normal',6:'spike',7:'hard',8:'hard',9:'peak'};
 
-function difficultyOf(L){let d=CADENCE[(L-1)%10];
+/* 2026-11-04 hand-tuned levels 1-50 [d, shelves, books per shelf, shuffle seed, move buffer %, extra moves] (edited in Bookshelf_levels_1-50.xlsx, applied by curve_tools/levels_xlsx.py): waves by tens, fewer shelves after every Hard */
+const CURVE50=[[2,2,4,7932,50,2],[2,2,4,15851,50,2],[3,2,5,23770,50,2],[2,2,5,131692,50,2],[3,2,6,39608,50,2],[4,3,5,347536,50,0],[2,2,6,55446,50,0],[3,2,7,63365,50,0],[7,3,6,171287,50,0],[2,2,6,79203,50,0],[2,2,6,187125,50,0],[3,3,5,395050,50,0],[4,3,6,102960,50,0],[2,2,7,310885,50,0],[3,3,5,518810,50,0],[5,3,6,126717,50,0],[3,3,5,134636,50,0],[5,3,6,1042582,50,0],[6,3,7,350480,50,0],[7,4,6,758411,50,0],[2,2,7,166312,50,0],[3,3,5,374237,50,0],[4,3,6,482159,50,0],[7,3,7,190069,50,0],[2,2,7,297991,50,0],[3,3,6,305910,50,0],[3,3,6,513835,50,0],[5,3,7,421751,50,0],[8,4,6,329667,50,0],[2,3,5,537592,50,0],[2,3,5,445508,50,2],[3,3,6,853439,50,0],[4,3,7,361343,50,0],[7,4,6,269259,50,0],[2,3,5,877196,50,0],[3,3,6,385100,50,0],[5,3,7,293016,50,0],[6,4,6,400938,50,0],[9,4,7,808869,50,0],[2,3,6,416776,50,0],[2,3,5,324692,50,0],[3,3,6,432614,50,0],[4,3,7,340530,50,0],[3,3,6,448452,50,0],[3,3,6,356368,50,0],[4,3,7,464290,50,0],[3,3,6,372206,50,0],[6,4,6,380125,50,0],[8,4,7,788056,50,0],[2,3,6,395963,50,0]];
+function difficultyOf(L){if(L<=CURVE50.length)return CURVE50[L-1][0];let d=CADENCE[(L-1)%10];
   if(L<=10)d=Math.min(d,[2,2,3,3,2,3,4,3,4,5][L-1]);   // tutorial band: gentle
   else if(L<=20)d=Math.min(d,7);                          // soften first real peak
   return d}
 
 /* grid size grows by band and by the cadence inside the band */
 function gridOf(L,d){   // [shelves, books per shelf] — the bookcase grows level by level
+  if(L<=CURVE50.length)return CURVE50[L-1].slice(1,3);
   if(L<=2)return[2,4];if(L<=5)return[2,5];
   if(L<=10)return d>=4?[3,5]:[2,6];
   if(L<=20)return d>=6?[3,6]:[3,5];
@@ -427,12 +412,21 @@ function modsOf(L,d,n){const m={locks:0,lockHp:1,links:0,hidden:0,stars:0,ticks:
   const types=['stars','hidden','ribbons','locks','ticking'];const primary=types[(Math.floor(L/10)+offsets.indexOf(off))%types.length];add(primary);
   if(d>=7&&off===7)add(primary==='hidden'?'stars':'hidden');if(primary==='locks'&&L%40===2)add('keyBook');return m}
 function levelDef(L){const baseD=difficultyOf(L),d=L===80?6:baseD,[rows,cols]=gridOf(L,baseD),n=rows*cols;
-  return{L,d,role:ROLE[d]||'normal',rows,cols,n,slack:slackOf(d),mods:modsOf(L,d,n),art:ART[(L-1)%ART.length],seed:L*7919+13,
+  return{L,d,role:ROLE[d]||'normal',rows,cols,n,slack:slackOf(d),mods:modsOf(L,d,n),art:ART[(L-1)%ART.length],seed:L<=CURVE50.length?CURVE50[L-1][3]:L*7919+13,
     badge:d>=9?'Super Hard':d>=7?'Hard':'',reward:d>=9?140:d>=7?100:d>=6?80:55}}
 
 /* deterministic RNG */
 function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
+/* Level Atlas: the atlas page saves its 300 level rows and the playable plays exactly that row */
+const ATLAS_ROWS=(()=>{try{const r=typeof localStorage!=='undefined'&&JSON.parse(localStorage.getItem('bookshelf_atlas_play_v1')||'null');return Array.isArray(r)?r:null}catch(e){return null}})();
+if(ATLAS_ROWS){const artByN=new Map(ART.map(a=>[Number(a.file.split('/').pop().split('_')[0]),a])),baseLevelDef=levelDef;
+  levelDef=function(L){const r=ATLAS_ROWS[L-1];if(!r)return baseLevelDef(L);const d=r.difficulty;
+    return{L,d,role:ROLE[d]||'normal',rows:r.shelves,cols:r.books/r.shelves,n:r.books,slack:slackOf(d),
+      mods:{locks:r.locks,lockHp:r.lockHp,links:r.ribbons,hidden:r.hidden,stars:r.stars,ticks:r.ticking,tickN:r.tickingTurns,keyBook:r.keyBook},
+      art:artByN.get(r.n)||ART[(L-1)%ART.length],seed:L*7919+13+r.variant*100003,
+      badge:d>=9?'Super Hard':d>=7?'Hard':'',reward:d>=9?140:d>=7?100:d>=6?80:55}}}
+function atlasMovesOf(L){const r=ATLAS_ROWS&&ATLAS_ROWS[L-1];return r?r.moves:NaN}
 if(typeof module!=='undefined')module.exports={MECH,THEMES,themeOf,FRAME_MIN,MOVE_K_FRAME,ART,CADENCE,difficultyOf,gridOf,slackOf,modsOf,levelDef,rng};
 
 /* gallery sets of 10 (patch_gallery_sets.py, 2026-10-23) */

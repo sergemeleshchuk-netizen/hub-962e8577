@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Bookshelf Art Review</title>
-<meta name="description" content="All Bookshelf paintings as one reorderable grid, 10 per row.">
+<title>Bookshelf Level Atlas</title>
+<meta name="description" content="All 300 Bookshelf levels from the game config sheet: reorder, ease, copy back to the sheet.">
 <style>
 :root{--bg:#17120e;--panel:#241b15;--panel2:#2e241c;--line:#4a3a2c;--text:#f1e6d6;--muted:#b49f88;--brass:#d2ab63;--accent:#e2b86a;--danger:#d26b5a}
 *{box-sizing:border-box}
@@ -76,24 +76,49 @@ footer{position:fixed;left:0;right:0;bottom:0;background:rgba(23,18,14,.95);bord
 #lb .ctl{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 #lb input{width:64px;font:inherit;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:8px;padding:6px 8px}
 @media (max-width:900px){#lb.on{grid-template-columns:1fr;overflow:auto}#lb .imgbox{height:auto}#lb img{max-height:60vh}}
+
+.tile .lv{position:absolute;left:5px;top:22px;display:flex;gap:3px;font-size:10px;font-weight:700}
+.tile .lv b{border-radius:5px;padding:1px 4px;background:rgba(0,0,0,.6);color:#fff}
+.tile .lv b.d{color:#1b1309}
+.d-e{background:#7fcf8e!important}.d-m{background:#e8c25e!important}.d-h{background:#ec8a55!important}.d-s{background:#e5574a!important}
+.tile.reserve{opacity:.55}
+.tile.reserve .pos{font-size:11px}
+.tile.edited{border-color:#79bce8}
+.tile.warn::after{content:"!";position:absolute;right:5px;bottom:40px;width:16px;height:16px;border-radius:50%;background:var(--danger);color:#fff;font:700 11px/16px system-ui;text-align:center}
+[hidden]{display:none!important}
+.reserve-sep{grid-column:1/-1;color:var(--muted);font-size:12px;padding:10px 0 2px;border-top:1px dashed var(--line)}
+.edit{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.edit label{display:flex;flex-direction:column;gap:2px;font-size:10px;color:var(--muted)}
+.edit input,.edit select{font:inherit;font-size:13px;width:100%;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:7px;padding:4px 6px}
+.edit input.ch,.edit select.ch{border-color:#79bce8;background:#1d2c38}
+.mechs{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:11px;color:var(--text)}
+.mechs label{display:flex;align-items:center;gap:4px}
+.mechs label.ch{color:#9fd0f2}
+.mechs input[type=number]{width:44px;font:inherit;font-size:11px;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:6px;padding:1px 4px}
+.warns{font-size:11px;color:#ffb3a8;display:flex;flex-direction:column;gap:2px}
+.row-btns{display:flex;gap:6px;flex-wrap:wrap}
+#pastePanel{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:25;display:flex;align-items:center;justify-content:center;padding:16px}
+#pastePanel .box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;width:min(720px,100%);display:flex;flex-direction:column;gap:10px}
+#pastePanel textarea{width:100%;height:240px;font:12px/1.3 ui-monospace,Menlo,monospace;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px}
+#pasteMsg{font-size:12px;color:var(--muted)}
 </style>
 </head>
 <body>
 <header><div class="hwrap">
-  <div><h1>Bookshelf · Art Review</h1><div class="sub" id="sub"></div></div>
+  <div><h1>Bookshelf · Level Atlas</h1><div class="sub" id="sub"></div></div>
   <span id="sum"></span>
   <div class="spacer"></div>
-  <label class="sub">Sort: <select id="sortSel"><option value="custom">my order</option><option value="n">original №</option><option value="v">readability V</option><option value="album">album</option><option value="grade">grade 🔴→🟢</option></select></label>
-  <label class="sub">Highlight: <select id="gradeSel"><option value="all">all</option><option value="R">🔴 redo</option><option value="Y">🟡 caveats</option><option value="G">🟢 good</option></select></label>
+  <label class="sub">Sort: <select id="sortSel"><option value="custom">level order</option><option value="n">original №</option><option value="v">readability V</option><option value="album">album</option><option value="grade">grade 🔴→🟢</option></select></label>
+  <label class="sub">Highlight: <select id="gradeSel"><option value="all">all</option><option value="R">🔴 redo</option><option value="Y">🟡 caveats</option><option value="G">🟢 good</option><option value="changed">changed vs sheet</option></select></label>
   <span class="status" id="status"></span>
 </div></header>
 
 <main>
   <section class="curve-panel" aria-label="Difficulty curve">
     <div>
-      <div class="curve-heading"><h2>Difficulty curve · 350 levels</h2><small>Click a point to inspect its painting</small></div>
-      <svg id="curveSvg" viewBox="0 0 900 180" role="img" aria-label="Configured difficulty for levels 1 to 350"></svg>
-      <div class="curve-legend"><span><i style="background:#e2b86a"></i>difficulty 2-9</span><span><i style="background:#79bce8"></i>moves (clean path + spare)</span><span><i style="background:#b48ae4"></i>mechanic</span></div>
+      <div class="curve-heading"><h2>Difficulty curve · 300 levels</h2><small>Click a point or a tile to edit that level</small></div>
+      <svg id="curveSvg" viewBox="0 0 900 180" role="img" aria-label="Difficulty and moves for levels 1 to 300"></svg>
+      <div class="curve-legend"><span><i style="background:#e2b86a"></i>difficulty 2-9</span><span><i style="background:#79bce8"></i>moves</span><span><i style="background:#b48ae4"></i>mechanic</span><span><i style="background:#9fd0f2;height:8px;width:8px;border-radius:50%"></i>changed vs sheet</span></div>
     </div>
     <div class="curve-detail" id="curveDetail"></div>
   </section>
@@ -101,14 +126,19 @@ footer{position:fixed;left:0;right:0;bottom:0;background:rgba(23,18,14,.95);bord
 </main>
 
 <footer><div class="fwrap">
-  <button class="primary" id="btnCopy">Copy order</button>
-  <button id="btnSave">Save order</button>
-  <button id="btnExport">Export JSON</button>
-  <button id="btnImport">Import JSON</button>
-  <input type="file" id="fileIn" accept="application/json" hidden>
-  <button class="danger" id="btnReset">Reset to game order</button>
-  <span class="hint">Drag a tile and drop it on another tile (left half = before, right half = after). “Copy order” puts the order into the clipboard as painting numbers; paste it to Claude. Click a tile for the big preview and the verdict. Dot: 🔴 crowds of identical objects or flat areas, 🟡 partly, 🟢 every zone distinct. Orange frame = moved.</span>
+  <button class="primary" id="btnCopy">Copy for sheet</button>
+  <button id="btnLoad">Load from sheet</button>
+  <button class="danger" id="btnReset">Reset to sheet</button>
+  <span class="hint">Drag a tile onto another (left half = before, right half = after), or open it and use “swap with level”: the level moves with its painting, difficulty, board and moves. Click a tile or the curve to edit that level. Your edits stay in this browser. “Copy for sheet” copies all 300 rows in the BookshelfLevels format: paste them into A1 of that tab. Orange frame = level moved, blue = settings changed.</span>
 </div></footer>
+
+<div id="pastePanel" hidden><div class="box">
+  <b>Load the BookshelfLevels tab</b>
+  <div class="sub">In the sheet: open the BookshelfLevels tab, press Cmd+A, Cmd+C, then paste here. This replaces the atlas data and your edits.</div>
+  <textarea id="pasteTa" placeholder="level	difficulty	books	shelves	moves	variant	artId	…"></textarea>
+  <div id="pasteMsg"></div>
+  <div class="row-btns"><button class="primary" id="pasteOk">Load</button><button id="pasteCancel">Cancel</button></div>
+</div></div>
 
 <div id="lb">
   <div class="imgbox"><img id="lbImg" alt=""></div>
@@ -119,110 +149,192 @@ footer{position:fixed;left:0;right:0;bottom:0;background:rgba(23,18,14,.95);bord
     <div id="lbGrade"></div>
     <div class="note" id="lbNote"></div>
     <div class="note" id="lbLevel"></div>
-    <button class="primary" id="lbPlay">▶ Play this painting at this level</button>
-    <div class="ctl">move to № <input type="number" id="lbPosIn" min="1"> <button id="lbFirst">⇈ first</button></div>
+    <div class="row-btns"><button class="primary" id="lbPlay">▶ Play this level</button><button id="lbEdit">Edit level</button></div>
+    <div class="ctl">swap with level <input type="number" id="lbSwapIn" min="1"> <button id="lbSwap">⇄ swap</button></div>
+    <div class="ctl">move to level <input type="number" id="lbPosIn" min="1"> <button id="lbFirst">⇈ first</button></div>
     <div class="nav"><button id="lbPrev">← prev</button><button id="lbNext">next →</button><button id="lbClose">close (Esc)</button></div>
   </div>
 </div>
 
 <script src="data.js"></script>
-<script src="game_order.js"></script>
 <script src="review.js"></script>
-<script src="curve_data.js"></script>
+<script src="sheet_data.js"></script>
 <script>
 (function(){
-  const P = window.PAINTINGS, RV = window.REVIEW || {}; const byId = {}; P.forEach(p => byId[p.id] = p);
+  const P = window.PAINTINGS, RV = window.REVIEW || {}; const byId = {}, byN = {}; P.forEach(p => { byId[p.id] = p; byN[p.n] = p; });
   const GL = {R:'🔴 redo for puzzle',Y:'🟡 ok with caveats',G:'🟢 good for puzzle'};
-  /* base order = the order the game uses right now (game_order.js is written by build_v12.py from order_v12.txt) */
-  const GO = (window.GAME_ORDER || []).map(n => (P.find(p => p.n === n) || {}).id).filter(Boolean);
-  const orig = GO.concat(P.map(p => p.id).filter(id => !GO.includes(id)));
-  const KEY = 'bookshelf_review_order_v2_' + orig.join(',').length + '_' + orig.slice(0, 20).join('.');
-  let order = orig.slice(), saved = orig.slice(), sortMode = 'custom', gradeF = 'all', selectedLevel = 1;
-  try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (Array.isArray(s) && s.length === orig.length && s.every(id => byId[id])) { order = s.slice(); saved = s.slice(); } } catch (e) {}
+  const COLS = ['level','difficulty','books','shelves','moves','variant','artId','locks','lockHp','ribbons','hidden','stars','ticking','tickingTurns','keyBook'];
+  const FIELDS = COLS.filter(k => k !== 'level' && k !== 'artId');
+  const BOARD = ['books','shelves','variant','locks','lockHp','ribbons','hidden','stars','ticking','tickingTurns','keyBook'];
+  const INTRO = {stars:31,hidden:41,ribbons:51,locks:61,ticking:71,keyBook:80};
+  const MECH = [['stars','Star book'],['hidden','Hidden book'],['ribbons','Tied books'],['locks','Locked book'],['ticking','Ticking book'],['keyBook','Key book']];
+  const MAXV = 39, SHELVES = [2,6], PER = [4,9];
   const $ = s => document.querySelector(s); const grid = $('#grid'), status = $('#status');
-  const dirty = () => order.some((id, i) => id !== saved[i]);
+  const pick = r => { const c = {}; FIELDS.forEach(k => c[k] = r[k]); return c; };
+
+  /* the sheet: which painting plays each level and how. artId is the Unity id (8 letters max) */
+  let SHEET, artIdOfN, LEVELS;
+  function loadSheet(rows){
+    SHEET = rows.map(r => Object.assign({}, r)); LEVELS = SHEET.length; artIdOfN = {};
+    SHEET.forEach(r => artIdOfN[r.n] = r.artId);
+  }
+  const SHEET_KEY = 'bookshelf_atlas_sheet_v1', DRAFT_KEY = 'bookshelf_atlas_draft_v1';
+  let sheetRows = window.SHEET_LEVELS || [];
+  try { const s = JSON.parse(localStorage.getItem(SHEET_KEY) || 'null'); if (s && s.base === JSON.stringify(sheetRows).length && Array.isArray(s.rows)) sheetRows = s.rows; } catch (e) {}
+  loadSheet(sheetRows);
+  const sheetIds = () => SHEET.map(r => byN[r.n].id);
+  const fresh = () => { const ids = sheetIds(); const order = ids.concat(P.map(p => p.id).filter(id => !ids.includes(id))); const cfg = {}; SHEET.forEach(r => cfg[byN[r.n].id] = pick(r)); return {order, cfg}; };
+  let st = fresh();
+  try { const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+    if (d && Array.isArray(d.order) && d.order.length === P.length && d.order.every(id => byId[id]) && d.cfg) st = {order: d.order, cfg: d.cfg}; } catch (e) {}
+  const saveDraft = () => { try { localStorage.setItem(DRAFT_KEY, JSON.stringify(st)); } catch (e) {} };
+
+  let sortMode = 'custom', gradeF = 'all', selectedLevel = 1;
   const gr = id => (RV[byId[id].n] || {}).g || '';
   const GR = {R:0,Y:1,G:2};
+  const cat = d => d >= 9 ? 's' : d >= 7 ? 'h' : d >= 4 ? 'm' : 'e';
+  const CATN = {e:'Easy',m:'Medium',h:'Hard',s:'Super Hard'};
+  /* one level as the sheet will see it */
+  function rowAt(L){ const id = st.order[L-1], c = st.cfg[id]; if (!c) return null; const p = byId[id];
+    return Object.assign({level: L, artId: artIdOfN[p.n] || p.id.slice(0, 8), n: p.n, id}, c); }
+  /* moved: another painting than the sheet has at this level. fields: settings changed against the painting's own sheet row */
+  const ownRow = n => SHEET.find(x => x.n === n);
+  function diffOf(L){ const r = rowAt(L), s = SHEET[L-1]; if (!r || !s) return {moved:false, fields:[]};
+    const own = ownRow(r.n); return {moved: r.n !== s.n, fields: own ? FIELDS.filter(k => r[k] !== own[k]) : []}; }
+  /* the solver's moves stay valid only while the board is the one the sheet solved: same level number, variant, grid, mechanics */
+  function requiredOf(L){ const r = rowAt(L); if (!r) return null; const s = SHEET.find(x => x.n === r.n);
+    if (!s || s.level !== L || !Number.isFinite(s.required) || BOARD.some(k => r[k] !== s[k])) return null; return s.required; }
+  function warnsOf(L){ const r = rowAt(L), w = []; if (!r) return w;
+    MECH.forEach(([k, name]) => { if (r[k] && L < INTRO[k]) w.push(`${name} before level ${INTRO[k]}, where the game teaches it`); });
+    if (r.books % r.shelves) w.push('books must split evenly over the shelves');
+    else { const per = r.books / r.shelves; if (per < PER[0] || per > PER[1]) w.push(`${per} books per shelf: allowed ${PER[0]}-${PER[1]}`); }
+    if (r.shelves < SHELVES[0] || r.shelves > SHELVES[1]) w.push(`shelves allowed ${SHELVES[0]}-${SHELVES[1]}`);
+    if (r.variant < 0 || r.variant > MAXV) w.push(`variant allowed 0-${MAXV}`);
+    if (r.moves < r.books) w.push('fewer moves than books');
+    const req = requiredOf(L); if (req != null && r.moves < req) w.push(`fewer moves than the solver needs (${req})`);
+    if (!artIdOfN[r.n]) w.push(`painting “${byId[r.id].title}” is not in the BookshelfPaintings tab yet`);
+    return w; }
+
   function view(){
-    const arr = order.slice();
+    const arr = st.order.slice();
     if (sortMode === 'n') arr.sort((a, b) => byId[a].n - byId[b].n);
     if (sortMode === 'v') arr.sort((a, b) => byId[a].v - byId[b].v || byId[a].n - byId[b].n);
     if (sortMode === 'album') arr.sort((a, b) => byId[a].album.localeCompare(byId[b].album) || byId[a].n - byId[b].n);
     if (sortMode === 'grade') arr.sort((a, b) => (GR[gr(a)] ?? 3) - (GR[gr(b)] ?? 3) || byId[a].v - byId[b].v);
     return arr;
   }
+  function changedCount(){ let moved = 0, edited = 0, warn = 0;
+    for (let L = 1; L <= LEVELS; L++){ const d = diffOf(L); if (d.moved) moved++; if (d.fields.length) edited++; if (warnsOf(L).length) warn++; }
+    return {moved, edited, warn}; }
   function setStatus(){
-    const d = dirty(); status.textContent = d ? 'unsaved changes' : (saved.some((id, i) => id !== orig[i]) ? 'saved (custom order)' : 'original order');
-    status.className = 'status' + (d ? ' dirty' : ''); $('#btnSave').disabled = !d;
-    const cnt = {R:0,Y:0,G:0}; P.forEach(p => { const g = (RV[p.n]||{}).g; if (g) cnt[g]++; });
-    $('#sum').innerHTML = `<span class="grade R">🔴 ${cnt.R}</span> <span class="grade Y">🟡 ${cnt.Y}</span> <span class="grade G">🟢 ${cnt.G}</span>`;
-    $('#sub').textContent = `${P.length} paintings · order = game v12 (level 1, 2, 3…) · 10 per row · ${sortMode === 'custom' ? 'drag to rank' : 'sorted view (drag disabled, switch to “my order”)'}`;
+    const c = changedCount();
+    status.textContent = c.moved || c.edited ? `vs sheet: ${c.moved} moved · ${c.edited} edited${c.warn ? ` · ${c.warn} with warnings` : ''}` : (c.warn ? `${c.warn} with warnings` : 'same as sheet');
+    status.className = 'status' + (c.moved || c.edited ? ' dirty' : '');
+    const cnt = {e:0,m:0,h:0,s:0}; for (let L = 1; L <= LEVELS; L++){ const r = rowAt(L); if (r) cnt[cat(r.difficulty)]++; }
+    $('#sum').innerHTML = `<span class="grade" style="background:#24402b;color:#a9e6b6">Easy ${cnt.e}</span> <span class="grade Y">Medium ${cnt.m}</span> <span class="grade" style="background:#5a3420;color:#ffc29a">Hard ${cnt.h}</span> <span class="grade R">Super Hard ${cnt.s}</span>`;
+    $('#sub').textContent = `${LEVELS} levels from the config sheet + ${P.length - LEVELS} reserve paintings · ${sortMode === 'custom' ? 'drag to reorder' : 'sorted view (drag disabled, switch to “level order”)'}`;
   }
+  /* the level travels with its painting. A reserve painting that enters the 300 takes over the settings of the level it pushed out */
   function moveTo(id, pos){
-    const from = order.indexOf(id); if (from < 0) return;
-    pos = Math.max(0, Math.min(order.length - 1, pos)); order.splice(from, 1); order.splice(pos, 0, id); render();
+    const o = st.order, from = o.indexOf(id); if (from < 0) return;
+    pos = Math.max(0, Math.min(o.length - 1, pos)); o.splice(from, 1); o.splice(pos, 0, id);
+    for (let i = 0; i < LEVELS; i++) if (!st.cfg[o[i]]) { const out = o.slice(LEVELS).find(x => st.cfg[x]); if (out) { st.cfg[o[i]] = st.cfg[out]; delete st.cfg[out]; } }
+    selectedLevel = o.indexOf(id) + 1 <= LEVELS ? o.indexOf(id) + 1 : selectedLevel;
+    saveDraft(); render();
   }
-  const curve = window.LEVEL_CURVE || [];
-  const MECH_NAME = {stars:'Star book',hidden:'Hidden book',links:'Tied books',locks:'Locked book',ticks:'Ticking book',keyBook:'Key book'};
-  function syncPlayOrder(){try{localStorage.setItem('bookshelf_play_order_v1',JSON.stringify(order.map(id=>byId[id].n)))}catch(e){}}
-  function launchLevel(level){
-    syncPlayOrder();
-    const art=byId[order[level-1]];
-    window.open(`playable/index.html?level=${level}&art=${art.n}`,'_blank','noopener');
-  }
+  /* two levels trade places, each with its own painting and settings */
+  function swapLevels(a, b){ const o = st.order; if (a === b || a < 1 || b < 1 || a > LEVELS || b > LEVELS) return;
+    [o[a-1], o[b-1]] = [o[b-1], o[a-1]]; selectedLevel = b; saveDraft(); render(); }
+  function setField(L, k, v){ const id = st.order[L-1]; if (!st.cfg[id]) return; st.cfg[id][k] = v; saveDraft(); render(); }
+  function resetLevel(L){ const id = st.order[L-1], s = SHEET.find(x => byN[x.n].id === id); if (s) { st.cfg[id] = pick(s); saveDraft(); render(); } }
+  function syncPlay(){ const rows = []; for (let L = 1; L <= LEVELS; L++) rows.push(rowAt(L)); try { localStorage.setItem('bookshelf_atlas_play_v1', JSON.stringify(rows)); } catch (e) {} }
+  function launchLevel(level){ syncPlay(); window.open(`playable/index.html?level=${level}`, '_blank', 'noopener'); }
+
   function renderCurve(){
-    if(curve.length!==order.length)return;
-    const svg=$('#curveSvg'), x=L=>32+(L-1)*850/349, yD=d=>140-(d-2)*15.5, yM=m=>140-m*1.45;
-    const path=(key,y)=>curve.map((r,i)=>`${i?'L':'M'}${x(r.level).toFixed(1)},${y(r[key]).toFixed(1)}`).join(' ');
-    const selected=curve[selectedLevel-1];
-    svg.innerHTML=`<g stroke="#4a3a2c" stroke-width="1">${[2,4,6,8].map(d=>`<line x1="32" x2="882" y1="${yD(d)}" y2="${yD(d)}"/>`).join('')}</g>
-      <g fill="#b49f88" font-size="10" font-family="system-ui"><text x="3" y="${yD(9)+4}">9</text><text x="3" y="${yD(2)+4}">2</text>${[1,50,100,150,200,250,300,350].map(L=>`<text x="${x(L)}" y="163" text-anchor="middle">${L}</text>`).join('')}</g>
-      <path d="${path('moves',yM)}" fill="none" stroke="#79bce8" stroke-opacity=".67" stroke-width="1.5"/>
-      <path d="${path('difficulty',yD)}" fill="none" stroke="#e2b86a" stroke-width="2.2"/>
-      ${curve.filter(r=>r.mechanics.length).map(r=>`<circle cx="${x(r.level)}" cy="${yD(r.difficulty)}" r="2.5" fill="#b48ae4"/>`).join('')}
+    const svg = $('#curveSvg'), N = LEVELS, x = L => 32 + (L - 1) * 850 / (N - 1), yD = d => 140 - (d - 2) * 15.5;
+    const rows = []; for (let L = 1; L <= N; L++) rows.push(rowAt(L));
+    const maxM = Math.max(...rows.map(r => r.moves)), yM = m => 140 - m * 125 / maxM;
+    const path = (key, y) => rows.map((r, i) => `${i ? 'L' : 'M'}${x(r.level).toFixed(1)},${y(r[key]).toFixed(1)}`).join(' ');
+    const sel = rows[selectedLevel - 1];
+    svg.innerHTML = `<g stroke="#4a3a2c" stroke-width="1">${[2,4,6,8].map(d => `<line x1="32" x2="882" y1="${yD(d)}" y2="${yD(d)}"/>`).join('')}</g>
+      <g fill="#b49f88" font-size="10" font-family="system-ui"><text x="3" y="${yD(9)+4}">9</text><text x="3" y="${yD(2)+4}">2</text>${[1,50,100,150,200,250,300].filter(L => L <= N).map(L => `<text x="${x(L)}" y="163" text-anchor="middle">${L}</text>`).join('')}</g>
+      <path d="${path('moves', yM)}" fill="none" stroke="#79bce8" stroke-opacity=".67" stroke-width="1.5"/>
+      <path d="${path('difficulty', yD)}" fill="none" stroke="#e2b86a" stroke-width="2.2"/>
+      ${rows.filter(r => MECH.some(([k]) => r[k])).map(r => `<circle cx="${x(r.level)}" cy="${yD(r.difficulty)}" r="2.5" fill="#b48ae4"/>`).join('')}
+      ${rows.filter(r => { const d = diffOf(r.level); return d.moved || d.fields.length; }).map(r => `<circle cx="${x(r.level)}" cy="${yD(r.difficulty)}" r="3.2" fill="none" stroke="#9fd0f2" stroke-width="1.5"/>`).join('')}
       <line x1="${x(selectedLevel)}" x2="${x(selectedLevel)}" y1="15" y2="141" stroke="#fff2c8" stroke-opacity=".8"/>
-      <circle cx="${x(selectedLevel)}" cy="${yD(selected.difficulty)}" r="5" fill="#fff2c8" stroke="#593a20" stroke-width="2"/>
-      ${curve.map(r=>`<rect class="curve-hit" data-level="${r.level}" x="${x(r.level)-1.25}" y="10" width="2.5" height="133"><title>Level ${r.level} · d${r.difficulty} · ${r.moves} moves</title></rect>`).join('')}`;
-    svg.onclick=e=>{const bounds=svg.getBoundingClientRect(),point=(e.clientX-bounds.left)*900/bounds.width;
-      selectLevel(Math.round((point-32)*349/850)+1)};
-    const art=byId[order[selectedLevel-1]], mech=selected.mechanics.map(k=>MECH_NAME[k]).join(' · ');
-    $('#curveDetail').innerHTML=`<div class="level-no">Level ${selectedLevel}</div><div class="art-name"></div>
-      <div class="metrics"><div class="metric"><b>${selected.difficulty}</b><span>difficulty</span></div><div class="metric"><b>${selected.moves}</b><span>moves</span></div><div class="metric"><b>${selected.books}</b><span>books</span></div></div>
-      <div class="curve-note">${selected.rows} shelves × ${selected.cols} books · clean path ${selected.cleanMoves} moves · +${selected.moves-selected.cleanMoves} spare moves</div>
-      <div class="mechanics">${mech||'No extra mechanics'}</div><button class="primary" id="curvePlay">▶ Play level ${selectedLevel}</button>`;
-    $('#curveDetail .art-name').textContent=art.title;
-    $('#curvePlay').onclick=()=>launchLevel(selectedLevel);
+      <circle cx="${x(selectedLevel)}" cy="${yD(sel.difficulty)}" r="5" fill="#fff2c8" stroke="#593a20" stroke-width="2"/>
+      ${rows.map(r => `<rect class="curve-hit" data-level="${r.level}" x="${x(r.level) - 1.5}" y="10" width="3" height="133"><title>Level ${r.level} · d${r.difficulty} · ${r.moves} moves</title></rect>`).join('')}`;
+    svg.onclick = e => { const b = svg.getBoundingClientRect(), pt = (e.clientX - b.left) * 900 / b.width; selectLevel(Math.round((pt - 32) * (N - 1) / 850) + 1); };
+    renderDetail();
+  }
+  function renderDetail(){
+    const L = selectedLevel, r = rowAt(L), s = ownRow(r.n) || {}, d = diffOf(L), req = requiredOf(L), w = warnsOf(L), p = byId[r.id];
+    const ch = k => d.fields.includes(k) ? ' ch' : '';
+    const per = r.books / r.shelves;
+    const num = (k, label, min, max, val = r[k]) => `<label>${label}<input type="number" data-k="${k}" class="${ch(k).trim()}" min="${min}" max="${max}" value="${val}"></label>`;
+    const sl = SHEET[L-1], fromSheet = sl && sl.n !== r.n ? `<div class="curve-note">Moved: in the sheet this painting is ${s.level ? 'level ' + s.level : 'not in the game'}, and level ${L} is “${byN[sl.n].title}”.</div>` : '';
+    $('#curveDetail').innerHTML = `<div class="level-no">Level ${L} <small class="sub">${CATN[cat(r.difficulty)]}</small></div><div class="art-name"></div>${fromSheet}
+      <div class="edit">
+        <label>difficulty<select data-k="difficulty" class="${ch('difficulty').trim()}">${[2,3,4,5,6,7,8,9].map(v => `<option${v === r.difficulty ? ' selected' : ''}>${v}</option>`).join('')}</select></label>
+        ${num('moves', 'moves', 1, 200)}
+        ${num('variant', 'variant (shuffle)', 0, MAXV)}
+        ${num('shelves', 'shelves', SHELVES[0], SHELVES[1])}
+        <label>books per shelf<input type="number" data-k="per" class="${ch('books').trim()}" min="${PER[0]}" max="${PER[1]}" value="${Number.isInteger(per) ? per : ''}"></label>
+        <label>books<input type="number" value="${r.books}" disabled></label>
+      </div>
+      <div class="mechs">${MECH.map(([k, name]) => `<label class="${ch(k).trim()}"><input type="checkbox" data-k="${k}"${r[k] ? ' checked' : ''}>${name}</label>`).join('')}
+        ${r.locks ? `<label class="${ch('lockHp').trim()}">lock hp <input type="number" data-k="lockHp" min="1" max="5" value="${r.lockHp}"></label>` : ''}
+        ${r.ticking ? `<label class="${ch('tickingTurns').trim()}">ticking turns <input type="number" data-k="tickingTurns" min="2" max="20" value="${r.tickingTurns}"></label>` : ''}</div>
+      <div class="curve-note">${req != null ? `Solver: clean path ${req} moves · +${r.moves - req} spare (${Math.round((r.moves / req - 1) * 100)}%)` : 'Board changed (level number, variant, grid or mechanics): the Unity import solves it again and checks the moves.'}</div>
+      ${d.fields.length ? `<div class="curve-note">Sheet had: ${d.fields.map(k => `${k} ${s[k]}`).join(' · ')}</div>` : ''}
+      ${w.length ? `<div class="warns">${w.map(x => `<span>⚠ ${x}</span>`).join('')}</div>` : ''}
+      <div class="row-btns"><button class="primary" id="curvePlay">▶ Play level ${L}</button>${d.fields.length ? '<button id="curveReset">Undo edits</button>' : ''}</div>`;
+    $('#curveDetail .art-name').textContent = p.title;
+    $('#curveDetail').querySelectorAll('[data-k]').forEach(el => el.onchange = () => {
+      const k = el.dataset.k;
+      if (el.type === 'checkbox') return setField(L, k, el.checked ? 1 : 0);
+      const v = Math.round(+el.value); if (!Number.isFinite(v)) return;
+      if (k === 'per') return setField(L, 'books', v * r.shelves);
+      if (k === 'shelves') { const id = st.order[L-1]; st.cfg[id].books = v * (Number.isInteger(per) ? per : Math.round(r.books / v)); }
+      setField(L, k, v);
+    });
+    $('#curvePlay').onclick = () => launchLevel(L);
+    if ($('#curveReset')) $('#curveReset').onclick = () => resetLevel(L);
   }
   function selectLevel(level){
-    selectedLevel=Math.max(1,Math.min(order.length,level));
-    document.querySelectorAll('.tile.selected').forEach(el=>el.classList.remove('selected'));
-    const tile=grid.querySelector(`.tile[data-id="${order[selectedLevel-1]}"]`);if(tile)tile.classList.add('selected');
+    selectedLevel = Math.max(1, Math.min(LEVELS, level));
+    document.querySelectorAll('.tile.selected').forEach(el => el.classList.remove('selected'));
+    const tile = grid.querySelector(`.tile[data-id="${st.order[selectedLevel-1]}"]`); if (tile) tile.classList.add('selected');
     renderCurve();
   }
   let dragId = null;
   function render(){
-    setStatus(); syncPlayOrder(); const arr = view(); grid.innerHTML = '';
-    arr.forEach(id => {
-      const p = byId[id], pos = order.indexOf(id), g = gr(id);
-      const t = document.createElement('div'); t.className = 'tile' + (id !== orig[pos] ? ' moved' : '') + (gradeF !== 'all' && g !== gradeF ? ' dim' : '') + (pos+1===selectedLevel ? ' selected' : '');
+    setStatus(); const arr = view(); grid.innerHTML = '';
+    arr.forEach((id, i) => {
+      const p = byId[id], pos = st.order.indexOf(id), L = pos + 1, g = gr(id), r = L <= LEVELS ? rowAt(L) : null, d = r ? diffOf(L) : {moved:false, fields:[]};
+      if (sortMode === 'custom' && pos === LEVELS) { const sep = document.createElement('div'); sep.className = 'reserve-sep'; sep.textContent = 'Reserve: paintings that are not in the game. Drag one into the levels to replace a painting; it takes over that level’s settings.'; grid.appendChild(sep); }
+      const dim = gradeF === 'changed' ? !(d.moved || d.fields.length) : (gradeF !== 'all' && g !== gradeF);
+      const t = document.createElement('div');
+      t.className = 'tile' + (d.moved ? ' moved' : '') + (!d.moved && d.fields.length ? ' edited' : '') + (r ? '' : ' reserve') + (r && warnsOf(L).length ? ' warn' : '') + (dim ? ' dim' : '') + (L === selectedLevel ? ' selected' : '');
       t.dataset.id = id; t.draggable = sortMode === 'custom';
-      t.innerHTML = `<img loading="lazy" src="${p.file}" alt="${p.title}"><span class="pos">${pos + 1}</span><span class="orig">№${p.n}</span><span class="dot ${g}" title="${GL[g]||''}"></span><button class="play-tile" title="Play level ${pos+1}">▶</button><div class="cap">${p.title}</div>`;
-      t.querySelector('.play-tile').onclick=e=>{e.stopPropagation();launchLevel(pos+1)};
+      t.innerHTML = `<img loading="lazy" src="${p.file}" alt=""><span class="pos">${r ? L : 'reserve'}</span><span class="orig">№${p.n}</span>${r ? `<span class="lv"><b class="d d-${cat(r.difficulty)}">d${r.difficulty}</b><b>${r.moves}m</b><b>${r.shelves}×${r.books / r.shelves}</b></span>` : ''}<span class="dot ${g}" title="${GL[g] || ''}"></span>${r ? `<button class="play-tile" title="Play level ${L}">▶</button>` : ''}<div class="cap"></div>`;
+      t.querySelector('img').alt = p.title; t.querySelector('.cap').textContent = p.title;
+      if (r) t.querySelector('.play-tile').onclick = e => { e.stopPropagation(); launchLevel(L); };
       t.ondragstart = e => { if (sortMode !== 'custom') { e.preventDefault(); return; } dragId = id; t.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', id); };
       t.ondragend = () => { dragId = null; document.querySelectorAll('.dragging,.over-l,.over-r').forEach(x => x.classList.remove('dragging', 'over-l', 'over-r')); };
-      t.ondragover = e => { if (!dragId || dragId === id) return; e.preventDefault(); const r = t.getBoundingClientRect(); const left = e.clientX < r.left + r.width / 2; t.classList.toggle('over-l', left); t.classList.toggle('over-r', !left); };
+      t.ondragover = e => { if (!dragId || dragId === id) return; e.preventDefault(); const b = t.getBoundingClientRect(); const left = e.clientX < b.left + b.width / 2; t.classList.toggle('over-l', left); t.classList.toggle('over-r', !left); };
       t.ondragleave = () => t.classList.remove('over-l', 'over-r');
-      t.ondrop = e => { e.preventDefault(); if (!dragId || dragId === id) return; const r = t.getBoundingClientRect(); const left = e.clientX < r.left + r.width / 2; const from = order.indexOf(dragId); let to = order.indexOf(id) + (left ? 0 : 1); if (from < to) to--; moveTo(dragId, to); dragId = null; };
-      t.onclick = () => openLb(arr, arr.indexOf(id));
-      // touch drag
+      t.ondrop = e => { e.preventDefault(); if (!dragId || dragId === id) return; const b = t.getBoundingClientRect(); const left = e.clientX < b.left + b.width / 2; const from = st.order.indexOf(dragId); let to = st.order.indexOf(id) + (left ? 0 : 1); if (from < to) to--; moveTo(dragId, to); dragId = null; };
+      t.onclick = () => { if (r) selectLevel(L); openLb(arr, arr.indexOf(id)); };
       t.addEventListener('pointerdown', e => {
         if (e.pointerType === 'mouse' || sortMode !== 'custom') return;
         let moved = false, target = null, left = true; const start = [e.clientX, e.clientY];
         const mv = ev => { if (Math.hypot(ev.clientX - start[0], ev.clientY - start[1]) < 8 && !moved) return; moved = true; t.classList.add('dragging'); ev.preventDefault();
           const el = document.elementFromPoint(ev.clientX, ev.clientY); const tile = el && el.closest('.tile'); document.querySelectorAll('.over-l,.over-r').forEach(x => x.classList.remove('over-l', 'over-r'));
-          target = tile && tile !== t ? tile : null; if (target) { const r = target.getBoundingClientRect(); left = ev.clientX < r.left + r.width / 2; target.classList.add(left ? 'over-l' : 'over-r'); } };
+          target = tile && tile !== t ? tile : null; if (target) { const b = target.getBoundingClientRect(); left = ev.clientX < b.left + b.width / 2; target.classList.add(left ? 'over-l' : 'over-r'); } };
         const up = () => { t.removeEventListener('pointermove', mv); t.removeEventListener('pointerup', up); t.removeEventListener('pointercancel', up); t.classList.remove('dragging');
-          if (moved && target) { const from = order.indexOf(id); let to = order.indexOf(target.dataset.id) + (left ? 0 : 1); if (from < to) to--; moveTo(id, to); } else if (!moved) { /* click handled by onclick */ } };
+          if (moved && target) { const from = st.order.indexOf(id); let to = st.order.indexOf(target.dataset.id) + (left ? 0 : 1); if (from < to) to--; moveTo(id, to); } };
         t.setPointerCapture(e.pointerId); t.addEventListener('pointermove', mv); t.addEventListener('pointerup', up); t.addEventListener('pointercancel', up);
       });
       grid.appendChild(t);
@@ -233,39 +345,62 @@ footer{position:fixed;left:0;right:0;bottom:0;background:rgba(23,18,14,.95);bord
   const lb = $('#lb'); let lbArr = [], lbI = 0;
   function openLb(arr, i){ lbArr = arr; lbI = i; showLb(); }
   function showLb(){
-    const id = lbArr[lbI], p = byId[id], r = RV[p.n];
-    $('#lbImg').src = p.file; $('#lbPos').textContent = order.indexOf(id) + 1; $('#lbTitle').textContent = p.title;
-    $('#lbMeta').textContent = `${p.after} · original №${p.n} · ${p.album} · V ${p.v.toFixed(2)} · ${p.file.replace('art/', '')}`;
-    $('#lbGrade').innerHTML = r ? `<span class="grade ${r.g}">${GL[r.g]}</span>` : '';
-    $('#lbNote').innerHTML = r ? `<b>Issue:</b> ${r.issue}${r.fix ? `<br><b>Fix:</b> ${r.fix}` : ''}` : '';
-    const level=order.indexOf(id)+1, cfg=curve[level-1];
-    $('#lbLevel').textContent=cfg?`Level ${level} · difficulty ${cfg.difficulty} · ${cfg.rows} × ${cfg.cols} = ${cfg.books} books · ${cfg.moves} moves · ${cfg.mechanics.map(k=>MECH_NAME[k]).join(', ')||'no extra mechanics'}`:'';
-    $('#lbPlay').onclick=()=>launchLevel(level);selectLevel(level);
-    $('#lbPosIn').value = order.indexOf(id) + 1; $('#lbPosIn').max = order.length; lb.classList.add('on');
+    const id = lbArr[lbI], p = byId[id], rv = RV[p.n], L = st.order.indexOf(id) + 1, r = L <= LEVELS ? rowAt(L) : null;
+    $('#lbImg').src = p.file; $('#lbPos').textContent = r ? `Level ${L}` : 'Reserve'; $('#lbTitle').textContent = p.title;
+    $('#lbMeta').textContent = `${p.after} · original №${p.n} · ${p.album} · V ${p.v.toFixed(2)} · ${p.file.replace('art/', '')}${artIdOfN[p.n] ? ` · artId ${artIdOfN[p.n]}` : ''}`;
+    $('#lbGrade').innerHTML = rv ? `<span class="grade ${rv.g}">${GL[rv.g]}</span>` : '';
+    $('#lbNote').innerHTML = rv ? `<b>Issue:</b> ${rv.issue}${rv.fix ? `<br><b>Fix:</b> ${rv.fix}` : ''}` : '';
+    $('#lbLevel').textContent = r ? `${CATN[cat(r.difficulty)]} · difficulty ${r.difficulty} · ${r.shelves} shelves × ${r.books / r.shelves} = ${r.books} books · ${r.moves} moves · variant ${r.variant} · ${MECH.filter(([k]) => r[k]).map(([, n]) => n).join(', ') || 'no extra mechanics'}` : 'Not in the game. Move it into levels 1-' + LEVELS + ' to use it.';
+    $('#lbPlay').hidden = !r; $('#lbEdit').hidden = !r;
+    $('#lbPlay').onclick = () => launchLevel(L); $('#lbEdit').onclick = () => { closeLb(); selectLevel(L); window.scrollTo({top: 0, behavior: 'smooth'}); };
+    $('#lbPosIn').value = Math.min(L, LEVELS); $('#lbPosIn').max = LEVELS; $('#lbSwapIn').max = LEVELS; $('#lbSwapIn').value = ''; $('#lbSwap').disabled = !r; lb.classList.add('on');
   }
   const closeLb = () => lb.classList.remove('on');
   $('#lbClose').onclick = closeLb; $('#lbImg').onclick = closeLb;
   $('#lbPrev').onclick = () => { lbI = (lbI - 1 + lbArr.length) % lbArr.length; showLb(); };
   $('#lbNext').onclick = () => { lbI = (lbI + 1) % lbArr.length; showLb(); };
-  $('#lbPosIn').onchange = e => { const id = lbArr[lbI]; moveTo(id, (+e.target.value || 1) - 1); lbArr = view(); lbI = lbArr.indexOf(id); showLb(); };
+  $('#lbPosIn').onchange = e => { const id = lbArr[lbI]; moveTo(id, Math.min(LEVELS, +e.target.value || 1) - 1); lbArr = view(); lbI = lbArr.indexOf(id); showLb(); };
+  $('#lbSwap').onclick = () => { const id = lbArr[lbI], L = st.order.indexOf(id) + 1; if (L > LEVELS) return; swapLevels(L, Math.round(+$('#lbSwapIn').value)); lbArr = view(); lbI = lbArr.indexOf(id); showLb(); };
   $('#lbFirst').onclick = () => { const id = lbArr[lbI]; moveTo(id, 0); lbArr = view(); lbI = lbArr.indexOf(id); showLb(); };
   document.addEventListener('keydown', e => { if (!lb.classList.contains('on')) return; if (e.key === 'Escape') closeLb(); if (e.key === 'ArrowLeft') $('#lbPrev').click(); if (e.key === 'ArrowRight') $('#lbNext').click(); });
-  // footer
-  $('#btnSave').onclick = () => { try { localStorage.setItem(KEY, JSON.stringify(order)); } catch (e) {} saved = order.slice(); setStatus(); };
-  $('#btnExport').onclick = () => { const out = order.map((id, i) => ({ pos: i + 1, id, n: byId[id].n, file: byId[id].file.replace('art/', ''), title: byId[id].title, grade: gr(id) }));
-    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], { type: 'application/json' })); a.download = 'bookshelf_art_order.json'; a.click(); };
+
+  // footer: copy back to the sheet
+  function sheetTsv(){ const lines = [COLS.join('\t')]; for (let L = 1; L <= LEVELS; L++){ const r = rowAt(L); lines.push(COLS.map(k => r[k]).join('\t')); } return lines.join('\n'); }
   $('#btnCopy').onclick = async () => {
-    const txt = 'bookshelf-order: ' + order.map(id => byId[id].n).join(',');
-    const b = $('#btnCopy'); const done = ok => { b.textContent = ok ? 'Copied ✓' : 'Copy failed, select below'; setTimeout(() => b.textContent = 'Copy order', 2000); };
+    const txt = sheetTsv(), b = $('#btnCopy'); const done = ok => { b.textContent = ok ? 'Copied ✓ paste into A1 of BookshelfLevels' : 'Copy failed: select the text below'; setTimeout(() => b.textContent = 'Copy for sheet', 3000); };
     try { await navigator.clipboard.writeText(txt); done(true); }
-    catch (e) { const ta = document.createElement('textarea'); ta.value = txt; ta.style.cssText = 'position:fixed;left:8px;bottom:60px;width:60vw;height:80px;z-index:30'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(true); } catch (e2) { done(false); } setTimeout(() => ta.remove(), 4000); }
+    catch (e) { const ta = document.createElement('textarea'); ta.value = txt; ta.style.cssText = 'position:fixed;left:8px;bottom:60px;width:60vw;height:120px;z-index:30'; document.body.appendChild(ta); ta.select(); try { done(document.execCommand('copy')); } catch (e2) { done(false); } setTimeout(() => ta.remove(), 8000); }
   };
-  $('#btnImport').onclick = () => $('#fileIn').click();
-  $('#fileIn').onchange = e => { const f = e.target.files[0]; if (!f) return; f.text().then(t => { const j = JSON.parse(t); const ids = j.map(x => typeof x === 'string' ? x : x.id); if (ids.length === orig.length && ids.every(id => byId[id])) { order = ids; render(); } else alert('Not a full order list'); }); e.target.value = ''; };
-  $('#btnReset').onclick = () => { if (confirm('Reset to the order used in the game and forget the saved one?')) { order = orig.slice(); saved = orig.slice(); try { localStorage.removeItem(KEY); } catch (e) {} render(); } };
+  // load a fresh copy of the BookshelfLevels tab (pasted)
+  const pp = $('#pastePanel');
+  $('#btnLoad').onclick = () => { $('#pasteTa').value = ''; $('#pasteMsg').textContent = ''; pp.hidden = false; $('#pasteTa').focus(); };
+  $('#pasteCancel').onclick = () => pp.hidden = true;
+  $('#pasteOk').onclick = () => {
+    const msg = t => $('#pasteMsg').textContent = t;
+    const lines = $('#pasteTa').value.trim().split(/\r?\n/).map(l => l.split('\t').map(x => x.trim()));
+    if (lines.length < 2) return msg('Nothing pasted.');
+    const h = lines[0], idx = {}; h.forEach((k, i) => idx[k] = i);
+    const miss = COLS.filter(k => !(k in idx)); if (miss.length) return msg('Missing columns: ' + miss.join(', ') + '. Copy the whole tab with its header row.');
+    const nOfArt = {}; SHEET.forEach(r => nOfArt[r.artId] = r.n); P.forEach(p => { if (!(p.id.slice(0, 8) in nOfArt)) nOfArt[p.id.slice(0, 8)] = p.n; });
+    const rows = [], bad = [];
+    lines.slice(1).filter(l => l[idx.level] !== '').forEach((l, i) => {
+      const r = {}; COLS.forEach(k => r[k] = k === 'artId' ? l[idx[k]] : Math.round(+l[idx[k]]));
+      if (r.level !== i + 1 || FIELDS.some(k => !Number.isFinite(r[k]))) bad.push(i + 2);
+      r.n = nOfArt[r.artId]; if (!r.n) bad.push(`artId ${r.artId}`);
+      const old = SHEET.find(x => x.n === r.n && x.level === r.level && BOARD.every(k => x[k] === r[k])); if (old && Number.isFinite(old.required)) r.required = old.required;
+      rows.push(r);
+    });
+    if (bad.length) return msg('Could not read: ' + bad.slice(0, 8).join(', '));
+    if (new Set(rows.map(r => r.n)).size !== rows.length) return msg('The same painting is used twice.');
+    loadSheet(rows); try { localStorage.setItem(SHEET_KEY, JSON.stringify({base: JSON.stringify(window.SHEET_LEVELS || []).length, rows})); } catch (e) {}
+    st = fresh(); saveDraft(); pp.hidden = true; selectedLevel = 1; render();
+  };
+  let resetArmed = 0;
+  $('#btnReset').onclick = () => { const b = $('#btnReset');
+    if (Date.now() - resetArmed > 4000) { resetArmed = Date.now(); b.textContent = 'Click again: forget all edits'; setTimeout(() => b.textContent = 'Reset to sheet', 4000); return; }
+    resetArmed = 0; b.textContent = 'Reset to sheet'; st = fresh(); saveDraft(); render(); };
   $('#sortSel').onchange = e => { sortMode = e.target.value; render(); };
   $('#gradeSel').onchange = e => { gradeF = e.target.value; render(); };
-  window.addEventListener('beforeunload', e => { if (dirty()) { e.preventDefault(); e.returnValue = ''; } });
   render();
 })();
 </script>

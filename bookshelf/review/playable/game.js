@@ -62,10 +62,10 @@ const fmt=s=>{s=Math.max(0,Math.ceil(s));const m=Math.floor(s/60),x=s%60;return 
    ========================================================= */
 const DEF={level:1,coins:300,lives:5,livesTs:0,inv:{peek:0,lens:0,glove:0,key:0,brush:0,bookmark:0,corners:0,center:0,glue:0,shelf:0},gifted:{},seenFeat:{},arts:{},albums:{},
   cases:{own:[],on:''},daily:{day:0,last:''},league:{week:'',pts:0},streak:0,removeAds:false,starter:false,bundle:false,adGap:0,attempts:{},tut:{},rv:{d:'',n:0},
-  settings:{sfx:true,music:true,haptics:true,glueLock:false,minimalUi:false,frame:true},stats:{wins:0,fails:0,boosters:0}};
+  settings:{sfx:true,music:true,haptics:true,glueLock:true,minimalUi:false,frame:true,bookCaps:true},stats:{wins:0,fails:0,boosters:0}};
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object')merge(a[k],b[k]);else a[k]=b[k]}return a}
-let S=(()=>{try{const s=JSON.parse(localStorage.getItem('bap_v14')||'null');if(s)return merge(JSON.parse(JSON.stringify(DEF)),s)}catch(e){}return JSON.parse(JSON.stringify(DEF))})();
-function save(){try{localStorage.setItem('bap_v14',JSON.stringify(S))}catch(e){}}
+let S=(()=>{try{const s=JSON.parse(localStorage.getItem('bap_atlas')||'null');if(s)return merge(JSON.parse(JSON.stringify(DEF)),s)}catch(e){}return JSON.parse(JSON.stringify(DEF))})();
+function save(){try{localStorage.setItem('bap_atlas',JSON.stringify(S))}catch(e){}}
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
 const MAXL=5,REGEN=30*60e3;
 function tickLives(){if(S.lives>=MAXL){S.livesTs=0;return}const now=Date.now();if(!S.livesTs)S.livesTs=now;while(S.lives<MAXL&&now-S.livesTs>=REGEN){S.lives++;S.livesTs+=REGEN}if(S.lives>=MAXL)S.livesTs=0}
@@ -163,16 +163,27 @@ function shuffleOrder(n,cols,R){let a,tries=0;const pc=o=>{let c=0;for(let p=0;p
 
 /* v12 25% mistake budget */
 const MISTAKE_RATE=.25;
-const SOLVED_MOVE_COST=Object.freeze([4,5,6,7,6,7,9,7,11,9,9,10,10,11,8,10,12,9,9,13,11,9,11,15,12,10,13,12,18,16,9,12,11,16,9,13,16,9,20,18,14,13,14,17,14,16,16,14,19,21,14,13,13,18,12,14,18,14,21,19,16,15,18,16,16,16,19,16,19,25,17,17,16,17,17,18,21,19,19,25,17,19,18,16,17,21,23,19,26,30,15,14,16,20,16,18,25,14,26,25,21,26,25,29,25,31,36,24,38,38,23,27,24,30,25,28,37,26,37,41,25,25,26,32,26,27,35,26,33,41,25,25,25,27,25,31,33,25,37,38,25,22,25,28,25,29,35,25,35,40,27,24,25,30,28,29,33,25,39,40,26,27,25,29,27,27,44,26,32,43,23,26,21,32,26,29,31,25,37,39,24,31,25,26,25,32,32,27,38,42,27,21,25,31,26,31,35,26,37,39,26,26,25,30,23,28,35,28,36,45,25,23,26,31,28,32,39,25,34,41,25,25,25,40,24,29,32,26,35,41,28,23,23,25,25,29,33,25,36,34,26,20,25,29,27,30,34,24,40,42,24,24,26,30,25,28,39,24,38,42,23,26,24,31,22,29,41,28,40,38,26,25,27,32,28,32,32,25,36,39,25,28,26,27,26,32,35,24,38,43,27,21,24,29,28,28,39,25,39,36,23,24,23,30,25,29,34,25,40,41,26,24,25,28,27,28,36,26,39,39,23,25,26,30,27,27,35,25,32,44,26,32,27,28,26,32,33,26,36,37,24,23,26,29,26,30,36,25,36,41]);
+const SOLVED_MOVE_COST=Object.freeze([4,5,6,6,7,10,6,8,13,7,7,9,12,8,9,12,9,13,14,18,8,9,12,15,8,11,11,14,17,9,7,11,14,17,6,11,14,14,21,10,10,11,14,10,11,14,12,16,21,11,14,13,13,18,12,14,18,14,21,19,16,15,18,16,16,16,19,16,19,25,17,17,16,17,17,18,21,19,19,25,17,19,18,16,17,21,23,19,26,30,15,14,16,20,16,18,25,14,26,25,21,26,25,29,25,31,36,24,38,38,23,27,24,30,25,28,37,26,37,41,25,25,26,32,26,27,35,26,33,41,25,25,25,27,25,31,33,25,37,38,25,22,25,28,25,29,35,25,35,40,27,24,25,30,28,29,33,25,39,40,26,27,25,29,27,27,44,26,32,43,23,26,21,32,26,29,31,25,37,39,24,31,25,26,25,32,32,27,38,42,27,21,25,31,26,31,35,26,37,39,26,26,25,30,23,28,35,28,36,45,25,23,26,31,28,32,39,25,34,41,25,25,25,40,24,29,32,26,35,41,28,23,23,25,25,29,33,25,36,34,26,20,25,29,27,30,34,24,40,42,24,24,26,30,25,28,39,24,38,42,23,26,24,31,22,29,41,28,40,38,26,25,27,32,28,32,32,25,36,39,25,28,26,27,26,32,35,24,38,43,27,21,24,29,28,28,39,25,39,36,23,24,23,30,25,29,34,25,40,41,26,24,25,28,27,28,36,26,39,39,23,25,26,30,27,27,35,25,32,44,26,32,27,28,26,32,33,26,36,37,24,23,26,29,26,30,36,25,36,41]);
+/* 2026-11-03: move buffer +50%, min +3 (patch_v12_moves_buffer) */
+const MOVE_BUFFER=.5,MOVE_BUFFER_MIN=3;function movesWithBuffer(c){return Math.max(3,Math.ceil(c*(1+MOVE_BUFFER)),c+MOVE_BUFFER_MIN)}
+/* 2026-11-04: the first five levels give +2 moves on top of the formula: the player is still learning */
+/* levels 1-50: buffer % and hand extra moves come from the level table (CURVE50 columns 5-6) */
+const earlyBonus=L=>L<=CURVE50.length?CURVE50[L-1][5]:0;
+/* 2026-11-06: moves for levels 1-300 from a playtest bot (block-first player, 15% mistaken moves, 200 plays per level):
+   the smallest budget where easy (d<=3) loses ~10% of plays, medium (d 4-6) ~25%, hard (d 7-8) ~45%, super hard (d 9) ~50%;
+   never fewer moves than books. Stars and ticking books are already counted in. Levels 1-5 keep their +2 learning moves. */
+const LEVEL_MOVES=Object.freeze([8,8,11,10,13,16,12,16,18,14,13,18,20,16,17,20,19,21,23,24,16,18,20,21,16,21,20,22,25,18,16,20,22,26,17,21,21,27,30,19,17,23,22,20,19,21,22,26,31,21,25,24,21,29,24,21,25,22,31,30,29,31,28,26,31,26,30,26,29,38,39,29,27,26,39,27,31,30,30,43,29,37,29,31,29,32,35,27,39,46,29,30,26,34,32,32,40,28,41,40,43,46,40,49,47,48,54,43,58,63,43,47,42,49,48,46,73,42,58,62,46,46,41,62,46,46,56,43,57,65,48,58,42,48,47,49,57,41,59,59,46,42,44,48,49,50,58,44,56,64,47,48,41,52,50,49,55,40,56,62,45,45,43,49,48,48,73,41,54,63,48,46,39,59,47,49,54,41,55,62,46,62,43,44,48,49,54,41,56,67,49,44,39,49,50,48,56,43,60,64,49,52,43,51,46,50,54,43,54,63,47,42,41,49,49,51,74,45,56,63,48,45,41,61,42,51,55,43,56,63,47,59,43,46,43,49,54,47,55,58,47,43,44,49,48,50,55,42,56,64,45,43,43,51,47,51,57,43,56,61,46,45,39,49,46,49,71,43,58,61,44,42,42,62,43,51,53,43,57,63,46,63,44,48,48,49,56,41,55,65,45,43,40,52,47,48,57,41,58,59]);
+const levelBudget=(L,c)=>Number.isFinite(LEVEL_MOVES[L-1])?LEVEL_MOVES[L-1]+earlyBonus(L):L<=CURVE50.length?Math.max(3,Math.ceil(c*(1+CURVE50[L-1][4]/100)),c+MOVE_BUFFER_MIN)+earlyBonus(L):movesWithBuffer(c);
 function plannedMoves(L,opt,def,stars,ticks){
+  const atlas=atlasMovesOf(L);if(Number.isFinite(atlas))return atlas;
   const clean=SOLVED_MOVE_COST[L-1];
-  if(!(S.attempts[L]||0)&&Number.isFinite(clean))return Math.max(3,Math.ceil(clean/(1-MISTAKE_RATE)));
+  if(Number.isFinite(clean)||Number.isFinite(LEVEL_MOVES[L-1]))return levelBudget(L,clean);
   /* A reshuffle has a new order. Keep its original conservative budget as a safety floor. */
   const old=Math.max(3,Math.ceil(opt*(def.n>=FRAME_MIN?MOVE_K_FRAME[def.d]:1+def.slack)))+(L<=3?1:0)+(def.n>=FRAME_MIN?2:0)-stars.length*2+Object.keys(ticks).length*2;
-  return Math.max(old,Math.ceil(opt/(1-MISTAKE_RATE))-stars.length*2+Object.keys(ticks).length*2);
+  return Math.max(old,movesWithBuffer(opt)-stars.length*2+Object.keys(ticks).length*2)+earlyBonus(L);
 }
 
-function prepareLevel(L){const def=levelDef(L);const R=rng(def.seed+(S.attempts[L]||0)*977);const {n,cols}=def;
+function prepareLevel(L){const def=levelDef(L);/* 2026-11-04: a retry replays the same shuffle (as in Unity), so the solver-checked move budget always applies */const R=rng(def.seed);const {n,cols}=def;
   const order=shuffleOrder(n,cols,R);const pos=[];order.forEach((id,p)=>pos[id]=p);
   const used=new Set(),links=[],locks={},hidden=[];let t=0;
   while(links.length<def.mods.links&&t++<400){const p=Math.floor(R()*n);if(p%cols===cols-1)continue;const a=order[p],b=order[p+1];if(used.has(a)||used.has(b)||pos[a]===a||pos[b]===b)continue;links.push([a,b]);used.add(a);used.add(b)}
@@ -193,6 +204,8 @@ function prepareLevel(L){const def=levelDef(L);const R=rng(def.seed+(S.attempts[
 function prePinnedIds(def,pre){const ids=[];const {rows,cols}=def;
   if(pre.corners&&rows>=2&&cols>=2)ids.push(0,cols-1,(rows-1)*cols,rows*cols-1);
   if(pre.center&&rows>=3&&cols>=3){const r=Math.floor(rows/2),c=Math.floor(cols/2);ids.push((r-1)*cols+c,r*cols+c-1,r*cols+c,r*cols+c+1,(r+1)*cols+c)}
+  /* 2026-11-06: two shelves have no plus of five, so pin the five middle books (three on top, two below) */
+  else if(pre.center&&rows===2&&cols>=3){const c=Math.floor(cols/2);ids.push(c-1,c,c+1,cols+c-1,cols+c)}
   return [...new Set(ids)]}
 function prePinnedOrder(order,ids){const out=order.slice();for(const id of ids){const p=out.indexOf(id);[out[id],out[p]]=[out[p],out[id]]}return out}
 
@@ -221,7 +234,7 @@ function startLevel(prep,pre){
   G.rowbacks=[];G.planks=[];
   ['crown','base'].forEach(c=>{const d=document.createElement('div');d.className=c;caseEl.appendChild(d)});
   for(let r=0;r<G.rows;r++){const rb=document.createElement('div');rb.className='rowback';caseEl.appendChild(rb);G.rowbacks.push(rb);const pl=document.createElement('div');pl.className='plank';caseEl.appendChild(pl);G.planks.push(pl)}
-  for(let id=0;id<G.n;id++){const el=document.createElement('div');el.className='book';el.innerHTML='<i></i>';
+  for(let id=0;id<G.n;id++){const el=document.createElement('div');el.className='book';el.innerHTML='<i></i><span class="skf"></span>';
     const b={id,el,inset:.8+R()*1.8,hf:.92+R()*.08};el.style.setProperty('--band',R()<.65?(.25+R()*.3).toFixed(2):'0');el.style.setProperty('--dk',(R()*.12).toFixed(2));
     el.addEventListener('pointerdown',e=>Input.down(e,id));G.books.push(b);caseEl.appendChild(el)}
   G.final=document.createElement('div');G.final.className='final';caseEl.appendChild(G.final);
@@ -246,13 +259,16 @@ function anchorFx(){const now=new Set();for(let id=0;id<G.n;id++)if(isAnch(id))n
 function syncPos(){G.pos=[];G.order.forEach((id,p)=>G.pos[id]=p)}
 const correctOf=o=>o.reduce((s,id,p)=>s+(id===p),0);
 
+/* v12 full-art (patch_v12_full_art) */
 function computeLayout(solved,availW,availH){const {rows,cols}=G;
-  const CS=!solved&&!!app.dataset.case;const side=solved?8:(CS?17:14),pad=solved?8:(CS?17:12),t=solved?0:(CS?clamp(availH*.036,16,22):clamp(availH*.022,9,14)),hr=0;   /* Unity port: a shelf is exactly one cell tall */
-  let imgW=Math.min(availW-2*side,520),imgH=imgW;
-  if(2*pad+imgH*(1+hr)+(rows-1)*t>availH){imgH=(availH-2*pad-(rows-1)*t)/(1+hr);imgW=imgH}
-  const sw=imgW/cols,sh=imgH/rows;
-  const rowH=sh;
-  return{solved,side,pad,t,imgW,imgH,sw,sh,rowH,caseW:imgW+2*side,caseH:2*pad+rows*rowH+(rows-1)*t}}
+  const CS=!solved&&!!app.dataset.case;const side=solved?8:(CS?17:14),pad=solved?8:(CS?17:12),t=solved?0:(CS?clamp(availH*.036,16,22):clamp(availH*.022,9,14));
+  const capK=(!solved&&S.settings.bookCaps!==false)?.08:0;           /* leather top: up to 8 % of the picture height */
+  const gap=solved?0:clamp(Math.round(Math.min(availW-2*side,520)/cols*.09),3,6);               /* real empty space between books (frames live here) */
+  let pw=Math.min(availW-2*side,520)/cols-gap,ph=pw*cols/rows;         /* the painting is square: cols*pw == rows*ph */
+  const H2=availH-2*pad-(rows-1)*t;
+  if(rows*ph*(1+capK)>H2){ph=H2/(rows*(1+capK));pw=ph*rows/cols}
+  const sw=pw+gap,capMax=ph*capK,rowH=ph+capMax,sh=rowH,imgW=sw*cols,imgH=rows*rowH;
+  return{solved,side,pad,t,imgW,imgH,sw,sh,rowH,pw,ph,gap,capMax,artW:pw*cols,artH:ph*rows,caseW:imgW+2*side,caseH:2*pad+rows*rowH+(rows-1)*t}}
 function slot(L,p){const r=Math.floor(p/G.cols),c=p%G.cols;return{r,c,x:L.side+c*L.sw,y:L.pad+r*(L.rowH+L.t)+(L.rowH-L.sh)}}
 function layout(solved,instant){const W=stage.clientWidth,H=stage.clientHeight;
   const CR=(!solved&&app.dataset.case)?Math.round(Math.min(78,(W+32)/3.2)-14):0,BS=CR?Math.round((W+30)/5.8-22):0;const L=computeLayout(solved,W-(CR?8:0),solved?Math.min(H-20,W):H-14-CR-BS);G.Lay=L;
@@ -260,7 +276,7 @@ function layout(solved,instant){const W=stage.clientWidth,H=stage.clientHeight;
   for(let r=0;r<G.rows;r++){const y=L.pad+r*(L.rowH+L.t);Object.assign(G.rowbacks[r].style,{left:L.side+'px',top:y+'px',width:L.imgW+'px',height:L.rowH+'px'});
     Object.assign(G.planks[r].style,{left:(L.side-5)+'px',top:(y+L.rowH)+'px',width:(L.imgW+10)+'px',height:(r===G.rows-1?0:L.t)+'px'})}
   Object.assign(G.final.style,{left:L.side+'px',top:L.pad+'px',width:L.imgW+'px',height:L.imgH+'px'});
-  G.books.forEach(b=>{b.el.style.backgroundSize=`${L.imgW}px ${L.imgH}px`});
+  G.books.forEach(b=>{b.el.style.backgroundSize=`${L.artW}px ${L.artH}px`});caseEl.style.setProperty('--ring',Math.min(3,(L.gap||0)/2)+'px');
   refreshBooks(instant);placeGhosts();
   {const R=G.rows,C=G.cols,rad='10px';G.books.forEach(b=>{const p=G.pos[b.id],r=Math.floor(p/C),c=p%C;
     b.el.style.borderRadius=solved?`${r===0&&c===0?rad:0} ${r===0&&c===C-1?rad:0} ${r===R-1&&c===C-1?rad:0} ${r===R-1&&c===0?rad:0}`:''})}}
@@ -283,15 +299,19 @@ const natSize=(g,id)=>g.natMembers[g.nat[id]].length;
 function pairCount(order){let c=0;const cols=G.cols;for(let p=0;p<order.length;p++){const a=order[p];if(p%cols<cols-1&&order[p+1]===a+1&&Math.floor((a+1)/cols)===Math.floor(a/cols))c++;}return c}
 
 function decorate(){G.books.forEach(b=>{const el=b.el,id=b.id;
-  let cv=el.querySelector('.cover');if(G.hidden.has(id)&&!cv){cv=document.createElement('u');cv.className='cover ol';cv.textContent='?';el.appendChild(cv)}
+  let cv=el.querySelector('.cover');if(G.hidden.has(id)&&!cv){cv=document.createElement('u');cv.className='cover';cv.innerHTML='<i class="hbB t"></i><i class="hbE"></i><i class="hbB b"></i>';el.appendChild(cv)}
   let ch=el.querySelector('.chains');if(G.locks[id]&&!ch){ch=document.createElement('s');ch.className='chains';ch.innerHTML=SVG.pad+'<em class="ol"></em>';el.appendChild(ch)}
   if(ch&&G.locks[id])ch.querySelector('em').textContent=G.locks[id];
   el.classList.toggle('lockd',!!G.locks[id]);
   let tie=el.querySelector('.tie');const lk=G.links.find(l=>l.includes(id));
-  if(lk&&!tie){tie=document.createElement('b');tie.className='tie'+(lk[0]===id?' knot':'');el.appendChild(tie)}
+  if(lk&&lk[0]===id&&!tie){tie=document.createElement('b');tie.className='tie knot';el.appendChild(tie)}
   badge(el,'star',G.stars.has(id),SVG.star);
   badge(el,'tick',G.ticks[id]!==undefined,`<span>${G.ticks[id]??''}</span>`);
-  badge(el,'kb',G.keyBook===id,`<img src="${ICO.key}" alt="">`)})}
+  badge(el,'kb',G.keyBook===id,`<img src="${ICO.key}" alt="">`)});syncTies()}
+/* hands span from the left book's left edge to the right book's right edge, clasp on the seam (TiedBooks pack) */
+function syncTies(){if(!G||!G.Lay||!G.links)return;const L=G.Lay;G.links.forEach(l=>{const [a,b]=G.pos[l[0]]<=G.pos[l[1]]?l:[l[1],l[0]];const ea=G.books[a].el,k=G.books[l[0]].el.querySelector('.tie.knot');if(!k)return;
+  if(k.parentNode!==ea)ea.appendChild(k);const A=G.books[a],B=G.books[b],xa=slot(L,G.pos[a]).x+(A.insL||0),xb=slot(L,G.pos[b]).x+L.sw-(B.insR||0),wa=L.sw-(A.insL||0)-(A.insR||0);
+  k.style.setProperty('--kw',(xb-xa)+'px');k.style.setProperty('--ah',Math.round(Math.max(26,Math.min(54,wa*.42)))+'px')})}
 function badge(el,k,on,html){let b=el.querySelector('.bdg.'+k);if(on&&!b){b=document.createElement('em');b.className='bdg '+k;el.appendChild(b)}
   if(on){if(b.dataset.h!==html){b.innerHTML=html;b.dataset.h=html}}else if(b&&!b.classList.contains('gone')){b.classList.add('gone');setTimeout(()=>b.remove(),420)}}
 /* specials after each move: Star Book (+3 moves), Key Book (opens every lock), Ticking Book (-3 moves at zero) */
@@ -313,14 +333,13 @@ function flyTo(txt,x0,y0,x1,y1,o){const t=document.createElement('div');t.classN
 function refreshBooks(instant){const L=G.Lay;G.groups=computeGroups();
   G.books.forEach(b=>{const el=b.el,lk=G.groups.links[b.id]||{},glued=!!(lk.l||lk.r||lk.u||lk.d);
     if(instant)el.style.transition='none';
-    const base=L.solved?0:Math.min(b.inset,L.sw*.07);
-    b.insL=lk.l?0:base;b.insR=lk.r?0:base;b.hfNow=(L.solved||glued)?1:b.hf;
+    /* v12 spine kit (patch_v12_spine_kit) */el.dataset.sk=(b.id*5+(G.L||0)*3)%4;b.insL=b.insR=(L.gap||0)/2;b.hfNow=1;b.cap=L.capMax?L.capMax*((L.solved||glued)?1:clamp((b.hf-.92)/.08,0,1)):0;
     const cr=Math.floor(b.id/G.cols),cc=b.id%G.cols;
-    el.style.width=(L.sw-b.insL-b.insR)+'px';el.style.height=(L.sh*b.hfNow)+'px';
-    el.style.backgroundPosition=`${-(cc*L.sw+b.insL)}px ${-(cr*L.sh+L.sh*(1-b.hfNow))}px`;
+    el.style.width=L.pw+'px';el.style.height=(L.ph+b.cap)+'px';el.style.borderTopWidth=b.cap+'px';el.style.setProperty('--cap',b.cap+'px');
+    el.style.backgroundPosition=`${-(cc*L.pw)}px ${-(cr*L.ph)}px`;
     el.classList.toggle('glued',glued&&!L.solved);el.classList.toggle('framed',isAnch(b.id)&&!L.solved);el.classList.toggle('gl-l',!!lk.l);el.classList.toggle('gl-r',!!lk.r);
-    placeBook(b.id);if(instant){el.offsetHeight;el.style.transition=''}})}
-function bookXY(id,p){const L=G.Lay,b=G.books[id],s=slot(L,p);return{x:s.x+b.insL,y:s.y+L.sh*(1-b.hfNow)}}
+    placeBook(b.id);if(instant){el.offsetHeight;el.style.transition=''}});syncTies()}
+function bookXY(id,p){const L=G.Lay,b=G.books[id],s=slot(L,p);return{x:s.x+b.insL,y:s.y+L.rowH-L.ph-(b.cap||0)}}
 function placeBook(id,p=G.pos[id],lift=0,solo=true){const {x,y}=bookXY(id,p);G.books[id].el.style.transform=`translate3d(${x}px,${y-lift*9}px,0) scale(${solo?1+lift*.06:1})`}
 function liftGroup(ids,on){const solo=ids.length===1;ids.forEach(i=>{G.books[i].el.classList.toggle('lift',on);placeBook(i,G.pos[i],on?1:0,solo)})}
 
@@ -400,16 +419,23 @@ function afterMerge(grown){const g=G.groups;let changed=false;
 function unlockBook(id){delete G.locks[id];const el=G.books[id].el,ch=el.querySelector('.chains');
   const key=document.createElement('img');key.src=ICO.key;key.className='mergeKey';el.appendChild(key);setTimeout(()=>key.remove(),700);el.classList.remove('lockd');if(ch){ch.classList.add('gone');setTimeout(()=>ch.remove(),400)}
   const r=relRect(el);burst(r.cx,r.cy,14,{colors:['#DDE3EA','#FFC548','#fff']});Sound.play('unlock');buzz('medium');G.groups=computeGroups()}
-function revealBook(id){if(!G.hidden.has(id))return;G.hidden.delete(id);const cv=G.books[id].el.querySelector('.cover');if(cv){cv.classList.add('gone');setTimeout(()=>cv.remove(),450)}const r=relRect(G.books[id].el);burst(r.cx,r.cy,8,{colors:['#C29BFF','#FFC548','#fff']});Sound.play('magic')}
+/* reveal (HiddenBooks pack look): shake + brighten, the cover swings open like a book cover, sparkles + «Revealed!» */
+function revealBook(id){if(!G.hidden.has(id))return;G.hidden.delete(id);const el=G.books[id].el,cv=el.querySelector('.cover');Sound.play('magic');
+  if(!cv||RM){cv&&cv.remove();return}cv.classList.add('opening');
+  setTimeout(()=>{cv.classList.add('gone');const r=relRect(el);burst(r.cx,r.cy,16,{colors:['#C29BFF','#FFE08A','#fff','#8FE0FF']});
+    const t=document.createElement('div');t.className='hb-txt';t.textContent='Revealed!';t.style.left=r.cx+'px';t.style.top=(r.cy-r.h/2-6)+'px';fx.appendChild(t);setTimeout(()=>t.remove(),1200);
+    el.classList.remove('hb-reveal');void el.offsetWidth;el.classList.add('hb-reveal');setTimeout(()=>{cv.remove();el.classList.remove('hb-reveal')},700)},520)}
 function untie(l){snapTie(l);G.links=G.links.filter(x=>x!==l);l.forEach(id=>{const t=G.books[id].el.querySelector('.tie');if(t){t.classList.add('gone');setTimeout(()=>t.remove(),350)}});
-  const r=relRect(G.books[l[0]].el);burst(r.x+r.w,r.cy,10,{colors:['#E58BFF','#C35BE0','#fff']});Sound.play('unlock');G.groups=computeGroups()}
+  Sound.play('unlock');G.groups=computeGroups()}
 
 
-/* The strap snaps at the clasp and the two pieces slide away. */
-function snapTie(l){const kn=G.books[l[0]].el.querySelector('.tie.knot');if(!kn||RM)return;const r=relRect(kn),x=r.x+r.w,y=r.cy;
-  for(const dir of [-1,1]){const piece=document.createElement('div');piece.className='tieFly';piece.style.width='30px';fx.appendChild(piece);
-    piece.animate([{transform:`translate(${x-15}px,${y-6}px)`,opacity:1},{transform:`translate(${x-15+dir*48}px,${y-31}px) rotate(${dir*25}deg)`,opacity:0}],{duration:650,easing:'ease-out'}).onfinish=()=>piece.remove()}
-  burst(x,y,10,{colors:['#FFE08A','#C35BE0','#fff'],spread:50})}
+/* The hands let go: the pair fades and two gloves wave apart (TiedBooks pack look) */
+function snapTie(l){const kn=G.books[l[0]].el.querySelector('.tie.knot');if(!kn||RM)return;const k=relRect(kn),W=parseFloat(kn.style.getPropertyValue('--kw'))||k.w,Hh=W*116/420,y0=k.y-Hh/2;kn.style.opacity='0';
+  for(const [src,dir,f] of [['ui/arm_l.webp',-1,240],['ui/arm_r.webp',1,260]]){const w=W*f/420*1.04,x0=dir<0?k.x:k.x+W-w,h=document.createElement('img');h.src=src;h.className='tb-fly';h.style.width=w+'px';fx.appendChild(h);
+    h.animate([{transform:`translate(${x0}px,${y0}px)`,opacity:1},{transform:`translate(${x0+dir*6}px,${y0}px) rotate(${dir*-6}deg)`,offset:.25},
+      {transform:`translate(${x0+dir*W*.35}px,${y0-18}px) rotate(${dir*14}deg)`,opacity:1,offset:.7},{transform:`translate(${x0+dir*W*.5}px,${y0-30}px) rotate(${dir*20}deg) scale(.85)`,opacity:0}],
+      {duration:950,easing:'cubic-bezier(.3,.7,.3,1)'}).onfinish=()=>h.remove()}
+  burst(k.x+W/2,k.y,12,{colors:['#FFE08A','#fff','#7CC8FF'],spread:50});toast('The hands let go!')}
 /* =========================================================
    INPUT — drag a book or a glued block; tap-tap to swap
    ========================================================= */
@@ -529,7 +555,7 @@ function testLevel(rows,cols){const base=levelDef(Math.max(S.level,101));const d
   toast(`Test shelf: ${def.n} books · correct books pin in place`,2600);startLevel({def,order,locks:{},links:[],hidden:[],moves,opt},{})}
 function openStart(){tickLives();if(S.lives<=0){outOfLives();return}
   const L=S.level;if(L<powerFrom()){pkPre=null;ProtoKit.play(L);return}const prep=prepareLevel(L),def=prep.def;const sel={bookmark:false,corners:false,center:false,glue:false,shelf:false};
-  const mods=[];if(Object.keys(prep.locks).length)mods.push(`<span class="mod">${SVG.pad}Locks</span>`);if(prep.links.length)mods.push(`<span class="mod">${SVG.ribbon}Ribbons</span>`);if(prep.hidden.length)mods.push(`<span class="mod">${SVG.q}Hidden books</span>`);
+  const mods=[];if(Object.keys(prep.locks).length)mods.push(`<span class="mod">${SVG.pad}Locks</span>`);if(prep.links.length)mods.push(`<span class="mod"><img src="ui/hs_both.webp" alt="" style="width:1.6em;height:auto">Tied books</span>`);if(prep.hidden.length)mods.push(`<span class="mod">${SVG.q}Hidden books</span>`);
   if(prep.stars.length)mods.push(`<span class="mod">${SVG.star}Star books +3</span>`);if(Object.keys(prep.ticks).length)mods.push(`<span class="mod tickc"><b>${prep.def.mods.tickN}</b>Ticking books</span>`);if(prep.keyBook>=0)mods.push(`<span class="mod"><img src="${ICO.key}" alt="">Key book</span>`);
   const wind=(S.attempts[L]||0)>=2;if(wind)prep.moves+=3;
   const p=popup({title:'Level '+L,ribbon:def.d>=9?'purple':def.d>=7?'coral':'',html:`
@@ -662,8 +688,8 @@ function complete(){G.solved=true;G.locked=true;clearHint();tipOff();
 
 
 /* ---------- unlock roadmap: what opens next (boosters, obstacles, features) ---------- */
-const MECH_UI={locks:{n:'Locked Books',ic:'<img src="ui/lk_pad.webp" alt="">'},stars:{n:'Star Books',ic:SVG.star},links:{n:'Tied Books',ic:SVG.ribbon},
-  hidden:{n:'Hidden Books',ic:'<img src="ui/hid_cover.webp" alt="">'},ticks:{n:'Ticking Books',ic:'<img src="ui/tk_clock.webp" alt="">'},keyBook:{n:'Key Book',ic:`<img src="${ICO.key}" alt="">`},doubleLock:{n:'Double Lock',ic:'<img src="ui/lk_pad.webp" alt="">'}};
+const MECH_UI={locks:{n:'Locked Books',ic:'<img src="ui/lk_pad.webp" alt="">'},stars:{n:'Star Books',ic:SVG.star},links:{n:'Tied Books',ic:'<img src="ui/hs_both.webp" alt="">'},
+  hidden:{n:'Hidden Books',ic:'<img src="ui/hid_icon.webp" alt="">'},ticks:{n:'Ticking Books',ic:'<img src="ui/tk_clock.webp" alt="">'},keyBook:{n:'Key Book',ic:`<img src="${ICO.key}" alt="">`},doubleLock:{n:'Double Lock',ic:'<img src="ui/lk_pad.webp" alt="">'}};
 function unlockList(){const out=[];
   IN_LEVEL.concat(PRE).forEach(k=>out.push({L:BOOST[k].unlock,n:BOOST[k].name,ic:`<img src="${bImg(k)}" alt="">`,t:PRE.includes(k)?'New power-up':'New booster'}));
   Object.keys(MECH).forEach(k=>out.push({L:MECH[k],n:MECH_UI[k].n,ic:MECH_UI[k].ic,t:'New challenge'}));
@@ -677,7 +703,7 @@ function unlockBar(done){const x=unlockNext(done);if(!x)return'';const ready=x.l
     <div class="urMid"><div class="urT1">${x.u.t}: <b>${x.u.n}</b></div><div class="urBar"><i style="width:${x.from*100}%"></i><span class="ol">${ready?'Next level!':Math.round(x.from*100)+'%'}</span></div></div></div>`}
 function unlockAnim(root){const b=root.querySelector('.urBox');if(!b)return;const i=b.querySelector('.urBar i'),s=b.querySelector('.urBar span'),to=+b.dataset.to,fr=+b.dataset.from,ready=b.classList.contains('ready');
   setTimeout(()=>{i.style.width=to*100+'%';const t0=performance.now();const st=t=>{const k=Math.min(1,(t-t0)/900),v=fr+(to-fr)*(1-Math.pow(1-k,3));if(!ready)s.textContent=Math.round(v*100)+'%';if(k<1)requestAnimationFrame(st);else if(to>=1){b.classList.add('urGo');Sound.play('magic')}};requestAnimationFrame(st)},500)}
-function show(id){['sHome','sGame','sSlide','sOdd'].forEach(s=>$('#'+s).hidden=s!==id);if(id==='sSlide'||id==='sOdd')evRes()}
+function show(id){['sHome','sGame','sSlide','sOdd','sSky'].forEach(s=>$('#'+s).hidden=s!==id);if(id==='sSlide'||id==='sOdd')evRes()}
 function evRes(){tickLives();document.querySelectorAll('.coinsV').forEach(e=>e.textContent=S.coins);document.querySelectorAll('.livesV').forEach(e=>e.textContent=S.lives);document.querySelectorAll('.livesSv').forEach(e=>e.textContent=S.lives>=MAXL?'Full':fmt((REGEN-(Date.now()-S.livesTs))/1000))}
 setInterval(()=>{if(!$('#sSlide').hidden||!$('#sOdd').hidden)evRes()},1000);
 document.querySelectorAll('.evCoins .plus').forEach(b=>b.onclick=()=>{Sound.play('click');S.level>=10?openShop():toast('Shop opens at level 10')});
@@ -698,7 +724,7 @@ function refreshHome(){tickLives();
   $('#hEasel').innerHTML=`<div class="frame">${teaser(prepareLevel(S.level))}</div><div class="q ol">?</div><div class="plate">Level ${S.level}${def.badge?` <span class="chip ${def.d>=9?'super':'hard'}">${def.badge}</span>`:''}</div>`;
   // 10-level band strip
   const b0=Math.floor((S.level-1)/10)*10+1;let st='';for(let i=0;i<10;i++){const l=b0+i,d=levelDef(l);st+=`<b class="${l<S.level?'on':''} ${d.d>=9?'peak':''}" title="Level ${l}"></b>`}$('#hStrip').innerHTML=`<span>${b0}</span>${st}<span>${b0+9}</span>`;
-  {const box=$('#hNav');box.innerHTML='';[...['shop','daily'].map(k=>sideDefs.find(d=>d.k===k)),{k:'home',lb:'Home',icon:'<img class="nvI" src="ui/nv_home.webp" alt="">',L:1,fn:()=>refreshHome()},...['gallery','league'].map(k=>sideDefs.find(d=>d.k===k))].forEach(d=>{const lock=S.level<d.L;const b=document.createElement('button');b.type='button';b.className='sbtn'+(lock?' locked':'')+(d.k==='home'?' active':'');if(d.k==='home')b.setAttribute('aria-current','page');
+  {const box=$('#hNav');box.innerHTML='';[...['shop','daily'].map(k=>sideDefs.find(d=>d.k===k)),{k:'home',lb:'Home',icon:'<img class="nvI" src="ui/nv_home.webp?v=shelf1" alt="">',L:1,fn:()=>refreshHome()},...['gallery','league'].map(k=>sideDefs.find(d=>d.k===k))].forEach(d=>{const lock=S.level<d.L;const b=document.createElement('button');b.type='button';b.className='sbtn'+(lock?' locked':'')+(d.k==='home'?' active':'');if(d.k==='home')b.setAttribute('aria-current','page');
     b.innerHTML=`<span class="tile">${navIcon(d)}</span>${lock?`<span class="pad">${SVG.pad}</span><span class="lvl">Lv ${d.L}</span>`:''}<span class="lb ol">${d.lb}</span>`+(!lock&&d.k==='daily'&&S.daily.last!==today()?'<span class="dot">!</span>':'')+(!lock&&d.k==='shop'&&S.level>=15&&!S.starter?'<span class="dot">%</span>':'');
     b.onclick=()=>lock?toast(`${d.lb} opens at level ${d.L}`):d.fn();box.appendChild(b)})}slHomeBtns()}
 setInterval(()=>{if(!$('#sHome').hidden){tickLives();$('#hLives .v').textContent=S.lives;$('#hLives .sv').textContent=S.lives>=MAXL?'Full':fmt((REGEN-(Date.now()-S.livesTs))/1000)}},1000);
@@ -760,13 +786,19 @@ function openGallery(){const artAt=typeof artOf==='function'?artOf:L=>ART[(L-1)%
   const p=popup({title:'Gallery',cls:'tall wide',html:`<div class="scroll">${albums.map(set=>{const al=set.k;const arts=set.lv.map(L=>artAt(L));const done=arts.filter(a=>S.arts[a.id]).length;const full=done===arts.length;
     return `<div class="album"><div class="albumHead"><span><i class="sw" style="background:${THEMES[set.th].sw}"></i>${set.name}</span><small>${done}/${arts.length}${full?(S.albums[al]?' · claimed':''):' · album prize 300'}</small></div>
     ${full&&!S.albums[al]?`<button class="btn gold sm" data-claim="${al}"><span class="t">Claim 300</span><img class="coin" src="${ICO.coin}" alt=""></button>`:''}
-    <div class="albumBg" style="background-image:url(${THEMES[set.th].bg})"></div><div class="grid4">${arts.map((a,i)=>{const n=S.arts[a.id]||0,t=tierOf(n);const lv=set.lv[i];return `<button class="gcard t${t}" data-art="${a.id}"><i style="background-image:url(${a.file})"></i>${t?'':`<span class="lq ol">?</span>`}<div class="nm">${t?a.title:'Level '+lv}</div></button>`}).join('')}</div></div>`}).join('')}
+    <div class="albumBg" style="background-image:url(${THEMES[set.th].bg})"></div><div class="grid4">${arts.map((a,i)=>{const n=S.arts[a.id]||0,t=tierOf(n);const lv=set.lv[i];return `<button class="gcard t${t}" data-art="${a.id}" data-lv="${lv}"><i style="background-image:url(${a.file})"></i>${t?'':`<span class="lq ol">?</span>`}<div class="nm">${t?a.title:'Level '+lv}</div></button>`}).join('')}</div></div>`}).join('')}
     <p class="ptext" style="font-size:12px;color:var(--muted)">Frames upgrade at 1, 2 and 3 restorations. Every painting is an original parody of a public-domain masterpiece.</p></div>`});
   p.el.querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>{const al=b.dataset.claim;S.albums[al]=1;const r=relRect(b);addCoins(300);coinFly(r,{cx:r.cx,cy:-20},8);b.remove()});
-  p.el.querySelectorAll('[data-art]').forEach(b=>b.onclick=()=>{const a=ART.find(x=>x.id===b.dataset.art);if(!S.arts[a.id]){toast('Restore it on the shelf to unlock');return}
-    const v=popup({title:a.title.length>18?'Painting':a.title,cls:'wide',html:`<div class="thumb" style="width:min(300px,100%)"><i style="display:block;width:100%;height:100%;border-radius:6px;background:url(${a.file}) center/cover"></i></div><div class="artname">${a.title}</div><div class="after">${a.after}</div><div class="ptext" style="font-size:15px;margin:0"><b>Restored ${S.arts[a.id]}×</b></div><div class="ptext" style="font-size:13px;margin-top:-4px">Restore it again on a bigger shelf. No life needed.</div>
-      <div class="replay">${REPLAY.map((r,i)=>`<button class="btn ${r.btn}" data-rp="${i}"><span class="stack"><span class="t">${r.label}</span><span class="sub t">${r.rows}×${r.cols} books · +${r.reward}</span></span></button>`).join('')}</div>`});
-    v.el.querySelectorAll('[data-rp]').forEach(btn=>btn.onclick=()=>{const r=REPLAY[+btn.dataset.rp];closeAll();startReplay(a,r)})})}
+  p.el.querySelectorAll('[data-art]').forEach(b=>b.onclick=()=>{const a=ART.find(x=>x.id===b.dataset.art);if(!S.arts[a.id]){toast('Restore it on the shelf to unlock');return}const RA=replayAuto(+b.dataset.lv);
+    const v=popup({title:a.title.length>18?'Painting':a.title,cls:'wide',html:`<div class="thumb" style="width:min(300px,100%)"><i style="display:block;width:100%;height:100%;border-radius:6px;background:url(${a.file}) center/cover"></i></div><div class="artname">${a.title}</div><div class="after">${a.after}</div><div class="ptext" style="font-size:15px;margin:0"><b>Restored ${S.arts[a.id]}×</b></div><div class="ptext" style="font-size:13px;margin-top:-4px">${RA.easier?'A bit easier':'A bit harder'} this time: ${RA.rows}×${RA.cols} books. No life needed.</div>
+      <button class="btn adBtn wide" id="rpAd"><img class="adI" src="ui/ad_icon.webp" alt=""><span class="stack"><span class="t">Replay</span><span class="sub t">Watch a video · +${RA.reward}</span></span></button>`});
+    q(v,'#rpAd').onclick=()=>showAd('rv',()=>{closeAll();startReplay(a,RA)})})}
+/* the replay's difficulty is picked for the player (Unity BookshelfGallery.ReplayLevel, 2026-11-04):
+   a Hard / Super Hard level comes back two steps easier on a shelf one row smaller, any other two
+   steps harder on a shelf one row larger (up to five rows); paid with a rewarded video */
+function replayAuto(L){const b=levelDef(L),easier=b.d>=7,d=Math.max(2,Math.min(9,easier?b.d-2:b.d+2));
+  const rows=easier?Math.max(2,b.rows-1):b.rows<5?b.rows+1:b.rows;
+  return{label:easier?'Easier':'Harder',easier,rows,cols:b.cols,d,reward:d>=9?140:d>=7?100:d>=6?80:55,btn:'purple',col:easier?'#38B24A':'#F0584A'}}
 const REPLAY=[{label:'Relaxed',rows:2,cols:5,d:2,reward:30,btn:'',col:'#38B24A'},{label:'Normal',rows:3,cols:6,d:4,reward:60,btn:'gold',col:'#E9A21C'},
   {label:'Hard',rows:4,cols:7,d:6,reward:100,btn:'coral',col:'#F0584A'},{label:'Expert',rows:5,cols:8,d:8,reward:160,btn:'purple',col:'#8A4FE0'}];
 function startReplayRaw(art,r){const n=r.rows*r.cols,cnt=(S.replayN=(S.replayN||0)+1);save();
@@ -819,13 +851,13 @@ const CURVE_MECHANICS=[
   {L:2,name:'Glued blocks',how:'Matching neighbours join and move together.'},
   {L:MECH.locks,name:'Locks',how:'Two nearby merges make a key open the lock.'},
   {L:MECH.stars,name:'Star books',how:'Place the star book correctly for +3 moves.'},
-  {L:MECH.links,name:'Ribbons',how:'A merge beside the tied pair unties them.'},
+  {L:MECH.links,name:'Tied books',how:'They hold hands and move together. A merge beside the pair makes them let go.'},
   {L:MECH.hidden,name:'Hidden books',how:'Join neighbours to reveal the hidden picture.'},
   {L:MECH.ticks,name:'Ticking books',how:'Place the ticking book before zero or lose 3 moves.'},
   {L:MECH.keyBook,name:'Key book',how:'Place the key book to open every lock.'}
 ];
 const curveBase=L=>SOLVED_MOVE_COST[L-1];
-const curveBudget=L=>Math.ceil(curveBase(L)/(1-MISTAKE_RATE));
+const curveBudget=L=>levelBudget(L,curveBase(L));
 function curveSvg(from,to,metric){
   const w=330,h=metric==='difficulty'?136:112,left=32,right=9,top=20,bottom=23;
   const max=metric==='difficulty'?9:metric==='books'?54:80,min=metric==='difficulty'?2:0;
@@ -837,40 +869,45 @@ function curveSvg(from,to,metric){
     [['budget',curveBudget],['clean',curveBase]];
   const guides=(metric==='difficulty'?[2,4,6,8,9]:metric==='books'?[0,18,36,54]:[0,20,40,60,80])
     .map(v=>`<path d="M${left} ${y(v)}H${w-right}" class="curve-grid"/><text x="${left-5}" y="${y(v)+4}" text-anchor="end">${v}</text>`).join('');
+  const tens=levels.filter(L=>L>from&&L<to&&(L-1)%10===0).map(L=>`<path d="M${x(L-.5).toFixed(1)} ${top}V${h-bottom}" class="curve-ten"/>`).join('');
   const paths=values.map(([cls,fn])=>`<path class="curve-line ${cls}" d="${levels.map((L,i)=>`${i?'L':'M'}${x(L).toFixed(1)} ${y(fn(L)).toFixed(1)}`).join(' ')}"/>`).join('');
   const intro=metric==='difficulty'?CURVE_MECHANICS.filter(m=>m.L>=from&&m.L<=to).map(m=>
     `<circle cx="${x(m.L)}" cy="${y(levelDef(m.L).d)}" r="4.5" class="curve-mechanic"><title>Level ${m.L}: ${m.name}</title></circle>`).join(''):'';
-  const label=metric==='difficulty'?'Design difficulty d':metric==='books'?'Books N = shelves × books per shelf':'Moves: 25% budget / clean path';
-  return `<svg class="curve-svg" viewBox="0 0 ${w} ${h}" role="img" aria-label="${label}, levels ${from} to ${to}"><rect x="${left}" y="${top}" width="${w-left-right}" height="${h-top-bottom}" class="curve-frame"/>${guides}${paths}${intro}<text x="${left}" y="12" class="curve-axis">${label}</text><text x="${left}" y="${h-4}" class="curve-axis">${from}</text><text x="${w-right}" y="${h-4}" text-anchor="end" class="curve-axis">${to}</text></svg>`
+  const label=metric==='difficulty'?'Design difficulty d':metric==='books'?'Books N = shelves × books per shelf':'Moves: +50% buffer / clean path';
+  return `<svg class="curve-svg" viewBox="0 0 ${w} ${h}" role="img" aria-label="${label}, levels ${from} to ${to}"><rect x="${left}" y="${top}" width="${w-left-right}" height="${h-top-bottom}" class="curve-frame"/>${guides}${tens}${paths}${intro}<text x="${left}" y="12" class="curve-axis">${label}</text><text x="${left}" y="${h-4}" class="curve-axis">${from}</text><text x="${w-right}" y="${h-4}" text-anchor="end" class="curve-axis">${to}</text></svg>`
 }
+/* v12 curve: one page = 50 levels; on top a table per ten (books, shelves, moves, category) */
+const curveCat=d=>d>=9?'super':d>=7?'hard':d>=4?'med':'norm';
+function curveTens(from,to){let out='';
+  for(let a=from;a<=to;a+=10){const ls=Array.from({length:Math.min(10,to-a+1)},(_,i)=>a+i),ten=Math.floor((a-1)/10)+1;
+    const row=(name,fn,cls='')=>`<tr${cls?` class="${cls}"`:''}><th>${name}</th>${ls.map(L=>`<td data-lv="${L}">${fn(L)}</td>`).join('')}</tr>`;
+    out+=`<table class="curve-tens"><caption>Ten ${ten} · levels ${a}–${ls[ls.length-1]}</caption>
+      ${row('Level',L=>L,'lv')}${row('Books',L=>levelDef(L).n)}${row('Shelves',L=>levelDef(L).rows)}
+      ${row('Min moves',curveBase)}${row('Given',curveBudget,'given')}
+      <tr class="cat"><th>Category</th>${ls.map(L=>{const d=levelDef(L).d;return `<td data-lv="${L}"><i class="${curveCat(d)}">d${d}</i></td>`}).join('')}</tr></table>`}
+  return out}
 function openDifficultyCurve(){
   const p=popup({title:'Difficulty Curve',cls:'tall wide',html:`<div class="scroll curve-scroll">
-    <div class="curve-note">350 levels · 25% planned wrong moves · mechanics shown at their first level</div>
-    <div class="curve-overview"></div>
-    <label class="curve-picker">Inspect level <input type="range" min="1" max="50" value="1" aria-label="Inspect level"></label>
-    <div class="curve-stat"></div>
     <div class="curve-nav"><button class="btn grey sm" data-step="-1" aria-label="Previous 50 levels"><span class="t">‹</span></button><strong class="curve-range"></strong><button class="btn grey sm" data-step="1" aria-label="Next 50 levels"><span class="t">›</span></button></div>
+    <div class="curve-catkey"><i class="norm">d</i>Easy <i class="med">d</i>Medium <i class="hard">d</i>Hard <i class="super">d</i>Super Hard · Given = min moves +50% (at least +3), levels 1–50 follow the level table (buffer % and extra moves per level)</div>
+    <div class="curve-tables"></div>
     <div class="curve-detail"></div>
-    <div class="curve-legend"><i class="budget"></i>Moves with 25% errors <i class="clean"></i>Found clean path</div>
-    <div class="curve-explain">25% wrong moves means 75% useful actions: budget = ceil(clean path cost ÷ 0.75). The clean path is found by a solver, not proven globally shortest. Star bonuses and ticking penalties are included. Difficulty d is a design index, not a measured win rate.</div>
+    <div class="curve-legend"><i class="budget"></i>Moves with +50% buffer <i class="clean"></i>Found clean path</div>
+    <div class="curve-explain">Min moves = the clean path found by a solver, not proven globally shortest. Given = min moves × 1.5 rounded up, and at least min + 3; levels 1–5 get +2 moves on top while the player learns. Star bonuses and ticking penalties are included. Difficulty d is a design index, not a measured win rate. Vertical lines on the charts split the tens.</div>
     <div class="curve-heading">New mechanics · first appearance</div><div class="curve-events"></div>
     <div class="curve-heading">Boosters</div><div class="curve-boosters"></div></div>`});
-  let chosen=Math.min(350,Math.max(1,S.level)),band=Math.floor((chosen-1)/50);
-  q(p,'.curve-overview').innerHTML=curveSvg(1,350,'difficulty');
+  let band=Math.floor((Math.min(350,Math.max(1,S.level))-1)/50),mark=0;
   q(p,'.curve-events').innerHTML=CURVE_MECHANICS.map(m=>`<button class="curve-event" data-jump="${m.L}"><b>${m.L}</b><span><strong>${m.name}</strong><small>${m.how}</small></span></button>`).join('');
   q(p,'.curve-boosters').innerHTML=Object.values(BOOST).filter(b=>b.unlock).map(b=>`<div class="curve-booster"><b>${b.unlock}</b><span>${b.name} · ${b.desc}</span></div>`).join('');
-  const picker=q(p,'.curve-picker input');
-  const stats=()=>{const d=levelDef(chosen),clean=curveBase(chosen),budget=curveBudget(chosen);
-    q(p,'.curve-stat').innerHTML=`<b>Level ${chosen}</b> · ${d.rows} shelves × ${d.cols} books = ${d.n} books · d${d.d}<br><strong>${budget} moves</strong> with 25% errors · ${clean} for the found clean path`;
-    picker.value=chosen};
   const draw=()=>{const from=band*50+1,to=Math.min(350,from+49);
     q(p,'.curve-range').textContent=`Levels ${from}–${to}`;
+    q(p,'.curve-tables').innerHTML=curveTens(from,to);
     q(p,'.curve-detail').innerHTML=curveSvg(from,to,'difficulty')+curveSvg(from,to,'books')+curveSvg(from,to,'moves');
-    picker.min=from;picker.max=to;chosen=Math.max(from,Math.min(to,chosen));stats();
+    p.el.querySelectorAll(`.curve-tens td[data-lv="${mark}"]`).forEach(td=>td.classList.add('mark'));
     q(p,'[data-step="-1"]').disabled=band===0;q(p,'[data-step="1"]').disabled=band===6};
-  picker.oninput=()=>{chosen=Number(picker.value);stats()};
-  p.el.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{band=Math.max(0,Math.min(6,band+Number(b.dataset.step)));chosen=band*50+1;draw()});
-  p.el.querySelectorAll('[data-jump]').forEach(b=>b.onclick=()=>{chosen=Number(b.dataset.jump);band=Math.floor((chosen-1)/50);draw();q(p,'.curve-detail').scrollIntoView({block:'nearest',behavior:'smooth'})});
+  p.el.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{band=Math.max(0,Math.min(6,band+Number(b.dataset.step)));draw();q(p,'.curve-scroll').scrollTop=0});
+  p.el.querySelectorAll('[data-jump]').forEach(b=>b.onclick=()=>{mark=Number(b.dataset.jump);band=Math.floor((mark-1)/50);draw();
+    const td=q(p,`.curve-tens td[data-lv="${mark}"]`);td&&td.closest('table').scrollIntoView({block:'nearest',behavior:'smooth'})});
   draw();
 }
 
@@ -878,9 +915,9 @@ function openDifficultyCurve(){
 /* v12 settings: grouped (patch_v12_settings) */
 const SET_GROUPS=[['Sound',[['sfx','Sound'],['music','Music'],['haptics','Vibration']]],
   ['Gameplay',[['glueLock','Glued books never split','A glued pair stays together even when it is not on its spot yet']]],
-  ['Look',[['minimalUi','Minimalistic UI','Dark library theme with line icons (from v10)']]]];
+  ['Look',[['minimalUi','Minimalistic UI','Dark library theme with line icons (from v10)'],['bookCaps','Book tops','Varied heights come from a leather top above the picture. Off: all books the same height. The picture is never cut']]]];
 function settingsRows(){return SET_GROUPS.map(([g,rows])=>`<div class="setGrp"><span class="lbl">${g}</span>${rows.map(([k,l,h])=>`<div class="set"><span class="setL">${l}${h?`<small>${h}</small>`:''}</span><button class="tg ${S.settings[k]?'on':''}" data-set="${k}" aria-label="${l}"></button></div>`).join('')}</div>`).join('')}
-function bindSettings(p){p.el.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{const k=b.dataset.set;S.settings[k]=!S.settings[k];b.classList.toggle('on',S.settings[k]);Sound.musicSync();save();if(k==='minimalUi')applyUiStyle()})}
+function bindSettings(p){p.el.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{const k=b.dataset.set;S.settings[k]=!S.settings[k];b.classList.toggle('on',S.settings[k]);Sound.musicSync();save();if(k==='minimalUi')applyUiStyle();if(k==='bookCaps'&&typeof G!=='undefined'&&G&&!$('#sGame').hidden)layout(G.solved,true)})}
 function toolsHTML(){return `<details class="setTools"><summary class="lbl">Prototype tools</summary><button class="btn blue wide" id="showCurve"><span class="t">Difficulty Curve · 350 levels</span></button><div class="dbg">
    <button class="btn gold" data-d="t40"><span class="t">Test 40</span></button><button class="btn gold" data-d="t48"><span class="t">Test 48</span></button><button class="btn gold" data-d="t54"><span class="t">Test 54</span></button><button class="btn grey" data-d="lm"><span class="t">Level −10</span></button><button class="btn grey" data-d="lp"><span class="t">Level +10</span></button><button class="btn grey" data-d="l1"><span class="t">Level +1</span></button>
    <button class="btn grey" data-d="coins"><span class="t">+1000 coins</span></button><button class="btn grey" data-d="lives"><span class="t">Lose lives</span></button><button class="btn grey" data-d="day"><span class="t">Next day</span></button><button class="btn coral" data-d="reset"><span class="t">Reset</span></button></div></details>`}
@@ -979,7 +1016,7 @@ function slLeft(){const d=new Date(),e=new Date(d);e.setHours(24,0,0,0);while(e.
 const evDone=ev=>ev==='slide'?Object.keys(S.slide.stars).length>=SLIDE_LV.length:Object.keys(S.odd.stars).length>=ODD_LV.length;
 
 /* ---------- home buttons ---------- */
-/* v12: Lava Quest + Shield Arena вместо Art Slide / Odd Book (логика из v8.2) */
+/* v12: Quest + Shield Arena вместо Art Slide / Odd Book (логика из v8.2) */
 const SHIELD_NAMES=['Mia','Theo','Zara','Finn','Ivy','Milo','Sana','Ezra','Juno','Nia','Rook','Lola','Kai','Ava','Leo','Pixie','Bruno','Noah','Lyra','Oscar'];
 const SHIELD_MULT=[1,2,3,5,10],LAVA_N=5,LAVA_PRIZE=500;
 function ev12(){if(!S.ev12)S.ev12={lava:{step:0,chests:0},shield:{start:Date.now(),points:0,streak:0}};const s=S.ev12.shield;
@@ -988,14 +1025,14 @@ function shieldLeft(){return Math.max(0,ev12().shield.start+864e5-Date.now())}
 function shieldTime(){const m=Math.ceil(shieldLeft()/6e4);return `${Math.floor(m/60)}h ${String(m%60).padStart(2,'0')}m`}
 function shieldBoard(){const s=ev12().shield,el=Math.min(24,Math.max(0,(Date.now()-s.start)/36e5));
   return [{name:'You',points:s.points,me:true},...SHIELD_NAMES.map((name,i)=>({name,points:Math.floor((i%5)+1+el*(.38+(20-i)*.095))}))].sort((a,b)=>b.points-a.points||(a.me?-1:b.me?1:0))}
-function ev12Result(win){const e=ev12(),s=e.shield;
+function ev12Result(win){const e=ev12(),s=e.shield;skyResult(win);
   if(win){e.lava.step++;if(e.lava.step>=LAVA_N){e.lava.step=0;e.lava.chests++;S.coins+=LAVA_PRIZE;e.lava.prize=1}
     s.points+=SHIELD_MULT[Math.min(s.streak,4)];s.streak++}
   else{e.lava.step=0;s.streak=0}save()}
 function openLavaHub(){const e=ev12().lava;
   const steps=Array.from({length:LAVA_N},(_,i)=>`<span class="lqS ${i<e.step?'on':''}">${i+1}</span>`).join('')+`<img class="lqC" src="${ICO.coin}" alt="">`;
-  const p=popup({title:'Lava Quest',ribbon:'coral',html:`<img class="ev12Hero" src="ui/ev_lava.webp" alt=""><div class="lqRow">${steps}</div>
-    <div class="ptext">Win <b>${LAVA_N} levels in a row</b> to cross the lava and open the chest: <b>+${LAVA_PRIZE} coins</b>. A loss sends you back to the start.</div>
+  const p=popup({title:'Quest',ribbon:'coral',html:`<img class="ev12Hero" src="ui/ev_quest.webp?v=water-shark-20261103" alt=""><div class="lqRow">${steps}</div>
+    <div class="ptext">Win <b>${LAVA_N} levels in a row</b> to reach the treasure island and open the chest: <b>+${LAVA_PRIZE} coins</b>. A loss sends you back to the start.</div>
     <div class="ptext" style="font-size:13px;opacity:.75">Chests opened: ${e.chests}</div><button class="btn wide juicy" id="ok"><span class="t">Play</span></button>`});
   q(p,'#ok').onclick=()=>p.close(()=>openStart())}
 function openShieldHub(){const s=ev12().shield,bd=shieldBoard(),me=bd.findIndex(x=>x.me)+1;
@@ -1004,8 +1041,53 @@ function openShieldHub(){const s=ev12().shield,bd=shieldBoard(),me=bd.findIndex(
     <div class="ptext">Each win earns shields: <b>×${SHIELD_MULT[Math.min(s.streak,4)]}</b> for your next win (streak ${s.streak}). Ends in <b>${shieldTime()}</b>.</div>
     <div class="saB">${rows}</div><button class="btn blue wide" id="ok"><span class="t">Play</span></button>`});
   q(p,'#ok').onclick=()=>p.close(()=>openStart())}
+/* v12 Sky Lift v2 (2026-11-09): шар поднимается за каждую победу, чекпоинты-платформы с сундуками, проигрыш роняет до последнего чекпоинта */
+const SKY_CP=[2,5,8,11,15,20,25,30,40,50,60],SKY_REWARD=[40,60,80,100,130,160,200,250,300,400,600],
+  SKY_CHEST=['chest2','chest1','chest4','chest3','chest5','chest6','chest4','chest3','chest5','chest6','grand'],SKY_DAYS=3,SKY_SEG=150,SKY_BASE=190;
+function sky(){const e=ev12();if(!e.sky)e.sky={h:0,cp:0,start:Date.now(),seen:0,flights:0,prizes:[]};const k=e.sky;
+  if(Date.now()-k.start>=SKY_DAYS*864e5){k.start=Date.now();k.h=0;k.cp=0;k.seen=0;k.prizes=[]}return k}
+function skyLeft(){const ms=Math.max(0,sky().start+SKY_DAYS*864e5-Date.now()),hh=Math.ceil(ms/36e5);return `${Math.floor(hh/24)}d ${hh%24}h`}
+function skyTop(){return SKY_CP[SKY_CP.length-1]}
+function skyResult(win){const k=sky();if(win){if(k.cp>=SKY_CP.length)return;k.h++;if(k.h>=SKY_CP[k.cp]){(k.prizes=k.prizes||[]).push(k.cp);k.cp++}}
+  else k.h=k.cp?SKY_CP[k.cp-1]:0;save()}
+function skyUnits(h){let prev=0;for(let i=0;i<SKY_CP.length;i++){const c=SKY_CP[i];if(h>=c){prev=c;continue}return i+(h-prev)/(c-prev)}return SKY_CP.length}
+function skyY(u){return SKY_BASE+u*SKY_SEG}
+function skyPrizeCheck(){const k=sky();if(!k.prizes||!k.prizes.length)return;
+  const go=()=>{if($('#sHome').hidden||!k.prizes.length)return;if(popStack.length){setTimeout(go,900);return}const ids=k.prizes.splice(0),last=ids.includes(SKY_CP.length-1),coins=ids.reduce((s,i)=>s+SKY_REWARD[i],0);
+    addCoins(coins);if(last){k.flights++;k.h=0;k.cp=0;k.seen=0}save();offerHome();
+    const p=popup({title:'Sky Lift',ribbon:'purple',html:`<img class="ev12Hero skyHero" src="ui/sl_${SKY_CHEST[ids[ids.length-1]]}.webp" alt=""><div class="ptext">${last?'You reached the top of the Sky Lift!':`Floor${ids.length>1?'s':''} <b>${ids.map(i=>SKY_CP[i]).join(', ')}</b> reached!`} Chest${ids.length>1?'s':''} opened: <b>+${coins} coins</b></div><button class="btn wide juicy" id="ok"><span class="t">Collect</span></button>`});
+    confetti();Sound.play('win');q(p,'#ok').onclick=()=>{Sound.play('coin');p.close()}};
+  setTimeout(go,700)}
+const SKY_EASE={out:'cubic-bezier(.22,1,.36,1)',inout:'cubic-bezier(.65,0,.35,1)',in:'cubic-bezier(.5,0,.75,0)'};
+let skyAnim=0;
+function openSkyLift(){const k=sky(),N=SKY_CP.length,H=skyY(N)+380,sec=$('#sSky'),seen=k.seen;
+  const cps=SKY_CP.map((c,i)=>{const y=skyY(i+1),on=k.cp>i,fresh=on&&c>seen,done=on&&!fresh;
+    return (i===N-1?`<div class="skGrand ${done?'on':''}" data-i="${i}" style="--y:${y}px"><img class="skChest" src="ui/sl_grand.webp" alt=""></div>`
+      :`<div class="skStop ${done?'on':''}" data-i="${i}" style="--y:${y}px"><img class="skPlat" src="ui/sl2_bracket.webp" alt=""><img class="skChest" src="ui/sl_${SKY_CHEST[i]}.webp" alt=""></div>`)
+      +`<div class="skHex ${on?'on':''}" style="--y:${y}px"><span class="ol">${c}</span></div>`}).join('');
+  const clouds=Array.from({length:N+2},(_,i)=>`<img class="skCloud c${i%4}" src="ui/sl2_cloud${i%4+1}.webp" alt="" style="--y:${skyY(i+.45)+(i%3)*28}px;left:${i%2?58+(i*7)%26:44+(i*11)%14}%">`).join('');
+  const from=skyY(skyUnits(seen)),to=skyY(skyUnits(k.h)),next=k.cp<N?SKY_CP[k.cp]-k.h:0;
+  sec.innerHTML=`<div class="skBg"></div>
+    <div class="skTop"><button class="skI" id="skInfo" aria-label="How it works"><span class="ol">i</span></button><div class="skBanner"><img src="ui/sl_banner.webp" alt=""><span class="skTitle ol">Sky Lift</span><span class="skTime">${skyLeft()}</span></div><button class="xbtn skX" id="skClose" aria-label="Close">${SVG.x}</button></div>
+    <div class="skScroll" id="skScroll"><div class="skTower" style="height:${H}px"><div class="skCity"></div>${clouds}<div class="skMast"></div><div class="skMastTop"></div><div class="skMastBase"></div><div class="skHex zero on" style="--y:${SKY_BASE}px"><span class="ol">0</span></div>${cps}<div class="skBalloon" id="skBalloon" style="bottom:${from}px"><img src="ui/sl_balloon.webp" alt=""></div></div></div>
+    <div class="skHud"><div class="skFire"><img src="ui/sl_fire.webp" alt=""><b class="ol">${k.h}</b></div><div class="skInfoTxt"><strong>${k.cp>=N?'Top reached!':`${next} more win${next===1?'':'s'} to floor ${SKY_CP[k.cp]}`}</strong><span>Win levels to rise. A lost level drops the balloon to the last chest.${k.flights?` Flights completed: ${k.flights}.`:''}</span></div><button class="btn gold" id="skPlay"><span class="t">Play</span></button></div>`;
+  show('sSky');sec.classList.remove('out');sec.classList.add('in');
+  const sc=$('#skScroll'),b=$('#skBalloon'),center=y=>{sc.scrollTop=Math.max(0,H-y-sc.clientHeight*.56)};center(from);
+  const run=++skyAnim,alive=()=>run===skyAnim&&!sec.hidden;
+  /* вход экрана (каскад ≤500 мс) → подъём/падение шара: камера едет за ним → пауза 450 мс → сундуки пройденных этажей раскрываются по очереди */
+  setTimeout(()=>{if(!alive())return;sec.classList.remove('in');if(Math.abs(to-from)<1)return;
+    const up=to>from,dur=Math.min(1700,Math.max(650,Math.abs(to-from)*2.2));b.style.transition=`bottom ${dur}ms ${up?SKY_EASE.inout:SKY_EASE.in}`;b.style.bottom=to+'px';b.classList.add(up?'rise':'fall');Sound.play(up?'whoosh':'slide');
+    const fresh=SKY_CP.map((c,i)=>c>seen&&c<=k.h?i:-1).filter(i=>i>=0),t0=performance.now();
+    const tick=()=>{if(!alive())return;const t=Math.min(1,(performance.now()-t0)/dur);center(from+(to-from)*t);if(t<1)requestAnimationFrame(tick);else{b.classList.remove('rise','fall');
+      fresh.forEach((i,n)=>setTimeout(()=>{if(!alive())return;const st=sec.querySelector(`[data-i="${i}"]`);if(!st)return;st.classList.add('pop');Sound.play('coin');setTimeout(()=>{st.classList.remove('pop');st.classList.add('on')},460)},450+n*260))}};
+    requestAnimationFrame(tick)},520);
+  k.seen=k.h;save();
+  $('#skClose').onclick=()=>{Sound.play('click');skyExit()};
+  $('#skPlay').onclick=()=>{Sound.play('click');skyExit(()=>openStart())};
+  $('#skInfo').onclick=()=>{Sound.play('click');const p=popup({title:'Sky Lift',ribbon:'purple',html:`<img class="ev12Hero" src="ui/sl_balloon.webp" alt=""><div class="ptext">Every won level lifts the balloon one floor. Reach a chest floor to open it. A lost level drops you to the last chest you opened, never lower. Reach floor 60 for the grand prize! Ends in <b>${skyLeft()}</b>.</div><button class="btn wide juicy" id="ok"><span class="t">Got it</span></button>`});q(p,'#ok').onclick=()=>p.close()}}
+function skyExit(cb){closeAll();skyAnim++;const sec=$('#sSky');sec.classList.remove('in');sec.classList.add('out');setTimeout(()=>{sec.classList.remove('out');show('sHome');refreshHome();cb&&cb()},380)}
 function slHomeBtns(){const l=$('#hEvL'),r=$('#hEvR');if(!l)return;const e=ev12();l.hidden=true;r.hidden=true;
-  offerHome();if(e.lava.prize){e.lava.prize=0;save();setTimeout(()=>{if(!popStack.length){const p=popup({title:'Lava Quest',ribbon:'green',html:`<img class="ev12Hero" src="ui/ev_lava.webp" alt=""><div class="ptext">5 wins in a row! Chest opened: <b>+${LAVA_PRIZE} coins</b></div><button class="btn wide juicy" id="ok"><span class="t">Collect</span></button>`});confetti();Sound.play('win');q(p,'#ok').onclick=()=>p.close()}},650)}}
+  offerHome();skyPrizeCheck();if(e.lava.prize){e.lava.prize=0;save();setTimeout(()=>{if(!popStack.length){const p=popup({title:'Quest',ribbon:'green',html:`<img class="ev12Hero" src="ui/ev_quest.webp?v=water-shark-20261103" alt=""><div class="ptext">5 wins in a row! Chest opened: <b>+${LAVA_PRIZE} coins</b></div><button class="btn wide juicy" id="ok"><span class="t">Collect</span></button>`});confetti();Sound.play('win');q(p,'#ok').onclick=()=>p.close()}},650)}}
 const OFFER_START={price:'$1.99',coins:1500,inv:{glove:3,lens:2}};
 function openStarterOffer(){const P=OFFER_START,inv=Object.entries(P.inv);
   const p=popup({title:'Starter Pack',ribbon:'gold',cls:'spPop',html:`
@@ -1287,9 +1369,9 @@ function offerHome(){let box=$('#hOffers');if(!box){box=document.createElement('
   const btn=(id,side,top,img,lb,extra='')=>`<button class="ofbtn ${side}${extra.includes('class="tm"')?' hasTm':''}" id="${id}" style="top:${top}px"><img class="ic" src="${img}" alt="">${extra}<span class="lb ol">${lb}</span></button>`;
   const R=[];if(!S.removeAds)R.push(['ofNoAds','ui/of_noads.webp','No Ads','']);
   if(!S.starter)R.push(['ofStart','ui/dl_c2.webp','Starter Pack','']);else if(!S.offerPack)R.push(['ofPack','ui/of_pack.webp','Sale',`<span class="bdg">-${OFFER_PACK.off}%</span><span class="tm" id="ofTm">${offerLeft()}</span>`]);
-  box.innerHTML=btn('ofLava','l',0,'ui/ev_lava.webp','Lava Quest',`<span class="tm">${e.lava.step}/${LAVA_N}</span>`)+btn('ofShield','l',112,'ui/ev_shield.webp','Shield Arena',`<span class="tm">${shieldTime()}</span>`)+R.map((x,i)=>btn(x[0],'r',i*112,x[1],x[2],x[3])).join('');
+  box.innerHTML=btn('ofLava','l',0,'ui/ev_quest.webp?v=water-shark-20261103','Quest',`<span class="tm">${e.lava.step}/${LAVA_N}</span>`)+btn('ofShield','l',112,'ui/ev_shield.webp','Shield Arena',`<span class="tm">${shieldTime()}</span>`)+btn('ofSky','l',224,'ui/sl_balloon.webp','Sky Lift',`<span class="tm">${sky().h}/${skyTop()}</span>`)+R.map((x,i)=>btn(x[0],'r',i*112,x[1],x[2],x[3])).join('');
   const on=(id,f)=>{const el=$('#'+id);if(el)el.onclick=()=>{Sound.play('click');f()}};
-  on('ofLava',openLavaHub);on('ofShield',openShieldHub);on('ofNoAds',openNoAds);on('ofStart',openStarterOffer);on('ofPack',openPackOffer);caseNav()}
+  on('ofLava',openLavaHub);on('ofShield',openShieldHub);on('ofSky',openSkyLift);on('ofNoAds',openNoAds);on('ofStart',openStarterOffer);on('ofPack',openPackOffer);caseNav()}
 setInterval(()=>{const t=$('#ofTm');if(t&&!$('#sHome').hidden)t.textContent=offerLeft()},1000);
 /* ---------- v102: juicy offers + booster unlock tutorial ---------- */
 const AD_SIGN=`<div class="adSign"><div class="adH l"><b>AD</b></div><div class="adH r"><b>AD</b></div><i class="crk"></i></div>`;
@@ -1383,7 +1465,7 @@ function brushRowFix(r,order=G.order){const o=order.slice();let need=0;
     o[q]=a;o[p]=p}
   return{o:need?o:null,need,blocked:false}}
 function brushCan(){if(!G)return[];const out=[];for(let r=0;r<G.rows;r++){const f=brushRowFix(r);if(f.o)out.push(r)}return out}
-function rowRect(r){const cr=relRect(caseEl),L=G.Lay,y=cr.y+L.pad+r*(L.rowH+L.t);return{x:cr.x+L.side,y,w:L.imgW,h:L.rowH,by:y+L.rowH-L.sh,bh:L.sh}}
+function rowRect(r){const cr=relRect(caseEl),L=G.Lay,y=cr.y+L.pad+r*(L.rowH+L.t);return{x:cr.x+L.side,y,w:L.imgW,h:L.rowH,by:y+L.rowH-L.ph,bh:L.ph}}
 function brushArm(){if(!G||G.locked||G.solved)return;tipOff();clearHint();const ok=brushCan();G.brush={ok};
   const sr=relRect(stage),pad=document.createElement('div');pad.id='brPad';
   pad.innerHTML=`<div class="brBub"><img src="${ICO.brush}" alt=""><span>Choose a shelf to paint</span></div>`+
@@ -1416,7 +1498,7 @@ function paintShelf(r){const f=brushRowFix(r);if(!f.o)return;G.brush.pad.remove(
   Sound.play('whoosh');
   /* 2 — a primed canvas glows over the chosen shelf */
   const cv=add('brFog',{left:R.x-3+'px',top:R.by-3+'px',width:R.w+6+'px',height:R.bh+6+'px'});cv.innerHTML='<i></i><i></i><i></i>';
-  const art=add('brArt',{left:R.x+'px',top:R.by+'px',width:R.w+'px',height:R.bh+'px',backgroundImage:`url(${G.art.file})`,backgroundSize:`${G.Lay.imgW}px ${G.Lay.imgH}px`,backgroundPosition:`0 ${-r*G.Lay.sh}px`});
+  const art=add('brArt',{left:R.x+'px',top:R.by+'px',width:R.w+'px',height:R.bh+'px',backgroundImage:`url(${G.art.file})`,backgroundSize:`${G.Lay.imgW}px ${G.Lay.artH*G.Lay.imgW/G.Lay.artW}px`,backgroundPosition:`0 ${-r*G.Lay.ph*G.Lay.imgW/G.Lay.artW}px`});
   if(!RM){cv.animate([{opacity:0},{opacity:1}],{duration:380,delay:260,easing:'cubic-bezier(.2,.8,.3,1)',fill:'backwards'})}
   const edge=add('brEdge',{left:R.x+'px',top:R.by-6+'px',height:R.bh+12+'px'});edge.style.opacity='0';
   /* 3 — under cover: books jump to their new homes instantly */
@@ -1653,3 +1735,11 @@ function freezeStart(){const g=G,mv=$('#gMoves'),END=performance.now()+5000;g.fr
 document.addEventListener('pointerdown',()=>Sound.init(),{capture:true,once:true});
 
 /* gallery sets of 10 (patch_gallery_sets.py, 2026-10-23) */
+
+/* v12 full-art self-check: every book shows a full cell; the cells tile the painting exactly */
+window.__artCheck=()=>{const L=G.Lay,seen=new Map();let area=0,bad=[];
+  G.books.forEach(b=>{const cs=getComputedStyle(b.el),w=parseFloat(b.el.style.width),hh=parseFloat(b.el.style.height)-(b.cap||0);
+    const [bx,by]=b.el.style.backgroundPosition.split(' ').map(v=>-parseFloat(v));const [aw,ah]=b.el.style.backgroundSize.split(' ').map(parseFloat);
+    const c=Math.round(bx/w),r=Math.round(by/hh),k=r+','+c;if(Math.abs(w-L.pw)>.01||Math.abs(hh-L.ph)>.01||Math.abs(bx-c*w)>.01||Math.abs(by-r*hh)>.01)bad.push(b.id);
+    seen.set(k,(seen.get(k)||0)+1);area+=w*hh;if(Math.abs(aw-L.artW)>.01||Math.abs(ah-L.artH)>.01)bad.push('size'+b.id)});
+  return{ok:!bad.length&&seen.size===G.n&&[...seen.values()].every(v=>v===1),coverage:+(area/(L.artW*L.artH)*100).toFixed(2),cells:seen.size,books:G.n,bad}};
