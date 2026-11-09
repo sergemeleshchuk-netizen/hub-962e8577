@@ -62,7 +62,7 @@ const fmt=s=>{s=Math.max(0,Math.ceil(s));const m=Math.floor(s/60),x=s%60;return 
    ========================================================= */
 const DEF={level:1,coins:300,lives:5,livesTs:0,inv:{peek:0,lens:0,glove:0,key:0,brush:0,bookmark:0,corners:0,center:0,glue:0,shelf:0},gifted:{},seenFeat:{},arts:{},albums:{},
   cases:{own:[],on:''},daily:{day:0,last:''},league:{week:'',pts:0},streak:0,removeAds:false,starter:false,bundle:false,adGap:0,attempts:{},tut:{},rv:{d:'',n:0},
-  settings:{sfx:true,music:true,haptics:true,glueLock:true,minimalUi:false,frame:true},stats:{wins:0,fails:0,boosters:0}};
+  settings:{sfx:true,music:true,haptics:true,glueLock:true,minimalUi:false,frame:true,bookCaps:true},stats:{wins:0,fails:0,boosters:0}};
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object')merge(a[k],b[k]);else a[k]=b[k]}return a}
 let S=(()=>{try{const s=JSON.parse(localStorage.getItem('bap_v12')||'null');if(s)return merge(JSON.parse(JSON.stringify(DEF)),s)}catch(e){}return JSON.parse(JSON.stringify(DEF))})();
 function save(){try{localStorage.setItem('bap_v12',JSON.stringify(S))}catch(e){}}
@@ -258,13 +258,16 @@ function anchorFx(){const now=new Set();for(let id=0;id<G.n;id++)if(isAnch(id))n
 function syncPos(){G.pos=[];G.order.forEach((id,p)=>G.pos[id]=p)}
 const correctOf=o=>o.reduce((s,id,p)=>s+(id===p),0);
 
+/* v12 full-art (patch_v12_full_art) */
 function computeLayout(solved,availW,availH){const {rows,cols}=G;
-  const CS=!solved&&!!app.dataset.case;const side=solved?8:(CS?17:14),pad=solved?8:(CS?17:12),t=solved?0:(CS?clamp(availH*.036,16,22):clamp(availH*.022,9,14)),hr=0;   /* Unity port: a shelf is exactly one cell tall */
-  let imgW=Math.min(availW-2*side,520),imgH=imgW;
-  if(2*pad+imgH*(1+hr)+(rows-1)*t>availH){imgH=(availH-2*pad-(rows-1)*t)/(1+hr);imgW=imgH}
-  const sw=imgW/cols,sh=imgH/rows;
-  const rowH=sh;
-  return{solved,side,pad,t,imgW,imgH,sw,sh,rowH,caseW:imgW+2*side,caseH:2*pad+rows*rowH+(rows-1)*t}}
+  const CS=!solved&&!!app.dataset.case;const side=solved?8:(CS?17:14),pad=solved?8:(CS?17:12),t=solved?0:(CS?clamp(availH*.036,16,22):clamp(availH*.022,9,14));
+  const capK=(!solved&&S.settings.bookCaps!==false)?.08:0;           /* leather top: up to 8 % of the picture height */
+  const gap=solved?0:clamp(Math.round(Math.min(availW-2*side,520)/cols*.09),3,6);               /* real empty space between books (frames live here) */
+  let pw=Math.min(availW-2*side,520)/cols-gap,ph=pw*cols/rows;         /* the painting is square: cols*pw == rows*ph */
+  const H2=availH-2*pad-(rows-1)*t;
+  if(rows*ph*(1+capK)>H2){ph=H2/(rows*(1+capK));pw=ph*rows/cols}
+  const sw=pw+gap,capMax=ph*capK,rowH=ph+capMax,sh=rowH,imgW=sw*cols,imgH=rows*rowH;
+  return{solved,side,pad,t,imgW,imgH,sw,sh,rowH,pw,ph,gap,capMax,artW:pw*cols,artH:ph*rows,caseW:imgW+2*side,caseH:2*pad+rows*rowH+(rows-1)*t}}
 function slot(L,p){const r=Math.floor(p/G.cols),c=p%G.cols;return{r,c,x:L.side+c*L.sw,y:L.pad+r*(L.rowH+L.t)+(L.rowH-L.sh)}}
 function layout(solved,instant){const W=stage.clientWidth,H=stage.clientHeight;
   const CR=(!solved&&app.dataset.case)?Math.round(Math.min(78,(W+32)/3.2)-14):0,BS=CR?Math.round((W+30)/5.8-22):0;const L=computeLayout(solved,W-(CR?8:0),solved?Math.min(H-20,W):H-14-CR-BS);G.Lay=L;
@@ -272,7 +275,7 @@ function layout(solved,instant){const W=stage.clientWidth,H=stage.clientHeight;
   for(let r=0;r<G.rows;r++){const y=L.pad+r*(L.rowH+L.t);Object.assign(G.rowbacks[r].style,{left:L.side+'px',top:y+'px',width:L.imgW+'px',height:L.rowH+'px'});
     Object.assign(G.planks[r].style,{left:(L.side-5)+'px',top:(y+L.rowH)+'px',width:(L.imgW+10)+'px',height:(r===G.rows-1?0:L.t)+'px'})}
   Object.assign(G.final.style,{left:L.side+'px',top:L.pad+'px',width:L.imgW+'px',height:L.imgH+'px'});
-  G.books.forEach(b=>{b.el.style.backgroundSize=`${L.imgW}px ${L.imgH}px`});
+  G.books.forEach(b=>{b.el.style.backgroundSize=`${L.artW}px ${L.artH}px`});caseEl.style.setProperty('--ring',Math.min(3,(L.gap||0)/2)+'px');
   refreshBooks(instant);placeGhosts();
   {const R=G.rows,C=G.cols,rad='10px';G.books.forEach(b=>{const p=G.pos[b.id],r=Math.floor(p/C),c=p%C;
     b.el.style.borderRadius=solved?`${r===0&&c===0?rad:0} ${r===0&&c===C-1?rad:0} ${r===R-1&&c===C-1?rad:0} ${r===R-1&&c===0?rad:0}`:''})}}
@@ -329,14 +332,13 @@ function flyTo(txt,x0,y0,x1,y1,o){const t=document.createElement('div');t.classN
 function refreshBooks(instant){const L=G.Lay;G.groups=computeGroups();
   G.books.forEach(b=>{const el=b.el,lk=G.groups.links[b.id]||{},glued=!!(lk.l||lk.r||lk.u||lk.d);
     if(instant)el.style.transition='none';
-    const base=L.solved?0:Math.min(b.inset,L.sw*.07);
-    b.insL=lk.l?0:base;b.insR=lk.r?0:base;b.hfNow=(L.solved||glued)?1:b.hf;
+    b.insL=b.insR=(L.gap||0)/2;b.hfNow=1;b.cap=L.capMax?L.capMax*((L.solved||glued)?1:clamp((b.hf-.92)/.08,0,1)):0;
     const cr=Math.floor(b.id/G.cols),cc=b.id%G.cols;
-    el.style.width=(L.sw-b.insL-b.insR)+'px';el.style.height=(L.sh*b.hfNow)+'px';
-    el.style.backgroundPosition=`${-(cc*L.sw+b.insL)}px ${-(cr*L.sh+L.sh*(1-b.hfNow))}px`;
+    el.style.width=L.pw+'px';el.style.height=(L.ph+b.cap)+'px';el.style.borderTopWidth=b.cap+'px';el.style.setProperty('--cap',b.cap+'px');
+    el.style.backgroundPosition=`${-(cc*L.pw)}px ${-(cr*L.ph)}px`;
     el.classList.toggle('glued',glued&&!L.solved);el.classList.toggle('framed',isAnch(b.id)&&!L.solved);el.classList.toggle('gl-l',!!lk.l);el.classList.toggle('gl-r',!!lk.r);
     placeBook(b.id);if(instant){el.offsetHeight;el.style.transition=''}});syncTies()}
-function bookXY(id,p){const L=G.Lay,b=G.books[id],s=slot(L,p);return{x:s.x+b.insL,y:s.y+L.sh*(1-b.hfNow)}}
+function bookXY(id,p){const L=G.Lay,b=G.books[id],s=slot(L,p);return{x:s.x+b.insL,y:s.y+L.rowH-L.ph-(b.cap||0)}}
 function placeBook(id,p=G.pos[id],lift=0,solo=true){const {x,y}=bookXY(id,p);G.books[id].el.style.transform=`translate3d(${x}px,${y-lift*9}px,0) scale(${solo?1+lift*.06:1})`}
 function liftGroup(ids,on){const solo=ids.length===1;ids.forEach(i=>{G.books[i].el.classList.toggle('lift',on);placeBook(i,G.pos[i],on?1:0,solo)})}
 
@@ -912,9 +914,9 @@ function openDifficultyCurve(){
 /* v12 settings: grouped (patch_v12_settings) */
 const SET_GROUPS=[['Sound',[['sfx','Sound'],['music','Music'],['haptics','Vibration']]],
   ['Gameplay',[['glueLock','Glued books never split','A glued pair stays together even when it is not on its spot yet']]],
-  ['Look',[['minimalUi','Minimalistic UI','Dark library theme with line icons (from v10)']]]];
+  ['Look',[['minimalUi','Minimalistic UI','Dark library theme with line icons (from v10)'],['bookCaps','Book tops','Varied heights come from a leather top above the picture. Off: all books the same height. The picture is never cut']]]];
 function settingsRows(){return SET_GROUPS.map(([g,rows])=>`<div class="setGrp"><span class="lbl">${g}</span>${rows.map(([k,l,h])=>`<div class="set"><span class="setL">${l}${h?`<small>${h}</small>`:''}</span><button class="tg ${S.settings[k]?'on':''}" data-set="${k}" aria-label="${l}"></button></div>`).join('')}</div>`).join('')}
-function bindSettings(p){p.el.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{const k=b.dataset.set;S.settings[k]=!S.settings[k];b.classList.toggle('on',S.settings[k]);Sound.musicSync();save();if(k==='minimalUi')applyUiStyle()})}
+function bindSettings(p){p.el.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{const k=b.dataset.set;S.settings[k]=!S.settings[k];b.classList.toggle('on',S.settings[k]);Sound.musicSync();save();if(k==='minimalUi')applyUiStyle();if(k==='bookCaps'&&typeof G!=='undefined'&&G&&!$('#sGame').hidden)layout(G.solved,true)})}
 function toolsHTML(){return `<details class="setTools"><summary class="lbl">Prototype tools</summary><button class="btn blue wide" id="showCurve"><span class="t">Difficulty Curve · 350 levels</span></button><div class="dbg">
    <button class="btn gold" data-d="t40"><span class="t">Test 40</span></button><button class="btn gold" data-d="t48"><span class="t">Test 48</span></button><button class="btn gold" data-d="t54"><span class="t">Test 54</span></button><button class="btn grey" data-d="lm"><span class="t">Level −10</span></button><button class="btn grey" data-d="lp"><span class="t">Level +10</span></button><button class="btn grey" data-d="l1"><span class="t">Level +1</span></button>
    <button class="btn grey" data-d="coins"><span class="t">+1000 coins</span></button><button class="btn grey" data-d="lives"><span class="t">Lose lives</span></button><button class="btn grey" data-d="day"><span class="t">Next day</span></button><button class="btn coral" data-d="reset"><span class="t">Reset</span></button></div></details>`}
@@ -1417,7 +1419,7 @@ function brushRowFix(r,order=G.order){const o=order.slice();let need=0;
     o[q]=a;o[p]=p}
   return{o:need?o:null,need,blocked:false}}
 function brushCan(){if(!G)return[];const out=[];for(let r=0;r<G.rows;r++){const f=brushRowFix(r);if(f.o)out.push(r)}return out}
-function rowRect(r){const cr=relRect(caseEl),L=G.Lay,y=cr.y+L.pad+r*(L.rowH+L.t);return{x:cr.x+L.side,y,w:L.imgW,h:L.rowH,by:y+L.rowH-L.sh,bh:L.sh}}
+function rowRect(r){const cr=relRect(caseEl),L=G.Lay,y=cr.y+L.pad+r*(L.rowH+L.t);return{x:cr.x+L.side,y,w:L.imgW,h:L.rowH,by:y+L.rowH-L.ph,bh:L.ph}}
 function brushArm(){if(!G||G.locked||G.solved)return;tipOff();clearHint();const ok=brushCan();G.brush={ok};
   const sr=relRect(stage),pad=document.createElement('div');pad.id='brPad';
   pad.innerHTML=`<div class="brBub"><img src="${ICO.brush}" alt=""><span>Choose a shelf to paint</span></div>`+
@@ -1450,7 +1452,7 @@ function paintShelf(r){const f=brushRowFix(r);if(!f.o)return;G.brush.pad.remove(
   Sound.play('whoosh');
   /* 2 — a primed canvas glows over the chosen shelf */
   const cv=add('brFog',{left:R.x-3+'px',top:R.by-3+'px',width:R.w+6+'px',height:R.bh+6+'px'});cv.innerHTML='<i></i><i></i><i></i>';
-  const art=add('brArt',{left:R.x+'px',top:R.by+'px',width:R.w+'px',height:R.bh+'px',backgroundImage:`url(${G.art.file})`,backgroundSize:`${G.Lay.imgW}px ${G.Lay.imgH}px`,backgroundPosition:`0 ${-r*G.Lay.sh}px`});
+  const art=add('brArt',{left:R.x+'px',top:R.by+'px',width:R.w+'px',height:R.bh+'px',backgroundImage:`url(${G.art.file})`,backgroundSize:`${G.Lay.imgW}px ${G.Lay.artH*G.Lay.imgW/G.Lay.artW}px`,backgroundPosition:`0 ${-r*G.Lay.ph*G.Lay.imgW/G.Lay.artW}px`});
   if(!RM){cv.animate([{opacity:0},{opacity:1}],{duration:380,delay:260,easing:'cubic-bezier(.2,.8,.3,1)',fill:'backwards'})}
   const edge=add('brEdge',{left:R.x+'px',top:R.by-6+'px',height:R.bh+12+'px'});edge.style.opacity='0';
   /* 3 — under cover: books jump to their new homes instantly */
@@ -1687,3 +1689,11 @@ function freezeStart(){const g=G,mv=$('#gMoves'),END=performance.now()+5000;g.fr
 document.addEventListener('pointerdown',()=>Sound.init(),{capture:true,once:true});
 
 /* gallery sets of 10 (patch_gallery_sets.py, 2026-10-23) */
+
+/* v12 full-art self-check: every book shows a full cell; the cells tile the painting exactly */
+window.__artCheck=()=>{const L=G.Lay,seen=new Map();let area=0,bad=[];
+  G.books.forEach(b=>{const cs=getComputedStyle(b.el),w=parseFloat(b.el.style.width),hh=parseFloat(b.el.style.height)-(b.cap||0);
+    const [bx,by]=b.el.style.backgroundPosition.split(' ').map(v=>-parseFloat(v));const [aw,ah]=b.el.style.backgroundSize.split(' ').map(parseFloat);
+    const c=Math.round(bx/w),r=Math.round(by/hh),k=r+','+c;if(Math.abs(w-L.pw)>.01||Math.abs(hh-L.ph)>.01||Math.abs(bx-c*w)>.01||Math.abs(by-r*hh)>.01)bad.push(b.id);
+    seen.set(k,(seen.get(k)||0)+1);area+=w*hh;if(Math.abs(aw-L.artW)>.01||Math.abs(ah-L.artH)>.01)bad.push('size'+b.id)});
+  return{ok:!bad.length&&seen.size===G.n&&[...seen.values()].every(v=>v===1),coverage:+(area/(L.artW*L.artH)*100).toFixed(2),cells:seen.size,books:G.n,bad}};
