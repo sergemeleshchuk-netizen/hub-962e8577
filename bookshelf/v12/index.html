@@ -149,6 +149,50 @@ body.minimal .mcHd small{background:none;border:1px solid #C9A25C;color:#E3C27A}
 </style>
 <style id="padBubCss">#brPad .brBub.lo{top:auto;transform:none;border-radius:16px;pointer-events:none;box-shadow:0 0 0 3px #FFE14D,0 8px 18px rgba(0,0,0,.25);animation:padBubIn .35s cubic-bezier(.34,1.56,.64,1) both}#brPad .brBub.lo::after{content:"";position:absolute;left:calc(var(--ax,50%) - 8px);bottom:-7px;width:16px;height:16px;background:#fff;transform:rotate(45deg);box-shadow:3px 3px 0 0 #FFE14D}#brPad .brBub.lo.go{opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s}@keyframes padBubIn{from{opacity:0;transform:translateY(8px) scale(.9)}to{opacity:1;transform:none}}</style>
 <style id="hiddenTutorialFocus">#mechW .spotH.hiddenFocus{border-radius:6px;border:0;outline:0;box-shadow:0 0 0 2000px rgba(16,10,40,.72);animation:none}#mechW .spotH.hiddenFocus::after{display:none}</style>
+<style>/* v12 Sky Lift */
+#sSky{background:#7CC5FF;z-index:7}
+.skBg{position:absolute;inset:0;background:url(ui/sl_sky.webp) center/cover no-repeat;z-index:0}
+.skTop{position:relative;z-index:2;height:calc(112px + env(safe-area-inset-top,0px));padding-top:calc(6px + env(safe-area-inset-top,0px));display:flex;align-items:flex-start;justify-content:center}
+.skBanner{position:relative;width:236px}
+.skBanner img{width:100%;display:block;filter:drop-shadow(0 6px 8px rgba(40,10,70,.35))}
+.skTitle{position:absolute;left:0;right:0;top:56%;text-align:center;font:800 25px/1 var(--f-hero);color:#fff;--o:#5A1E8A}
+.skTime{position:absolute;left:0;right:0;top:85%;text-align:center;font:800 12px/1 var(--f-num);color:#FFE38A;text-shadow:0 1px 0 #5A1E8A}
+.skI{position:absolute;left:12px;top:calc(16px + env(safe-area-inset-top,0px));width:40px;height:40px;border-radius:50%;border:3px solid #fff;background:linear-gradient(#8FC8FF,#3C86E8);box-shadow:0 4px 0 #1C4BA8;font:800 20px/1 var(--f-num);color:#fff;display:grid;place-items:center;padding:0}
+.skI .ol{--o:#1C4BA8}
+.xbtn.skX{position:absolute;right:12px;top:calc(14px + env(safe-area-inset-top,0px))}
+.skScroll{position:relative;z-index:1;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.skScroll::-webkit-scrollbar{display:none}
+.skTower{position:relative;width:100%}
+.skRail{position:absolute;left:14px;top:0;bottom:0;width:60px;isolation:isolate;background:url(ui/sl_rail_top.webp) top/60px auto no-repeat,url(ui/sl_rail_bot.webp) bottom/60px auto no-repeat;filter:drop-shadow(0 4px 6px rgba(40,10,70,.3))}
+.skRail::before{content:"";position:absolute;left:0;right:0;top:42px;bottom:42px;background:url(ui/sl_rail_mid.webp) top/60px auto repeat-y;z-index:-1}
+.skHex{position:absolute;left:17px;bottom:var(--y);width:54px;height:59px;transform:translateY(50%);background:url(ui/sl_hex.webp) center/contain no-repeat;display:grid;place-items:center;font:800 21px/1 var(--f-num);color:#fff;--o:#5A1E8A;z-index:3;filter:drop-shadow(0 3px 4px rgba(40,10,70,.35))}
+.skHex .ol{--o:#5A1E8A;padding-top:2px}
+.skHex.on{filter:drop-shadow(0 0 6px #FFE38A) drop-shadow(0 3px 4px rgba(40,10,70,.35))}
+.skStop{position:absolute;left:62px;bottom:calc(var(--y) - 54px);width:124px;z-index:2}
+.skShelf{width:124px;display:block;filter:drop-shadow(0 5px 6px rgba(40,10,70,.3))}
+.skChest{position:absolute;left:62px;bottom:50px;width:58px;filter:drop-shadow(0 4px 5px rgba(40,10,70,.35))}
+.skStop.on .skChest{animation:skGlow 2.2s ease-in-out infinite}
+@keyframes skGlow{0%,100%{filter:drop-shadow(0 4px 5px rgba(40,10,70,.35)) drop-shadow(0 0 4px rgba(255,227,138,.6))}50%{filter:drop-shadow(0 4px 5px rgba(40,10,70,.35)) drop-shadow(0 0 12px rgba(255,227,138,1))}}
+.skPill{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:3px;padding:3px 8px 3px 5px;border-radius:12px;background:var(--ink);color:#fff;font:800 12px/1 var(--f-num);white-space:nowrap;border:1.5px solid #FFD56A;box-shadow:0 2px 4px rgba(0,0,0,.3)}
+.skPill img{width:14px;height:14px}
+.skPill.on{background:linear-gradient(#9AF0A8,#38B852);color:#fff;border-color:#fff}
+.skGrand{position:absolute;left:22px;bottom:calc(var(--y) - 30px);width:180px;z-index:2}
+.skGrand img:first-child{width:100%;display:block;filter:drop-shadow(0 6px 10px rgba(40,10,70,.3));animation:skFloat 4s ease-in-out infinite}
+.skGrand .skPill{bottom:-6px}
+@keyframes skFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.skStart{position:absolute;left:66%;bottom:calc(var(--y) - 36px);transform:translateX(-50%);font:800 16px/1 var(--f-hero);color:#fff;--o:#5A1E8A;letter-spacing:.04em}
+.skBalloon{position:absolute;left:66%;width:124px;transform:translateX(-50%);transition:bottom 1.1s cubic-bezier(.4,0,.2,1);z-index:4;pointer-events:none}
+.skBalloon img{width:100%;display:block;filter:drop-shadow(0 10px 12px rgba(40,10,70,.35));animation:skBob 3.2s ease-in-out infinite;transform-origin:50% 0}
+@keyframes skBob{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-7px) rotate(1.5deg)}}
+.skHud{position:relative;z-index:2;display:flex;align-items:center;gap:10px;padding:8px 12px calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(40,10,70,0),rgba(40,10,70,.6))}
+.skFire{position:relative;width:62px;height:74px;flex:none}
+.skFire img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 3px 4px rgba(40,10,70,.35))}
+.skFire b{position:absolute;left:0;right:0;top:63%;transform:translateY(-50%);text-align:center;font:800 24px/1 var(--f-num);color:#fff;--o:#B5221A}
+.skInfoTxt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;color:#fff;font:700 11.5px/1.3 var(--f-ui);text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.skInfoTxt strong{font:800 15px/1.2 var(--f-hero)}
+#skPlay{flex:none;min-width:92px}
+.skyHero{width:140px;height:120px}
+</style>
 </head><body><title>Bookshelf: Art Puzzle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1874,6 +1918,7 @@ body{height:100dvh;display:flex;align-items:center;justify-content:center;backgr
     <div id="stage"><div id="case"></div><div id="peek"><div class="pf"><i id="peekImg"></i><span class="pk-n ol">3</span><div class="pk-bar"><i></i></div><span class="pk-x"><b>✕</b>Tap to close</span></div></div></div>
     <div class="bbar" id="gBoosters"></div>
   </section>
+  <section class="scr" id="sSky" hidden></section>
   <section class="scr" id="sSlide" hidden>
     <div class="topbar evRes"><div class="ctr evLives"><img src="ui/i_heart.png" alt=""><span class="v livesV">5</span><span class="sv livesSv">Full</span><button class="plus" aria-label="Get lives"><span class="ol">+</span></button></div><div class="ctr evCoins"><img src="ui/i_coin.png" alt=""><span class="v coinsV">0</span><button class="plus" aria-label="Get coins"><span class="ol">+</span></button></div></div>
     <div class="hud slHud">

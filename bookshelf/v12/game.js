@@ -702,7 +702,7 @@ function unlockBar(done){const x=unlockNext(done);if(!x)return'';const ready=x.l
     <div class="urMid"><div class="urT1">${x.u.t}: <b>${x.u.n}</b></div><div class="urBar"><i style="width:${x.from*100}%"></i><span class="ol">${ready?'Next level!':Math.round(x.from*100)+'%'}</span></div></div></div>`}
 function unlockAnim(root){const b=root.querySelector('.urBox');if(!b)return;const i=b.querySelector('.urBar i'),s=b.querySelector('.urBar span'),to=+b.dataset.to,fr=+b.dataset.from,ready=b.classList.contains('ready');
   setTimeout(()=>{i.style.width=to*100+'%';const t0=performance.now();const st=t=>{const k=Math.min(1,(t-t0)/900),v=fr+(to-fr)*(1-Math.pow(1-k,3));if(!ready)s.textContent=Math.round(v*100)+'%';if(k<1)requestAnimationFrame(st);else if(to>=1){b.classList.add('urGo');Sound.play('magic')}};requestAnimationFrame(st)},500)}
-function show(id){['sHome','sGame','sSlide','sOdd'].forEach(s=>$('#'+s).hidden=s!==id);if(id==='sSlide'||id==='sOdd')evRes()}
+function show(id){['sHome','sGame','sSlide','sOdd','sSky'].forEach(s=>$('#'+s).hidden=s!==id);if(id==='sSlide'||id==='sOdd')evRes()}
 function evRes(){tickLives();document.querySelectorAll('.coinsV').forEach(e=>e.textContent=S.coins);document.querySelectorAll('.livesV').forEach(e=>e.textContent=S.lives);document.querySelectorAll('.livesSv').forEach(e=>e.textContent=S.lives>=MAXL?'Full':fmt((REGEN-(Date.now()-S.livesTs))/1000))}
 setInterval(()=>{if(!$('#sSlide').hidden||!$('#sOdd').hidden)evRes()},1000);
 document.querySelectorAll('.evCoins .plus').forEach(b=>b.onclick=()=>{Sound.play('click');S.level>=10?openShop():toast('Shop opens at level 10')});
@@ -1024,7 +1024,7 @@ function shieldLeft(){return Math.max(0,ev12().shield.start+864e5-Date.now())}
 function shieldTime(){const m=Math.ceil(shieldLeft()/6e4);return `${Math.floor(m/60)}h ${String(m%60).padStart(2,'0')}m`}
 function shieldBoard(){const s=ev12().shield,el=Math.min(24,Math.max(0,(Date.now()-s.start)/36e5));
   return [{name:'You',points:s.points,me:true},...SHIELD_NAMES.map((name,i)=>({name,points:Math.floor((i%5)+1+el*(.38+(20-i)*.095))}))].sort((a,b)=>b.points-a.points||(a.me?-1:b.me?1:0))}
-function ev12Result(win){const e=ev12(),s=e.shield;
+function ev12Result(win){const e=ev12(),s=e.shield;skyResult(win);
   if(win){e.lava.step++;if(e.lava.step>=LAVA_N){e.lava.step=0;e.lava.chests++;S.coins+=LAVA_PRIZE;e.lava.prize=1}
     s.points+=SHIELD_MULT[Math.min(s.streak,4)];s.streak++}
   else{e.lava.step=0;s.streak=0}save()}
@@ -1040,8 +1040,42 @@ function openShieldHub(){const s=ev12().shield,bd=shieldBoard(),me=bd.findIndex(
     <div class="ptext">Each win earns shields: <b>×${SHIELD_MULT[Math.min(s.streak,4)]}</b> for your next win (streak ${s.streak}). Ends in <b>${shieldTime()}</b>.</div>
     <div class="saB">${rows}</div><button class="btn blue wide" id="ok"><span class="t">Play</span></button>`});
   q(p,'#ok').onclick=()=>p.close(()=>openStart())}
+/* v12 Sky Lift (2026-11-09): шар поднимается за каждую победу, чекпоинты-полки с сундуками, проигрыш роняет до последнего флажка */
+const SKY_CP=[2,5,8,11,15,20,25],SKY_REWARD=[40,80,120,180,250,350,600],SKY_CHEST=['chest2','chest1','chest4','chest3','chest5','chest6','grand'],SKY_DAYS=3,SKY_SEG=168,SKY_BASE=150;
+function sky(){const e=ev12();if(!e.sky)e.sky={h:0,cp:0,start:Date.now(),seen:0,flights:0,prizes:[]};const k=e.sky;
+  if(Date.now()-k.start>=SKY_DAYS*864e5){k.start=Date.now();k.h=0;k.cp=0;k.seen=0;k.prizes=[]}return k}
+function skyLeft(){const ms=Math.max(0,sky().start+SKY_DAYS*864e5-Date.now()),hh=Math.ceil(ms/36e5);return `${Math.floor(hh/24)}d ${hh%24}h`}
+function skyTop(){return SKY_CP[SKY_CP.length-1]}
+function skyResult(win){const k=sky();if(win){if(k.cp>=SKY_CP.length)return;k.h++;if(k.h>=SKY_CP[k.cp]){(k.prizes=k.prizes||[]).push(k.cp);k.cp++}}
+  else k.h=k.cp?SKY_CP[k.cp-1]:0;save()}
+function skyUnits(h){let prev=0;for(let i=0;i<SKY_CP.length;i++){const c=SKY_CP[i];if(h>=c){prev=c;continue}return i+(h-prev)/(c-prev)}return SKY_CP.length}
+function skyY(u){return SKY_BASE+u*SKY_SEG}
+function skyPrizeCheck(){const k=sky();if(!k.prizes||!k.prizes.length)return;
+  const go=()=>{if($('#sHome').hidden)return;if(popStack.length){setTimeout(go,900);return}const ids=k.prizes.splice(0),last=ids.includes(SKY_CP.length-1),coins=ids.reduce((s,i)=>s+SKY_REWARD[i],0);
+    addCoins(coins);if(last){k.flights++;k.h=0;k.cp=0;k.seen=0}save();offerHome();
+    const p=popup({title:'Sky Lift',ribbon:'purple',html:`<img class="ev12Hero skyHero" src="ui/sl_${SKY_CHEST[ids[ids.length-1]]}.webp" alt=""><div class="ptext">${last?'You reached the top of the Sky Lift!':`Flag${ids.length>1?'s':''} <b>${ids.map(i=>SKY_CP[i]).join(', ')}</b> reached!`} Chest${ids.length>1?'s':''} opened: <b>+${coins} coins</b></div><button class="btn wide juicy" id="ok"><span class="t">Collect</span></button>`});
+    confetti();Sound.play('win');q(p,'#ok').onclick=()=>{Sound.play('coin');p.close()}};
+  setTimeout(go,700)}
+function openSkyLift(){const k=sky(),N=SKY_CP.length,H=skyY(N)+250,sec=$('#sSky');
+  const cps=SKY_CP.map((c,i)=>{const y=skyY(i+1),on=k.cp>i,pill=`<span class="skPill ${on?'on':''}"><img src="${ICO.coin}" alt="">${on?'Collected':'+'+SKY_REWARD[i]}</span>`;
+    return (i===N-1?`<div class="skGrand ${on?'on':''}" style="--y:${y}px"><img src="ui/sl_grand.webp" alt="">${pill}</div>`
+      :`<div class="skStop ${on?'on':''}" style="--y:${y}px"><img class="skShelf" src="ui/sl_shelf_${on?'on':'off'}.webp" alt=""><img class="skChest" src="ui/sl_${SKY_CHEST[i]}.webp" alt="">${pill}</div>`)
+      +`<div class="skHex ${on?'on':''}" style="--y:${y}px"><span class="ol">${c}</span></div>`}).join('');
+  const from=skyY(skyUnits(k.seen)),to=skyY(skyUnits(k.h)),next=k.cp<N?SKY_CP[k.cp]-k.h:0;
+  sec.innerHTML=`<div class="skBg"></div>
+    <div class="skTop"><button class="skI" id="skInfo" aria-label="How it works"><span class="ol">i</span></button><div class="skBanner"><img src="ui/sl_banner.webp" alt=""><span class="skTitle ol">Sky Lift</span><span class="skTime">${skyLeft()}</span></div><button class="xbtn skX" id="skClose" aria-label="Close">${SVG.x}</button></div>
+    <div class="skScroll" id="skScroll"><div class="skTower" style="height:${H}px"><div class="skRail"></div>${cps}<div class="skStart ol" style="--y:${SKY_BASE}px">Start</div><div class="skBalloon" id="skBalloon" style="bottom:${from}px"><img src="ui/sl_balloon.webp" alt=""></div></div></div>
+    <div class="skHud"><div class="skFire"><img src="ui/sl_fire.webp" alt=""><b class="ol">${k.h}</b></div><div class="skInfoTxt"><strong>${k.cp>=N?'Top reached!':`${next} more win${next===1?'':'s'} to the next flag`}</strong><span>Win levels to rise. A lost level drops the balloon to the last flag.${k.flights?` Flights completed: ${k.flights}.`:''}</span></div><button class="btn gold" id="skPlay"><span class="t">Play</span></button></div>`;
+  show('sSky');
+  const sc=$('#skScroll'),b=$('#skBalloon'),center=y=>{sc.scrollTop=Math.max(0,H-y-sc.clientHeight*.58)};center(from);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{b.style.bottom=to+'px';if(Math.abs(to-from)>1){Sound.play('whoosh');const t0=performance.now(),dur=1100,tick=()=>{const t=Math.min(1,(performance.now()-t0)/dur);center(from+(to-from)*t);if(t<1)requestAnimationFrame(tick)};tick()}}));
+  k.seen=k.h;save();
+  $('#skClose').onclick=()=>{Sound.play('click');skyExit()};
+  $('#skPlay').onclick=()=>{Sound.play('click');skyExit();setTimeout(openStart,60)};
+  $('#skInfo').onclick=()=>{Sound.play('click');const p=popup({title:'Sky Lift',ribbon:'purple',html:`<img class="ev12Hero" src="ui/sl_balloon.webp" alt=""><div class="ptext">Every won level lifts the balloon one floor. Reach a flag to open its chest. A lost level drops you to the last flag you passed, never lower. Reach the top for the grand prize! Ends in <b>${skyLeft()}</b>.</div><button class="btn wide juicy" id="ok"><span class="t">Got it</span></button>`});q(p,'#ok').onclick=()=>p.close()}}
+function skyExit(){closeAll();show('sHome');refreshHome()}
 function slHomeBtns(){const l=$('#hEvL'),r=$('#hEvR');if(!l)return;const e=ev12();l.hidden=true;r.hidden=true;
-  offerHome();if(e.lava.prize){e.lava.prize=0;save();setTimeout(()=>{if(!popStack.length){const p=popup({title:'Quest',ribbon:'green',html:`<img class="ev12Hero" src="ui/ev_quest.webp?v=water-shark-20261103" alt=""><div class="ptext">5 wins in a row! Chest opened: <b>+${LAVA_PRIZE} coins</b></div><button class="btn wide juicy" id="ok"><span class="t">Collect</span></button>`});confetti();Sound.play('win');q(p,'#ok').onclick=()=>p.close()}},650)}}
+  offerHome();skyPrizeCheck();if(e.lava.prize){e.lava.prize=0;save();setTimeout(()=>{if(!popStack.length){const p=popup({title:'Quest',ribbon:'green',html:`<img class="ev12Hero" src="ui/ev_quest.webp?v=water-shark-20261103" alt=""><div class="ptext">5 wins in a row! Chest opened: <b>+${LAVA_PRIZE} coins</b></div><button class="btn wide juicy" id="ok"><span class="t">Collect</span></button>`});confetti();Sound.play('win');q(p,'#ok').onclick=()=>p.close()}},650)}}
 const OFFER_START={price:'$1.99',coins:1500,inv:{glove:3,lens:2}};
 function openStarterOffer(){const P=OFFER_START,inv=Object.entries(P.inv);
   const p=popup({title:'Starter Pack',ribbon:'gold',cls:'spPop',html:`
@@ -1323,9 +1357,9 @@ function offerHome(){let box=$('#hOffers');if(!box){box=document.createElement('
   const btn=(id,side,top,img,lb,extra='')=>`<button class="ofbtn ${side}${extra.includes('class="tm"')?' hasTm':''}" id="${id}" style="top:${top}px"><img class="ic" src="${img}" alt="">${extra}<span class="lb ol">${lb}</span></button>`;
   const R=[];if(!S.removeAds)R.push(['ofNoAds','ui/of_noads.webp','No Ads','']);
   if(!S.starter)R.push(['ofStart','ui/dl_c2.webp','Starter Pack','']);else if(!S.offerPack)R.push(['ofPack','ui/of_pack.webp','Sale',`<span class="bdg">-${OFFER_PACK.off}%</span><span class="tm" id="ofTm">${offerLeft()}</span>`]);
-  box.innerHTML=btn('ofLava','l',0,'ui/ev_quest.webp?v=water-shark-20261103','Quest',`<span class="tm">${e.lava.step}/${LAVA_N}</span>`)+btn('ofShield','l',112,'ui/ev_shield.webp','Shield Arena',`<span class="tm">${shieldTime()}</span>`)+R.map((x,i)=>btn(x[0],'r',i*112,x[1],x[2],x[3])).join('');
+  box.innerHTML=btn('ofLava','l',0,'ui/ev_quest.webp?v=water-shark-20261103','Quest',`<span class="tm">${e.lava.step}/${LAVA_N}</span>`)+btn('ofShield','l',112,'ui/ev_shield.webp','Shield Arena',`<span class="tm">${shieldTime()}</span>`)+btn('ofSky','l',224,'ui/sl_balloon.webp','Sky Lift',`<span class="tm">${sky().h}/${skyTop()}</span>`)+R.map((x,i)=>btn(x[0],'r',i*112,x[1],x[2],x[3])).join('');
   const on=(id,f)=>{const el=$('#'+id);if(el)el.onclick=()=>{Sound.play('click');f()}};
-  on('ofLava',openLavaHub);on('ofShield',openShieldHub);on('ofNoAds',openNoAds);on('ofStart',openStarterOffer);on('ofPack',openPackOffer);caseNav()}
+  on('ofLava',openLavaHub);on('ofShield',openShieldHub);on('ofSky',openSkyLift);on('ofNoAds',openNoAds);on('ofStart',openStarterOffer);on('ofPack',openPackOffer);caseNav()}
 setInterval(()=>{const t=$('#ofTm');if(t&&!$('#sHome').hidden)t.textContent=offerLeft()},1000);
 /* ---------- v102: juicy offers + booster unlock tutorial ---------- */
 const AD_SIGN=`<div class="adSign"><div class="adH l"><b>AD</b></div><div class="adH r"><b>AD</b></div><i class="crk"></i></div>`;
