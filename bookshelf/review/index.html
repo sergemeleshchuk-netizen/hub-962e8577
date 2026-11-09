@@ -129,7 +129,7 @@ footer{position:fixed;left:0;right:0;bottom:0;background:rgba(23,18,14,.95);bord
   <button class="primary" id="btnCopy">Copy for sheet</button>
   <button id="btnLoad">Load from sheet</button>
   <button class="danger" id="btnReset">Reset to sheet</button>
-  <span class="hint">Drag a tile onto another (left half = before, right half = after), or open it and use “swap with level”: the level moves with its painting, difficulty, board and moves. Click a tile or the curve to edit that level. Your edits stay in this browser. “Copy for sheet” copies all 300 rows in the BookshelfLevels format: paste them into A1 of that tab. Orange frame = level moved, blue = settings changed.</span>
+  <span class="hint">Drag a tile onto another (left half = before, right half = after), or open it and use “swap with level”: only the painting moves; difficulty, board and moves stay with the level number, so the curve stays the same and applies to the new order. Click a tile or the curve to edit that level. Your edits stay in this browser. “Copy for sheet” copies all 300 rows in the BookshelfLevels format: paste them into A1 of that tab. Orange frame = new painting on this level, blue = level settings changed.</span>
 </div></footer>
 
 <div id="pastePanel" hidden><div class="box">
@@ -178,15 +178,18 @@ footer{position:fixed;left:0;right:0;bottom:0;background:rgba(23,18,14,.95);bord
     SHEET = rows.map(r => Object.assign({}, r)); LEVELS = SHEET.length; artIdOfN = {};
     SHEET.forEach(r => artIdOfN[r.n] = r.artId);
   }
-  const SHEET_KEY = 'bookshelf_atlas_sheet_v1', DRAFT_KEY = 'bookshelf_atlas_draft_v1';
+  const SHEET_KEY = 'bookshelf_atlas_sheet_v1', DRAFT_KEY = 'bookshelf_atlas_draft_v2';
   let sheetRows = window.SHEET_LEVELS || [];
   try { const s = JSON.parse(localStorage.getItem(SHEET_KEY) || 'null'); if (s && s.base === JSON.stringify(sheetRows).length && Array.isArray(s.rows)) sheetRows = s.rows; } catch (e) {}
   loadSheet(sheetRows);
   const sheetIds = () => SHEET.map(r => byN[r.n].id);
-  const fresh = () => { const ids = sheetIds(); const order = ids.concat(P.map(p => p.id).filter(id => !ids.includes(id))); const cfg = {}; SHEET.forEach(r => cfg[byN[r.n].id] = pick(r)); return {order, cfg}; };
+  /* order = which painting plays each level (content only). cfg[L-1] = level L's settings: the difficulty curve stays with the level number, a reorder never moves it */
+  const fresh = () => { const ids = sheetIds(); const order = ids.concat(P.map(p => p.id).filter(id => !ids.includes(id))); return {order, cfg: SHEET.map(pick)}; };
   let st = fresh();
+  const okOrder = o => Array.isArray(o) && o.length === P.length && o.every(id => byId[id]);
   try { const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
-    if (d && Array.isArray(d.order) && d.order.length === P.length && d.order.every(id => byId[id]) && d.cfg) st = {order: d.order, cfg: d.cfg}; } catch (e) {}
+    if (d && okOrder(d.order) && Array.isArray(d.cfg) && d.cfg.length === LEVELS) st = {order: d.order, cfg: d.cfg};
+    else { const old = JSON.parse(localStorage.getItem('bookshelf_atlas_draft_v1') || 'null'); if (old && okOrder(old.order)) st.order = old.order; } } catch (e) {}
   const saveDraft = () => { try { localStorage.setItem(DRAFT_KEY, JSON.stringify(st)); } catch (e) {} };
 
   let sortMode = 'custom', gradeF = 'all', selectedLevel = 1;
@@ -195,15 +198,15 @@ footer{position:fixed;left:0;right:0;bottom:0;background:rgba(23,18,14,.95);bord
   const cat = d => d >= 9 ? 's' : d >= 7 ? 'h' : d >= 4 ? 'm' : 'e';
   const CATN = {e:'Easy',m:'Medium',h:'Hard',s:'Super Hard'};
   /* one level as the sheet will see it */
-  function rowAt(L){ const id = st.order[L-1], c = st.cfg[id]; if (!c) return null; const p = byId[id];
+  function rowAt(L){ const id = st.order[L-1], c = st.cfg[L-1]; if (!c) return null; const p = byId[id];
     return Object.assign({level: L, artId: artIdOfN[p.n] || p.id.slice(0, 8), n: p.n, id}, c); }
-  /* moved: another painting than the sheet has at this level. fields: settings changed against the painting's own sheet row */
+  /* moved: another painting than the sheet has at this level. fields: settings changed against the sheet row of this level */
   const ownRow = n => SHEET.find(x => x.n === n);
   function diffOf(L){ const r = rowAt(L), s = SHEET[L-1]; if (!r || !s) return {moved:false, fields:[]};
-    const own = ownRow(r.n); return {moved: r.n !== s.n, fields: own ? FIELDS.filter(k => r[k] !== own[k]) : []}; }
-  /* the solver's moves stay valid only while the board is the one the sheet solved: same level number, variant, grid, mechanics */
-  function requiredOf(L){ const r = rowAt(L); if (!r) return null; const s = SHEET.find(x => x.n === r.n);
-    if (!s || s.level !== L || !Number.isFinite(s.required) || BOARD.some(k => r[k] !== s[k])) return null; return s.required; }
+    return {moved: r.n !== s.n, fields: FIELDS.filter(k => r[k] !== s[k])}; }
+  /* the shuffle seed comes from the level number and variant, not the painting: the sheet's solver moves stay valid while variant, grid and mechanics are the sheet's */
+  function requiredOf(L){ const r = rowAt(L), s = SHEET[L-1]; if (!r || !s) return null;
+    if (!Number.isFinite(s.required) || BOARD.some(k => r[k] !== s[k])) return null; return s.required; }
   function warnsOf(L){ const r = rowAt(L), w = []; if (!r) return w;
     MECH.forEach(([k, name]) => { if (r[k] && L < INTRO[k]) w.push(`${name} before level ${INTRO[k]}, where the game teaches it`); });
     if (r.books % r.shelves) w.push('books must split evenly over the shelves');
@@ -234,19 +237,18 @@ footer{position:fixed;left:0;right:0;bottom:0;background:rgba(23,18,14,.95);bord
     $('#sum').innerHTML = `<span class="grade" style="background:#24402b;color:#a9e6b6">Easy ${cnt.e}</span> <span class="grade Y">Medium ${cnt.m}</span> <span class="grade" style="background:#5a3420;color:#ffc29a">Hard ${cnt.h}</span> <span class="grade R">Super Hard ${cnt.s}</span>`;
     $('#sub').textContent = `${LEVELS} levels from the config sheet + ${P.length - LEVELS} reserve paintings · ${sortMode === 'custom' ? 'drag to reorder' : 'sorted view (drag disabled, switch to “level order”)'}`;
   }
-  /* the level travels with its painting. A reserve painting that enters the 300 takes over the settings of the level it pushed out */
+  /* only the content moves: every level keeps its own settings (difficulty, moves, grid, mechanics), so the curve stays as it is and applies to the new order */
   function moveTo(id, pos){
     const o = st.order, from = o.indexOf(id); if (from < 0) return;
     pos = Math.max(0, Math.min(o.length - 1, pos)); o.splice(from, 1); o.splice(pos, 0, id);
-    for (let i = 0; i < LEVELS; i++) if (!st.cfg[o[i]]) { const out = o.slice(LEVELS).find(x => st.cfg[x]); if (out) { st.cfg[o[i]] = st.cfg[out]; delete st.cfg[out]; } }
     selectedLevel = o.indexOf(id) + 1 <= LEVELS ? o.indexOf(id) + 1 : selectedLevel;
     saveDraft(); render();
   }
-  /* two levels trade places, each with its own painting and settings */
+  /* two levels trade paintings; the settings stay with the level numbers */
   function swapLevels(a, b){ const o = st.order; if (a === b || a < 1 || b < 1 || a > LEVELS || b > LEVELS) return;
     [o[a-1], o[b-1]] = [o[b-1], o[a-1]]; selectedLevel = b; saveDraft(); render(); }
-  function setField(L, k, v){ const id = st.order[L-1]; if (!st.cfg[id]) return; st.cfg[id][k] = v; saveDraft(); render(); }
-  function resetLevel(L){ const id = st.order[L-1], s = SHEET.find(x => byN[x.n].id === id); if (s) { st.cfg[id] = pick(s); saveDraft(); render(); } }
+  function setField(L, k, v){ if (!st.cfg[L-1]) return; st.cfg[L-1][k] = v; saveDraft(); render(); }
+  function resetLevel(L){ const s = SHEET[L-1]; if (s) { st.cfg[L-1] = pick(s); saveDraft(); render(); } }
   function syncPlay(){ const rows = []; for (let L = 1; L <= LEVELS; L++) rows.push(rowAt(L)); try { localStorage.setItem('bookshelf_atlas_play_v1', JSON.stringify(rows)); } catch (e) {} }
   function launchLevel(level){ syncPlay(); window.open(`playable/index.html?level=${level}`, '_blank', 'noopener'); }
 
@@ -269,11 +271,11 @@ footer{position:fixed;left:0;right:0;bottom:0;background:rgba(23,18,14,.95);bord
     renderDetail();
   }
   function renderDetail(){
-    const L = selectedLevel, r = rowAt(L), s = ownRow(r.n) || {}, d = diffOf(L), req = requiredOf(L), w = warnsOf(L), p = byId[r.id];
+    const L = selectedLevel, r = rowAt(L), s = SHEET[L-1] || {}, own = ownRow(r.n), d = diffOf(L), req = requiredOf(L), w = warnsOf(L), p = byId[r.id];
     const ch = k => d.fields.includes(k) ? ' ch' : '';
     const per = r.books / r.shelves;
     const num = (k, label, min, max, val = r[k]) => `<label>${label}<input type="number" data-k="${k}" class="${ch(k).trim()}" min="${min}" max="${max}" value="${val}"></label>`;
-    const sl = SHEET[L-1], fromSheet = sl && sl.n !== r.n ? `<div class="curve-note">Moved: in the sheet this painting is ${s.level ? 'level ' + s.level : 'not in the game'}, and level ${L} is “${byN[sl.n].title}”.</div>` : '';
+    const fromSheet = s.n && s.n !== r.n ? `<div class="curve-note">New painting: in the sheet level ${L} is “${byN[s.n].title}”, and this painting is ${own ? 'level ' + own.level : 'not in the game'}. The level settings stay.</div>` : '';
     $('#curveDetail').innerHTML = `<div class="level-no">Level ${L} <small class="sub">${CATN[cat(r.difficulty)]}</small></div><div class="art-name"></div>${fromSheet}
       <div class="edit">
         <label>difficulty<select data-k="difficulty" class="${ch('difficulty').trim()}">${[2,3,4,5,6,7,8,9].map(v => `<option${v === r.difficulty ? ' selected' : ''}>${v}</option>`).join('')}</select></label>
@@ -296,7 +298,7 @@ footer{position:fixed;left:0;right:0;bottom:0;background:rgba(23,18,14,.95);bord
       if (el.type === 'checkbox') return setField(L, k, el.checked ? 1 : 0);
       const v = Math.round(+el.value); if (!Number.isFinite(v)) return;
       if (k === 'per') return setField(L, 'books', v * r.shelves);
-      if (k === 'shelves') { const id = st.order[L-1]; st.cfg[id].books = v * (Number.isInteger(per) ? per : Math.round(r.books / v)); }
+      if (k === 'shelves') { st.cfg[L-1].books = v * (Number.isInteger(per) ? per : Math.round(r.books / v)); }
       setField(L, k, v);
     });
     $('#curvePlay').onclick = () => launchLevel(L);
@@ -313,7 +315,7 @@ footer{position:fixed;left:0;right:0;bottom:0;background:rgba(23,18,14,.95);bord
     setStatus(); const arr = view(); grid.innerHTML = '';
     arr.forEach((id, i) => {
       const p = byId[id], pos = st.order.indexOf(id), L = pos + 1, g = gr(id), r = L <= LEVELS ? rowAt(L) : null, d = r ? diffOf(L) : {moved:false, fields:[]};
-      if (sortMode === 'custom' && pos === LEVELS) { const sep = document.createElement('div'); sep.className = 'reserve-sep'; sep.textContent = 'Reserve: paintings that are not in the game. Drag one into the levels to replace a painting; it takes over that level’s settings.'; grid.appendChild(sep); }
+      if (sortMode === 'custom' && pos === LEVELS) { const sep = document.createElement('div'); sep.className = 'reserve-sep'; sep.textContent = 'Reserve: paintings that are not in the game. Drag one into the levels to replace a painting; the level keeps its settings.'; grid.appendChild(sep); }
       const dim = gradeF === 'changed' ? !(d.moved || d.fields.length) : (gradeF !== 'all' && g !== gradeF);
       const t = document.createElement('div');
       t.className = 'tile' + (d.moved ? ' moved' : '') + (!d.moved && d.fields.length ? ' edited' : '') + (r ? '' : ' reserve') + (r && warnsOf(L).length ? ' warn' : '') + (dim ? ' dim' : '') + (L === selectedLevel ? ' selected' : '');
@@ -387,7 +389,7 @@ footer{position:fixed;left:0;right:0;bottom:0;background:rgba(23,18,14,.95);bord
       const r = {}; COLS.forEach(k => r[k] = k === 'artId' ? l[idx[k]] : Math.round(+l[idx[k]]));
       if (r.level !== i + 1 || FIELDS.some(k => !Number.isFinite(r[k]))) bad.push(i + 2);
       r.n = nOfArt[r.artId]; if (!r.n) bad.push(`artId ${r.artId}`);
-      const old = SHEET.find(x => x.n === r.n && x.level === r.level && BOARD.every(k => x[k] === r[k])); if (old && Number.isFinite(old.required)) r.required = old.required;
+      const old = SHEET.find(x => x.level === r.level && BOARD.every(k => x[k] === r[k])); if (old && Number.isFinite(old.required)) r.required = old.required;
       rows.push(r);
     });
     if (bad.length) return msg('Could not read: ' + bad.slice(0, 8).join(', '));
