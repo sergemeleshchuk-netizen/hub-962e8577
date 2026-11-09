@@ -1059,12 +1059,12 @@ function skyPrizeCheck(){const k=sky();if(!k.prizes||!k.prizes.length)return;
   setTimeout(go,700)}
 const SKY_EASE={out:'cubic-bezier(.22,1,.36,1)',inout:'cubic-bezier(.65,0,.35,1)',in:'cubic-bezier(.5,0,.75,0)'};
 let skyAnim=0;
-function openSkyLift(){const k=sky(),N=SKY_CP.length,H=skyY(N)+230,sec=$('#sSky'),seen=k.seen;
-  const cps=SKY_CP.map((c,i)=>{const y=skyY(i+1),on=k.cp>i,fresh=on&&c>seen,done=on&&!fresh,pill=`<span class="skPill ${done?'on':''}"><img src="${ICO.coin}" alt=""><em>${done?'Collected':'+'+SKY_REWARD[i]}</em></span>`;
-    return (i===N-1?`<div class="skGrand ${done?'on':''}" data-i="${i}" style="--y:${y}px"><img class="skChest" src="ui/sl_grand.webp" alt="">${pill}</div>`
-      :`<div class="skStop ${done?'on':''}" data-i="${i}" style="--y:${y}px"><img class="skPlat" src="ui/sl2_bracket.webp" alt=""><img class="skChest" src="ui/sl_${SKY_CHEST[i]}.webp" alt="">${pill}</div>`)
+function openSkyLift(){const k=sky(),N=SKY_CP.length,H=skyY(N)+380,sec=$('#sSky'),seen=k.seen;
+  const cps=SKY_CP.map((c,i)=>{const y=skyY(i+1),on=k.cp>i,fresh=on&&c>seen,done=on&&!fresh;
+    return (i===N-1?`<div class="skGrand ${done?'on':''}" data-i="${i}" style="--y:${y}px"><img class="skChest" src="ui/sl_grand.webp" alt=""></div>`
+      :`<div class="skStop ${done?'on':''}" data-i="${i}" style="--y:${y}px"><img class="skPlat" src="ui/sl2_bracket.webp" alt=""><img class="skChest" src="ui/sl_${SKY_CHEST[i]}.webp" alt=""></div>`)
       +`<div class="skHex ${on?'on':''}" style="--y:${y}px"><span class="ol">${c}</span></div>`}).join('');
-  const clouds=Array.from({length:N+2},(_,i)=>`<img class="skCloud c${i%2}" src="ui/sl2_cloud${i%2+1}.webp" alt="" style="--y:${skyY(i+.45)+(i%3)*28}px;left:${i%2?60+(i*7)%26:46+(i*11)%14}%">`).join('');
+  const clouds=Array.from({length:N+2},(_,i)=>`<img class="skCloud c${i%4}" src="ui/sl2_cloud${i%4+1}.webp" alt="" style="--y:${skyY(i+.45)+(i%3)*28}px;left:${i%2?58+(i*7)%26:44+(i*11)%14}%">`).join('');
   const from=skyY(skyUnits(seen)),to=skyY(skyUnits(k.h)),next=k.cp<N?SKY_CP[k.cp]-k.h:0;
   sec.innerHTML=`<div class="skBg"></div>
     <div class="skTop"><button class="skI" id="skInfo" aria-label="How it works"><span class="ol">i</span></button><div class="skBanner"><img src="ui/sl_banner.webp" alt=""><span class="skTitle ol">Sky Lift</span><span class="skTime">${skyLeft()}</span></div><button class="xbtn skX" id="skClose" aria-label="Close">${SVG.x}</button></div>
@@ -1078,7 +1078,7 @@ function openSkyLift(){const k=sky(),N=SKY_CP.length,H=skyY(N)+230,sec=$('#sSky'
     const up=to>from,dur=Math.min(1700,Math.max(650,Math.abs(to-from)*2.2));b.style.transition=`bottom ${dur}ms ${up?SKY_EASE.inout:SKY_EASE.in}`;b.style.bottom=to+'px';b.classList.add(up?'rise':'fall');Sound.play(up?'whoosh':'slide');
     const fresh=SKY_CP.map((c,i)=>c>seen&&c<=k.h?i:-1).filter(i=>i>=0),t0=performance.now();
     const tick=()=>{if(!alive())return;const t=Math.min(1,(performance.now()-t0)/dur);center(from+(to-from)*t);if(t<1)requestAnimationFrame(tick);else{b.classList.remove('rise','fall');
-      fresh.forEach((i,n)=>setTimeout(()=>{if(!alive())return;const st=sec.querySelector(`[data-i="${i}"]`);if(!st)return;st.classList.add('on','pop');Sound.play('coin');const pill=st.querySelector('.skPill');pill.classList.add('on');pill.querySelector('em').textContent='Collected';setTimeout(()=>st.classList.remove('pop'),460)},450+n*260))}};
+      fresh.forEach((i,n)=>setTimeout(()=>{if(!alive())return;const st=sec.querySelector(`[data-i="${i}"]`);if(!st)return;st.classList.add('pop');Sound.play('coin');setTimeout(()=>{st.classList.remove('pop');st.classList.add('on')},460)},450+n*260))}};
     requestAnimationFrame(tick)},520);
   k.seen=k.h;save();
   $('#skClose').onclick=()=>{Sound.play('click');skyExit()};
