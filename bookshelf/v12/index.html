@@ -149,9 +149,9 @@ body.minimal .mcHd small{background:none;border:1px solid #C9A25C;color:#E3C27A}
 </style>
 <style id="padBubCss">#brPad .brBub.lo{top:auto;transform:none;border-radius:16px;pointer-events:none;box-shadow:0 0 0 3px #FFE14D,0 8px 18px rgba(0,0,0,.25);animation:padBubIn .35s cubic-bezier(.34,1.56,.64,1) both}#brPad .brBub.lo::after{content:"";position:absolute;left:calc(var(--ax,50%) - 8px);bottom:-7px;width:16px;height:16px;background:#fff;transform:rotate(45deg);box-shadow:3px 3px 0 0 #FFE14D}#brPad .brBub.lo.go{opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s}@keyframes padBubIn{from{opacity:0;transform:translateY(8px) scale(.9)}to{opacity:1;transform:none}}</style>
 <style id="hiddenTutorialFocus">#mechW .spotH.hiddenFocus{border-radius:6px;border:0;outline:0;box-shadow:0 0 0 2000px rgba(16,10,40,.72);animation:none}#mechW .spotH.hiddenFocus::after{display:none}</style>
-<style>/* v12 Sky Lift */
-#sSky{background:#7CC5FF;z-index:7}
-.skBg{position:absolute;inset:0;background:url(ui/sl_sky.webp) center/cover no-repeat;z-index:0}
+<style>/* v12 Sky Lift v2 */
+#sSky{background:#5EB9FF;z-index:7;overflow:hidden}
+.skBg{position:absolute;inset:0;background:linear-gradient(#1772FA,#79D9FC 60%,#B5EFFD);z-index:0}
 .skTop{position:relative;z-index:2;height:calc(112px + env(safe-area-inset-top,0px));padding-top:calc(6px + env(safe-area-inset-top,0px));display:flex;align-items:flex-start;justify-content:center}
 .skBanner{position:relative;width:236px}
 .skBanner img{width:100%;display:block;filter:drop-shadow(0 6px 8px rgba(40,10,70,.35))}
@@ -163,28 +163,33 @@ body.minimal .mcHd small{background:none;border:1px solid #C9A25C;color:#E3C27A}
 .skScroll{position:relative;z-index:1;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .skScroll::-webkit-scrollbar{display:none}
 .skTower{position:relative;width:100%}
-.skRail{position:absolute;left:14px;top:0;bottom:0;width:60px;isolation:isolate;background:url(ui/sl_rail_top.webp) top/60px auto no-repeat,url(ui/sl_rail_bot.webp) bottom/60px auto no-repeat;filter:drop-shadow(0 4px 6px rgba(40,10,70,.3))}
-.skRail::before{content:"";position:absolute;left:0;right:0;top:42px;bottom:42px;background:url(ui/sl_rail_mid.webp) top/60px auto repeat-y;z-index:-1}
-.skHex{position:absolute;left:17px;bottom:var(--y);width:54px;height:59px;transform:translateY(50%);background:url(ui/sl_hex.webp) center/contain no-repeat;display:grid;place-items:center;font:800 21px/1 var(--f-num);color:#fff;--o:#5A1E8A;z-index:3;filter:drop-shadow(0 3px 4px rgba(40,10,70,.35))}
+.skCity{position:absolute;left:0;right:0;bottom:0;height:700px;background:url(ui/sl2_bg.webp) center bottom/100% auto no-repeat;z-index:0}
+.skCloud{position:absolute;bottom:var(--y);width:96px;z-index:1}
+.skCloud.c1{width:62px}
+.skMast{position:absolute;left:12px;top:34px;bottom:64px;width:70px;background:url(ui/sl2_mast.webp) center top/70px auto repeat-y;z-index:2;filter:drop-shadow(0 4px 6px rgba(40,10,70,.3))}
+.skMastTop{position:absolute;left:-3px;top:0;width:200px;height:72px;background:url(ui/sl2_top.webp) left top/auto 72px no-repeat;z-index:3;filter:drop-shadow(0 4px 6px rgba(40,10,70,.3))}
+.skMastBase{position:absolute;left:-12px;bottom:0;width:130px;height:70px;background:url(ui/sl2_base.webp) left bottom/auto 70px no-repeat;z-index:3;filter:drop-shadow(0 4px 6px rgba(40,10,70,.3))}
+.skHex{position:absolute;left:21px;bottom:var(--y);width:52px;height:57px;transform:translateY(50%);background:url(ui/sl_hex.webp) center/contain no-repeat;display:grid;place-items:center;font:800 20px/1 var(--f-num);color:#fff;--o:#5A1E8A;z-index:5;filter:drop-shadow(0 3px 4px rgba(40,10,70,.35))}
 .skHex .ol{--o:#5A1E8A;padding-top:2px}
-.skHex.on{filter:drop-shadow(0 0 6px #FFE38A) drop-shadow(0 3px 4px rgba(40,10,70,.35))}
-.skStop{position:absolute;left:62px;bottom:calc(var(--y) - 54px);width:124px;z-index:2}
-.skShelf{width:124px;display:block;filter:drop-shadow(0 5px 6px rgba(40,10,70,.3))}
-.skChest{position:absolute;left:62px;bottom:50px;width:58px;filter:drop-shadow(0 4px 5px rgba(40,10,70,.35))}
-.skStop.on .skChest{animation:skGlow 2.2s ease-in-out infinite}
-@keyframes skGlow{0%,100%{filter:drop-shadow(0 4px 5px rgba(40,10,70,.35)) drop-shadow(0 0 4px rgba(255,227,138,.6))}50%{filter:drop-shadow(0 4px 5px rgba(40,10,70,.35)) drop-shadow(0 0 12px rgba(255,227,138,1))}}
-.skPill{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:3px;padding:3px 8px 3px 5px;border-radius:12px;background:var(--ink);color:#fff;font:800 12px/1 var(--f-num);white-space:nowrap;border:1.5px solid #FFD56A;box-shadow:0 2px 4px rgba(0,0,0,.3)}
-.skPill img{width:14px;height:14px}
+.skHex.on{filter:drop-shadow(0 0 5px #FFE38A) drop-shadow(0 3px 4px rgba(40,10,70,.35))}
+.skStop{position:absolute;left:72px;bottom:calc(var(--y) - 36px);width:104px;z-index:4}
+.skPlat{width:104px;display:block;filter:drop-shadow(0 5px 6px rgba(40,10,70,.3))}
+.skStop .skChest{position:absolute;left:28px;bottom:34px;width:64px;filter:drop-shadow(0 4px 5px rgba(40,10,70,.35));transform-origin:50% 100%}
+.skStop.pop .skChest,.skGrand.pop .skChest{animation:skPop .46s cubic-bezier(.34,1.56,.64,1)}
+@keyframes skPop{0%{transform:scale(1)}45%{transform:scale(1.22) translateY(-6px)}100%{transform:scale(1)}}
+.skPill{position:absolute;left:50%;bottom:-16px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:3px;padding:3px 8px 3px 5px;border-radius:12px;background:var(--ink);color:#fff;font:800 12px/1 var(--f-num);white-space:nowrap;border:1.5px solid #FFD56A;box-shadow:0 2px 4px rgba(0,0,0,.3);transition:background .25s,border-color .25s}
+.skPill img{width:14px;height:14px}.skPill em{font-style:normal}
 .skPill.on{background:linear-gradient(#9AF0A8,#38B852);color:#fff;border-color:#fff}
-.skGrand{position:absolute;left:22px;bottom:calc(var(--y) - 30px);width:180px;z-index:2}
-.skGrand img:first-child{width:100%;display:block;filter:drop-shadow(0 6px 10px rgba(40,10,70,.3));animation:skFloat 4s ease-in-out infinite}
+.skStop.pop .skPill,.skGrand.pop .skPill{animation:skPillIn .3s cubic-bezier(.22,1,.36,1) .22s both}
+@keyframes skPillIn{0%{transform:translateX(-50%) translateY(10px);opacity:0}100%{transform:translateX(-50%) translateY(0);opacity:1}}
+.skGrand{position:absolute;left:84px;bottom:calc(var(--y) - 30px);width:170px;z-index:4}
+.skGrand .skChest{width:100%;display:block;filter:drop-shadow(0 6px 10px rgba(40,10,70,.3));transform-origin:50% 100%}
 .skGrand .skPill{bottom:-6px}
-@keyframes skFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-.skStart{position:absolute;left:66%;bottom:calc(var(--y) - 36px);transform:translateX(-50%);font:800 16px/1 var(--f-hero);color:#fff;--o:#5A1E8A;letter-spacing:.04em}
-.skBalloon{position:absolute;left:66%;width:124px;transform:translateX(-50%);transition:bottom 1.1s cubic-bezier(.4,0,.2,1);z-index:4;pointer-events:none}
-.skBalloon img{width:100%;display:block;filter:drop-shadow(0 10px 12px rgba(40,10,70,.35));animation:skBob 3.2s ease-in-out infinite;transform-origin:50% 0}
-@keyframes skBob{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-7px) rotate(1.5deg)}}
-.skHud{position:relative;z-index:2;display:flex;align-items:center;gap:10px;padding:8px 12px calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(40,10,70,0),rgba(40,10,70,.6))}
+.skBalloon{position:absolute;left:70%;width:120px;transform:translateX(-50%);z-index:6;pointer-events:none}
+.skBalloon img{width:100%;display:block;filter:drop-shadow(0 10px 12px rgba(40,10,70,.35));transform-origin:50% 0;transition:transform .45s cubic-bezier(.22,1,.36,1)}
+.skBalloon.rise img{transform:rotate(-2.5deg) translateY(-3px)}
+.skBalloon.fall img{transform:rotate(3deg) translateY(4px)}
+.skHud{position:relative;z-index:2;display:flex;align-items:center;gap:10px;padding:8px 12px calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(20,40,90,0),rgba(20,40,90,.6))}
 .skFire{position:relative;width:62px;height:74px;flex:none}
 .skFire img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 3px 4px rgba(40,10,70,.35))}
 .skFire b{position:absolute;left:0;right:0;top:63%;transform:translateY(-50%);text-align:center;font:800 24px/1 var(--f-num);color:#fff;--o:#B5221A}
@@ -192,6 +197,17 @@ body.minimal .mcHd small{background:none;border:1px solid #C9A25C;color:#E3C27A}
 .skInfoTxt strong{font:800 15px/1.2 var(--f-hero)}
 #skPlay{flex:none;min-width:92px}
 .skyHero{width:140px;height:120px}
+/* вход снизу вверх каскадом (баннер сверху, башня и HUD снизу), выход вниз ≈75 % */
+#sSky.in .skTop{animation:skDown .42s cubic-bezier(.22,1,.36,1) both}
+#sSky.in .skScroll{animation:skUp .5s cubic-bezier(.22,1,.36,1) .06s both}
+#sSky.in .skHud{animation:skUp .42s cubic-bezier(.22,1,.36,1) .14s both}
+#sSky.out .skTop{animation:skDownOut .3s cubic-bezier(.5,0,.75,0) both}
+#sSky.out .skScroll{animation:skUpOut .36s cubic-bezier(.5,0,.75,0) both}
+#sSky.out .skHud{animation:skUpOut .3s cubic-bezier(.5,0,.75,0) both}
+@keyframes skUp{0%{transform:translateY(70px);opacity:0}100%{transform:translateY(0);opacity:1}}
+@keyframes skDown{0%{transform:translateY(-50px);opacity:0}100%{transform:translateY(0);opacity:1}}
+@keyframes skUpOut{0%{transform:translateY(0);opacity:1}100%{transform:translateY(70px);opacity:0}}
+@keyframes skDownOut{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-50px);opacity:0}}
 </style>
 </head><body><title>Bookshelf: Art Puzzle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
