@@ -1,0 +1,32 @@
+/* Sky Lift v8.5 — a separate ChatGPT art direction in gouache and brass. */
+.eventTab.balloonTab{border-color:#f8dfb8;background:linear-gradient(155deg,#2e7980,#164e58);box-shadow:inset 0 2px 0 #ffffff55,0 4px 0 #0d363e,0 7px 11px #13282b8c}
+.eventTab.balloonTab b{color:#fff7df;text-shadow:0 2px 2px #0d3138}.eventTab.balloonTab small{color:#ffd2aa}.eventTab.balloonTab .eventGlyph img{width:28px;height:43px}
+.skyLiftPopup{padding:35px 12px 12px!important;gap:6px!important;border-color:#b3946b!important;background:linear-gradient(#fff9ed,#e9d9bf)!important;box-shadow:inset 0 4px 0 #fff9ed,0 8px 0 #b99a70,0 9px 0 #927251,0 22px 34px #1d2e3580!important}
+.skyLiftPopup .ribbon.green{min-width:180px;border-color:#ebd4a2;background:linear-gradient(#479897,#236a70 50%,#154d57);--o:#123e47;box-shadow:inset 0 3px 0 #ffffff61,0 5px 0 #123f47,0 10px 14px #172f3480}
+.skyLiftPopup .ribbon.green::before,.skyLiftPopup .ribbon.green::after{background:#1b555c}
+.skyEyebrow{flex:none;width:100%;text-align:center;color:#7f644b;font:900 9px/1 var(--f-ui);letter-spacing:.19em}
+.skyScene{position:relative;flex:1;min-height:245px;width:100%;overflow:hidden;border:3px solid #d6b77c;border-radius:19px;background:#347e85 url(events/sky_dawn.webp) center center/cover no-repeat;box-shadow:inset 0 0 0 2px #fdf0cd9e,inset 0 -22px 28px #1a4c5370,0 4px 0 #9d784d}
+.skyScene::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,#173e4621,transparent 36%,#152d3626);z-index:1}
+.skyRoute{position:absolute;z-index:2;left:26%;top:12%;bottom:8%;border-left:3px dotted #e6d7adab;filter:drop-shadow(0 1px 1px #164b57)}
+.skyRoute::after{content:"✦";position:absolute;left:-9px;bottom:-11px;color:#ffde9c;font:900 15px/1 var(--f-num)}
+.skyGrand{position:absolute;right:4%;top:2%;z-index:6;display:flex;flex-direction:column;align-items:center;width:35%;filter:drop-shadow(0 3px 3px #132e3580)}
+.skyGrand img{display:block;width:70%;aspect-ratio:1;object-fit:contain}
+.skyGrand span{margin-top:-6px;padding:3px 6px;border:1px solid #d9b375;border-radius:7px;background:#fff1d4e9;color:#744d29;font:900 9px/1 var(--f-ui);white-space:nowrap;letter-spacing:.02em}
+.skyStop{position:absolute;z-index:4;right:4%;width:47%;height:16%;filter:drop-shadow(0 4px 3px #1d3a4680)}
+.skyStop>img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.skyStopNumber{position:absolute;left:12%;top:30%;z-index:2;display:grid;place-items:center;width:23px;height:23px;border-radius:50%;border:1.5px solid #dfc594;background:linear-gradient(#467f83,#1a575e);box-shadow:0 2px 0 #173a42;color:#fff6df;font:900 12px/1 var(--f-num)}
+.skyStopReward{position:absolute;left:43%;top:24%;z-index:2;display:flex;align-items:center;gap:2px;padding:2px 5px;border-radius:8px;background:#fff2d9e8;color:#644222;font:900 14px/1 var(--f-num);box-shadow:0 2px 0 #986e4b80}
+.skyStopReward img{width:16px;height:16px;object-fit:contain}
+.skyStop.reached .skyStopNumber{background:linear-gradient(#ffd898,#d29150);border-color:#fff1c7;color:#7b4024;box-shadow:0 2px 0 #9d6236}
+.skyStop.reached .skyStopReward{background:#ffe2b8f0}
+.skyStop.current{filter:drop-shadow(0 0 8px #ffdd9f)}
+.skyCraft{position:absolute;z-index:5;left:10%;width:31%;aspect-ratio:2/3;filter:drop-shadow(0 8px 5px #19393f91);animation:qbob 2.8s ease-in-out infinite;transition:bottom .5s}
+.skyCraft img{width:100%;height:100%;object-fit:contain}
+.skySummary{flex:none;width:100%;padding:8px 10px;border:1px solid #d8bb8f;border-radius:14px;background:linear-gradient(#fffdf5,#f6ead6);box-shadow:0 2px 0 #bda079;color:#654d3b}
+.skySummaryTop{display:flex;align-items:center;gap:7px}.skyCompass{display:grid;place-items:center;flex:none;width:31px;height:31px;border-radius:10px;background:linear-gradient(#3e8587,#1b5b64);color:#f6d4a2;font:900 22px/1 var(--f-num);box-shadow:inset 0 2px 0 #ffffff55,0 2px 0 #15414a}
+.skySummaryTop>div{display:flex;flex-direction:column;flex:1;min-width:0}.skySummaryTop small{color:#9a7454;font:900 9px/1.1 var(--f-ui);letter-spacing:.08em}.skySummaryTop strong{color:#1b535a;font:800 15px/1.08 var(--f-hero)}
+.skyFlights{flex:none;padding:4px 6px;border-radius:7px;background:#e6f0ea;color:#476d69;font:900 10px/1 var(--f-ui);white-space:nowrap}
+.skySummary p{margin:4px 0 2px;color:#6c5a4b;font:800 10px/1.25 var(--f-ui)}
+.skyWarning{color:#a36750;font:800 10px/1.1 var(--f-ui)}
+.skyClaim{flex:none;min-height:52px!important;border-radius:17px!important;font-size:20px!important}.skyClaim[disabled]{opacity:.73;filter:saturate(.4)}
+@media(max-height:720px){.skyLiftPopup{padding-top:31px!important;gap:4px!important}.skyScene{min-height:190px}.skySummary{padding:5px 8px}.skySummary p,.skyWarning{font-size:9px}.skyClaim{min-height:45px!important;font-size:17px!important}.skyStopReward{font-size:12px}.skyStopReward img{width:13px;height:13px}.skyStopNumber{width:20px;height:20px;font-size:11px}.skyGrand span{font-size:8px}}
