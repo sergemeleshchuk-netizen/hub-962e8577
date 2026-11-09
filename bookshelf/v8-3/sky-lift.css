@@ -1,0 +1,155 @@
+/* Sky Lift: an element-by-element visual pass over the Balloon Ride event. */
+.eventTab.balloonTab{
+  border-color:#d6f6ff;
+  background:linear-gradient(160deg,#79d8f3 0%,#45a9dc 52%,#2985c7 100%);
+  box-shadow:inset 0 2px 0 #ffffff8a,0 4px 0 #1c659f,0 7px 11px #2446676b;
+}
+.eventTab.balloonTab b{font-size:12px;text-shadow:0 1px 2px #18547d}
+.eventTab.balloonTab small{color:#effcff}
+.eventTab.balloonTab .eventGlyph img{width:33px;height:48px}
+
+.balloonPopup{
+  padding:36px 12px 12px!important;
+  gap:7px!important;
+  border-color:#a3d7ea!important;
+  background:linear-gradient(180deg,#f8fdff 0%,#eaf9fc 52%,#fff8e9 100%)!important;
+  box-shadow:inset 0 4px 0 #fff,0 8px 0 #79b8d2,0 9px 0 #488cb0,0 22px 34px #153e5780!important;
+}
+.balloonPopup .ribbon.green{
+  min-width:188px;
+  border-color:#fff1c1;
+  background:linear-gradient(#a7eefe,#48bce5 52%,#238bc8);
+  --o:#17608f;
+  box-shadow:inset 0 3px 0 #ffffffa1,0 5px 0 #17608f,0 10px 14px #17507170;
+}
+.balloonPopup .ribbon.green::before,.balloonPopup .ribbon.green::after{background:#2480b2}
+.balloonKicker{
+  flex:none;
+  width:100%;
+  text-align:center;
+  color:#3386ad;
+  font:900 10px/1 var(--f-ui);
+  letter-spacing:.18em;
+}
+.balloonKickerStar{color:#f3b648;font-size:13px;padding:0 5px}
+.balloonSky{
+  position:relative;flex:1;min-height:245px;width:100%;overflow:hidden;
+  border:3px solid #fff4cb;border-radius:22px;
+  background:
+    radial-gradient(circle at 24% 13%,#fffdf0 0 2%,#ffe7a4 5%,#fff2bc80 11%,transparent 24%),
+    linear-gradient(180deg,#63c7ef 0%,#8bdef3 52%,#d7f3f1 84%,#fef6d9 100%);
+  box-shadow:inset 0 0 0 2px #ffffff8c,inset 0 -18px 26px #91c6c260,0 4px 0 #79b8d2;
+}
+.balloonSky::before{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse 80% 30% at 50% -8%,#ffffff8c,transparent 75%),
+    radial-gradient(ellipse 80% 15% at 90% 72%,#fffefa7a,transparent 80%);
+}
+.balloonSun{left:10%;top:9%;width:64px;height:64px;background:radial-gradient(circle,#fffef4 0 30%,#fff1aa 60%,transparent 75%);box-shadow:0 0 30px 17px #fff4bc72}
+.balloonCloud{z-index:1;width:84px;height:26px;box-shadow:0 6px 16px #4da6c52f,0 -3px 6px #fff;opacity:.75}
+.balloonCloud.cloudA{left:-22px;top:33%;transform:scale(.75)}
+.balloonCloud.cloudB{right:-21px;top:49%;transform:scale(.63)}
+.balloonCloud.cloudC{left:37%;top:7%;transform:scale(.44);opacity:.5}
+.balloonRoute{
+  position:absolute;z-index:2;left:25%;top:19%;bottom:10%;width:1px;
+  border-left:3px dashed #fffdf4d9;
+  filter:drop-shadow(0 1px 1px #329ac1);
+}
+.balloonRoute::before,.balloonRoute::after{
+  content:"";position:absolute;left:-7px;width:11px;height:11px;border-radius:50%;
+  background:#fff9d7;border:2px solid #6db5cf;
+}
+.balloonRoute::before{top:0}.balloonRoute::after{bottom:0}
+.balloonPrize{
+  top:8px;right:8px;z-index:6;padding:3px 8px 3px 3px;gap:2px;
+  border-radius:14px;border-color:#fff7d8;
+  background:linear-gradient(#fff8d5,#fddc7a 55%,#f4b74e);
+  box-shadow:inset 0 2px 0 #fff9e9,0 3px 0 #c68d32,0 7px 12px #367a9761;
+  color:#8a5a28;font:900 9px/1.05 var(--f-ui);letter-spacing:.07em;
+}
+.balloonPrize img{width:39px;height:34px}
+.balloonPrize b{font:900 18px/1 var(--f-num);color:#8e4b16}
+.balloonStop{
+  right:6%;width:113px;height:35px;z-index:4;gap:5px;
+  padding:2px 5px;border-radius:17px;
+  border:2px solid #ffffffd9;
+  background:linear-gradient(#ffffffed,#e9f8f9ed);
+  box-shadow:0 3px 0 #76b8c9,0 5px 8px #317fa044;
+  filter:none;
+  color:#286984;
+}
+.balloonStop::before{
+  content:"";position:absolute;right:100%;top:50%;width:26px;height:2px;
+  border-top:2px dashed #fffdde;opacity:.92;
+}
+.balloonStop .stopNumber{
+  margin:0;width:25px;height:25px;border:0;
+  background:linear-gradient(#95def0,#4ba9d3);
+  color:#fff;font:900 12px var(--f-num);
+  box-shadow:inset 0 2px 0 #ffffff87,0 2px 0 #3186ac;
+}
+.balloonStop .stopReward{
+  position:relative;display:flex;align-items:center;gap:2px;flex:1;
+  font:900 16px/1 var(--f-num);color:#34748d;
+}
+.balloonStop .stopReward img{width:20px;height:20px;object-fit:contain}
+.balloonStop.reached{
+  border-color:#fff7c1;
+  background:linear-gradient(#fffce7,#ffe7a5);
+  box-shadow:0 3px 0 #dca652,0 5px 10px #b67b4670;
+}
+.balloonStop.reached .stopNumber{background:linear-gradient(#ffdf80,#f4aa38);box-shadow:inset 0 2px 0 #fff7cc,0 2px 0 #c4852b}
+.balloonStop.reached .stopReward{color:#89561f}
+.balloonStop.current{outline:2px solid #fff4bf;outline-offset:2px}
+.balloonCraft{
+  left:10%;width:82px;height:104px;z-index:5;
+  filter:drop-shadow(0 6px 4px #277ea17a);
+  animation:qbob 2.6s ease-in-out infinite;
+}
+.balloonGround{
+  bottom:-19px;left:-15%;width:132%;height:43px;border-radius:50%;
+  background:linear-gradient(#fdf8db,#d7e4c1 40%,#9dc5ad);
+  box-shadow:0 -6px 13px #d8f4da9e;
+}
+.balloonInfo{
+  flex:none;align-items:stretch;gap:5px;text-align:left;
+  padding:9px 10px 8px;border:1px solid #bfe7ed;border-radius:15px;
+  background:linear-gradient(#fff,#f5fcfb);
+  box-shadow:0 2px 0 #b1dce3;
+}
+.balloonStatus{display:flex;align-items:center;gap:8px}
+.balloonStatusIcon{
+  display:grid;place-items:center;flex:none;width:34px;height:34px;
+  border-radius:11px;background:linear-gradient(#8cdef0,#42acd2);
+  box-shadow:inset 0 2px 0 #ffffff99,0 2px 0 #2789b0;
+  color:#fff;font:900 23px/1 var(--f-num);
+}
+.balloonStatus>div{display:flex;flex-direction:column;min-width:0;flex:1}
+.balloonStatus small{color:#458eab;font:900 9px/1.15 var(--f-ui);letter-spacing:.09em}
+.balloonStatus strong{color:#21617f;font:800 16px/1.05 var(--f-hero)}
+.balloonFlightCount{
+  flex:none;padding:4px 6px;border-radius:7px;background:#e3f4f6;
+  color:#47849c;font:900 10px/1 var(--f-ui);white-space:nowrap;
+}
+.balloonInfo p{margin:1px 0;color:#5c7682;font:800 11px/1.22 var(--f-ui)}
+.balloonRisk{display:flex;align-items:center;gap:5px;color:#aa7551;font:800 10px/1.1 var(--f-ui)}
+.balloonRisk span{
+  display:grid;place-items:center;width:15px;height:15px;border-radius:50%;
+  background:#fff0d8;color:#b67637;font:900 11px var(--f-ui);
+}
+.balloonClaim{flex:none;min-height:52px;font-size:20px!important;border-radius:17px!important}
+.balloonClaim img{width:24px;height:24px;object-fit:contain;filter:drop-shadow(0 2px 1px #a3602380)}
+.balloonClaim[disabled]{opacity:.77;filter:saturate(.68)}
+@media(max-height:720px){
+  .balloonPopup{padding-top:31px!important;gap:5px!important}
+  .balloonKicker{font-size:9px}
+  .balloonSky{min-height:190px}
+  .balloonInfo{padding:6px 8px;gap:3px}
+  .balloonInfo p{font-size:10px}
+  .balloonRisk{font-size:9px}
+  .balloonClaim{min-height:46px;font-size:17px!important}
+  .balloonCraft{width:69px;height:87px}
+  .balloonStop{height:30px;width:102px}
+  .balloonStop .stopNumber{width:21px;height:21px}
+  .balloonStop .stopReward{font-size:14px}
+}
