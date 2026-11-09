@@ -1928,4 +1928,27 @@ body{height:100dvh;display:flex;align-items:center;justify-content:center;backgr
 #case:not(.solved) .book.glued.gl-r::before{right:calc(-1 * var(--ring,3px))}
 #case:not(.solved) .book.glued.gl-l::before{left:calc(-1 * var(--ring,3px))}
 </style>
+<style id="spineKit">
+/* v12 spine kit (patch_v12_spine_kit): ChatGPT pieces, 9-sliced; nothing lies on the picture */
+#case:not(.solved) .book>i{opacity:1!important;background:none!important;box-shadow:none!important;border-radius:0!important;box-sizing:border-box;
+  border-style:solid;border-color:transparent;border-image:url(ui/spine/cap_brown.webp) 23 24 15 24 fill stretch;
+  border-width:calc(var(--cap,0px)*.3026) calc(var(--cap,0px)*.3158) calc(var(--cap,0px)*.1974) calc(var(--cap,0px)*.3158)}
+#case:not(.solved) .book[data-sk="1"]>i{border-image-source:url(ui/spine/cap_burgundy.webp)}
+#case:not(.solved) .book[data-sk="2"]>i{border-image-source:url(ui/spine/cap_green.webp)}
+#case:not(.solved) .book[data-sk="3"]>i{border-image-source:url(ui/spine/cap_navy.webp)}
+.book>.skf{display:none;position:absolute;pointer-events:none;z-index:4;box-sizing:border-box;border-style:solid;border-color:transparent;
+  --k:calc(var(--ring,3px) / 12.5);border-width:calc(var(--k) * 16);
+  top:calc(-1 * var(--cap,0px) - var(--ring,3px) - var(--k) * 1.5);left:calc(-1 * var(--ring,3px) - var(--k) * 1.5);
+  right:calc(-1 * var(--ring,3px) - var(--k) * 1.5);bottom:calc(-1 * var(--ring,3px) - var(--k) * 1.5);
+  border-image:url(ui/spine/frame_pin.webp) 16 stretch}
+#case:not(.solved) .book.framed>.skf{display:block}
+#case:not(.solved) .book.sel>.skf,#case:not(.solved) .book.lift>.skf,#case:not(.solved) .book.target>.skf{display:block;border-image-source:url(ui/spine/frame_sel.webp)}
+#case:not(.solved) .book.framed{box-shadow:none}
+#case:not(.solved) .book.lift{box-shadow:0 16px 22px -4px rgba(30,15,5,.6)}
+#case:not(.solved) .book.sel{box-shadow:0 16px 22px -4px rgba(30,15,5,.6)}
+#case:not(.solved) .book.target{box-shadow:0 8px 16px rgba(0,0,0,.45)}
+#case:not(.solved) .book.glued::before{background:none!important;box-shadow:none!important;border-radius:0!important;box-sizing:border-box;
+  border-style:solid;border-color:transparent;border-width:0 2.5px;border-image:url(ui/spine/bracket.webp) 0 17 fill stretch}
+#case:not(.solved) .book.loose::before{border-image:none!important;background:repeating-linear-gradient(90deg,#FFE08A 0 6px,transparent 6px 10px)!important}
+</style>
 </body></html>

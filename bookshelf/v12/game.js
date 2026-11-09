@@ -233,7 +233,7 @@ function startLevel(prep,pre){
   G.rowbacks=[];G.planks=[];
   ['crown','base'].forEach(c=>{const d=document.createElement('div');d.className=c;caseEl.appendChild(d)});
   for(let r=0;r<G.rows;r++){const rb=document.createElement('div');rb.className='rowback';caseEl.appendChild(rb);G.rowbacks.push(rb);const pl=document.createElement('div');pl.className='plank';caseEl.appendChild(pl);G.planks.push(pl)}
-  for(let id=0;id<G.n;id++){const el=document.createElement('div');el.className='book';el.innerHTML='<i></i>';
+  for(let id=0;id<G.n;id++){const el=document.createElement('div');el.className='book';el.innerHTML='<i></i><span class="skf"></span>';
     const b={id,el,inset:.8+R()*1.8,hf:.92+R()*.08};el.style.setProperty('--band',R()<.65?(.25+R()*.3).toFixed(2):'0');el.style.setProperty('--dk',(R()*.12).toFixed(2));
     el.addEventListener('pointerdown',e=>Input.down(e,id));G.books.push(b);caseEl.appendChild(el)}
   G.final=document.createElement('div');G.final.className='final';caseEl.appendChild(G.final);
@@ -332,7 +332,7 @@ function flyTo(txt,x0,y0,x1,y1,o){const t=document.createElement('div');t.classN
 function refreshBooks(instant){const L=G.Lay;G.groups=computeGroups();
   G.books.forEach(b=>{const el=b.el,lk=G.groups.links[b.id]||{},glued=!!(lk.l||lk.r||lk.u||lk.d);
     if(instant)el.style.transition='none';
-    b.insL=b.insR=(L.gap||0)/2;b.hfNow=1;b.cap=L.capMax?L.capMax*((L.solved||glued)?1:clamp((b.hf-.92)/.08,0,1)):0;
+    /* v12 spine kit (patch_v12_spine_kit) */el.dataset.sk=(b.id*5+(G.L||0)*3)%4;b.insL=b.insR=(L.gap||0)/2;b.hfNow=1;b.cap=L.capMax?L.capMax*((L.solved||glued)?1:clamp((b.hf-.92)/.08,0,1)):0;
     const cr=Math.floor(b.id/G.cols),cc=b.id%G.cols;
     el.style.width=L.pw+'px';el.style.height=(L.ph+b.cap)+'px';el.style.borderTopWidth=b.cap+'px';el.style.setProperty('--cap',b.cap+'px');
     el.style.backgroundPosition=`${-(cc*L.pw)}px ${-(cr*L.ph)}px`;
