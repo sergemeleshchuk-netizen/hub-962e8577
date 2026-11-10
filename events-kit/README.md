@@ -56,3 +56,7 @@ Reward types: `{type:'coins',n}`, `{type:'booster',id,n}`, `{type:'lives',min}` 
 - Cheats: `SKY.cheat.setFloor(n)`, `SKY.cheat.endSeason()`, `SKY.reset()`. Analytics via `cfg.track`: `sky_lift_unlock / milestone / drop / open / claim / flight / season_reset`.
 
 Verified with `proto-size-match/verify_v51.mjs` (headless Chrome + CDP, real taps).
+
+## Changelog
+- 2026-11-10 (2), feedback on Size Match v51: the first-time how-to popup is shown only after the chest popup (Collect), never over the rising balloon; the rise is paced per floor (430 ms per floor, 0.8-2.6 s) with the HUD floor counter ticking floor by floor, so opening the screen from the Home tile shows exactly how many floors were gained since the last visit; any first showing (hop or tile) counts as the entry presentation (no second "enter" screen on Home).
+- 2026-11-10: first release (Size Match v51).

@@ -4,6 +4,9 @@
    Ported from Bookshelf v12 Sky Lift v4 (2026-11-09) and extended per PLAYBOOK/events/02-sky-lift-requirements.md:
    milestones are persisted, every milestone is presented automatically (post-win hop, or on Home if the player left),
    rewards are typed (coins / booster / unlimited lives) and shown on every chest and in the claim popup.
+   2026-11-10 (2): first-time how-to popup comes after the chest popup (never over the rise); the rise is paced per floor
+   (430 ms/floor, 0.8-2.6 s) and the HUD floor counter ticks floor by floor, so a player who opens the screen from the
+   Home tile sees exactly how many floors were gained since the last visit.
 
    Usage (host game):
      const sky = SkyLift.init({
@@ -92,33 +95,38 @@ window.SkyLift=(function(){
         <div class="skTop"><button class="skI" id="skInfo" aria-label="How it works"><span class="skOl">i</span></button><div class="skBanner"><img src="${art('sl_banner')}" alt=""><span class="skTitle skOl">${cfg.title}</span><span class="skTime" id="skTime">${left()}</span></div><button class="skX skScrX" id="skClose" aria-label="Close">${SVGX}</button></div>
         <div class="skScroll" id="skScroll"><div class="skTower" style="height:${H}px"><div class="skCity"></div>${clouds}<div class="skMast"></div><div class="skMastTop"></div><div class="skMastBase"></div><div class="skHex zero on" style="--y:${BASE}px"><span class="skOl">0</span></div>${cps}<div class="skBalloon" id="skBalloon" style="bottom:${from}px"><img src="${art('sl_balloon')}" alt=""></div></div></div>
         <div class="skHud"><div class="skFire"><img src="${art('sl_fire')}" alt=""><b class="skOl" id="skFloor">${seen}</b></div><div class="skInfoTxt" id="skInfoTxt"></div><button class="skBtn gold" id="skPlay"><span class="t">Play</span></button></div>`;
-      hudText()}
-    function hudText(){const next=k.cp<N?M[k.cp]-k.floor:0,el=sec.querySelector('#skInfoTxt');if(!el)return;
+      hudText(seen)}
+    function hudText(shown){const next=k.cp<N?M[k.cp]-k.floor:0,el=sec.querySelector('#skInfoTxt');if(!el)return;
       el.innerHTML=`<strong>${k.cp>=N?'Top reached!':`${next} more win${next===1?'':'s'} to floor ${M[k.cp]}`}</strong><span>Win levels to rise. A lost level drops the balloon to floor ${protectedFloor()}.${k.flights?` Flights completed: ${k.flights}.`:''}</span>`;
-      const f=sec.querySelector('#skFloor');if(f)f.textContent=k.floor}
+      const f=sec.querySelector('#skFloor');if(f)f.textContent=shown==null?k.floor:shown}
     /* open({from:'win'|'home'|'button', play, close}) → cascade in → balloon moves (camera follows) → pause → fresh chests pop → claim popup */
     function open(ctx){ensure();tick();const seen=k.presented,run=++anim;render();sec.hidden=false;sec.classList.remove('out');sec.classList.add('in');
+      if(!k.enter){k.enter=true;save()}   // any first showing (hop or tile) counts as the entry presentation
       track('sky_lift_open',{from:ctx.from,floor:k.floor});
       const H=Y(N)+380,sc=sec.querySelector('#skScroll'),b=sec.querySelector('#skBalloon'),center=y=>{sc.scrollTop=Math.max(0,H-y-sc.clientHeight*.56)};
       const from=Y(units(seen)),to=Y(units(k.floor));center(from);
       const alive=()=>run===anim&&!sec.hidden;
+      const needTut=!k.tut,tut=()=>{if(!alive())return;if(!k.tut){k.tut=true;save()}infoPopup()};
       const finish=()=>{if(!alive())return;const fresh=k.pending.slice();
         fresh.forEach((i,n)=>setTimeout(()=>{if(!alive())return;const st=sec.querySelector(`[data-i="${i}"]`);if(!st)return;st.classList.add('pop');snd('coin');setTimeout(()=>{st.classList.remove('pop');st.classList.add('on')},460)},450+n*260));
-        if(fresh.length)setTimeout(()=>{if(alive())claim(fresh)},450+fresh.length*260+420)};
+        if(fresh.length)setTimeout(()=>{if(alive())claim(fresh,needTut?tut:null)},450+fresh.length*260+420);   // first time: chest first, the how-to popup after Collect
+        else if(needTut)setTimeout(tut,320)};
       setTimeout(()=>{if(!alive())return;sec.classList.remove('in');
         if(Math.abs(to-from)<1){finish();return}
-        const up=to>from,dur=Math.min(1700,Math.max(650,Math.abs(to-from)*2.2));b.style.transition=`bottom ${dur}ms ${up?EASE.inout:EASE.in}`;b.style.bottom=to+'px';b.classList.add(up?'rise':'fall');snd(up?'whoosh':'slide');
-        const t0=performance.now(),tickF=()=>{if(!alive())return;const t=Math.min(1,(performance.now()-t0)/dur);center(from+(to-from)*t);if(t<1)requestAnimationFrame(tickF);else{b.classList.remove('rise','fall');finish()}};
+        const up=to>from,floors=Math.abs(k.floor-seen),dur=Math.min(2600,Math.max(800,floors*(up?430:260)));b.style.transition=`bottom ${dur}ms ${up?EASE.inout:EASE.in}`;b.style.bottom=to+'px';b.classList.add(up?'rise':'fall');snd(up?'whoosh':'slide');
+        const fEl=sec.querySelector('#skFloor');let shown=seen;
+        const t0=performance.now(),tickF=()=>{if(!alive())return;const t=Math.min(1,(performance.now()-t0)/dur),e=up?(t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2):t*t;center(from+(to-from)*e);
+          const fl=Math.round(seen+(k.floor-seen)*e);if(fl!==shown&&fEl){shown=fl;fEl.textContent=fl;fEl.classList.remove('tick');void fEl.offsetWidth;fEl.classList.add('tick');if(up)snd('tick')}
+          if(t<1)requestAnimationFrame(tickF);else{b.classList.remove('rise','fall');finish()}};
         requestAnimationFrame(tickF)},520);
       k.presented=k.floor;save();
       clearInterval(timer);timer=setInterval(()=>{const t=sec.querySelector('#skTime');if(t)t.textContent=left()},30000);
       const exit=cb=>{closePops();anim++;clearInterval(timer);sec.classList.remove('in');sec.classList.add('out');setTimeout(()=>{sec.classList.remove('out');sec.hidden=true;refreshTile();ctx.release&&ctx.release();cb&&cb()},380)};
       sec.querySelector('#skClose').onclick=()=>{snd('click');exit(ctx.close)};
       sec.querySelector('#skPlay').onclick=()=>{snd('click');exit(ctx.play||ctx.close)};
-      sec.querySelector('#skInfo').onclick=()=>{snd('click');infoPopup()};
-      if(!k.tut){k.tut=true;save();setTimeout(()=>{if(alive())infoPopup()},560)}}
+      sec.querySelector('#skInfo').onclick=()=>{snd('click');infoPopup()}}
     /* claim: grant the rewards of the freshly reached milestones; the grand prize also completes the flight (balloon back to 0) */
-    function claim(ids){const last=ids.includes(N-1),rs=ids.flatMap(rewardsOf);
+    function claim(ids,after){const last=ids.includes(N-1),rs=ids.flatMap(rewardsOf);
       k.pending=k.pending.filter(i=>!ids.includes(i));
       const p=popup({title:cfg.title,close:false,html:`<img class="skHero chest" src="${art('sl_'+cfg.chests[ids[ids.length-1]])}" alt=""><div class="skText">${last?'You reached the top of the Sky Lift!':`Floor${ids.length>1?'s':''} <b>${ids.map(i=>M[i]).join(', ')}</b> reached!`} Chest${ids.length>1?'s':''} opened:</div><div class="skRw">${rs.map((r,i)=>`<span class="r" style="animation-delay:${.15+i*.09}s"><span class="i">${icon(r)}</span>${label(r)}</span>`).join('')}</div><button class="skBtn gold wide" id="skCollect"><span class="t">Collect</span></button>`});
       confettiIn(p.el);snd('win');track('sky_lift_claim',{floors:ids.map(i=>M[i]),grand:last});
@@ -128,7 +136,7 @@ window.SkyLift=(function(){
             sec.querySelectorAll('.skStop.on,.skGrand.on').forEach(e=>e.classList.remove('on'));sec.querySelectorAll('.skHex.on:not(.zero)').forEach(e=>e.classList.remove('on'));
             b.style.transition=`bottom 1600ms ${EASE.inout}`;b.style.bottom=Y(0)+'px';b.classList.add('fall');setTimeout(()=>b.classList.remove('fall'),1600);
             const y0=parseFloat(getComputedStyle(b).bottom)||0,t0=performance.now(),f=()=>{const t=Math.min(1,(performance.now()-t0)/1600);sc.scrollTop=Math.max(0,H-(y0+(Y(0)-y0)*t)-sc.clientHeight*.56);if(t<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
-          hudText();refreshTile()})}}
+          hudText();refreshTile();after&&setTimeout(after,last?1700:120)})}}
     /* ---------- home tile ---------- */
     let tile=null;
     function mountTile(el){tile=el;el.classList.add('skTile');el.onclick=()=>{snd('click');if(window.EventsHub&&EventsHub.open)EventsHub.open(id,{play:a.onPlay});else open({from:'button',play:a.onPlay})};refreshTile()}
@@ -139,7 +147,7 @@ window.SkyLift=(function(){
       pendingWin:()=>k.pending.length>0,
       presentWin:ctx=>open({from:'win',play:ctx.play,close:ctx.close,release:ctx.release}),
       pendingHome:()=>k.pending.length>0||!k.enter,
-      presentHome:ctx=>{if(!k.enter){k.enter=true;save()}open({from:'home',play:ctx.play||a.onPlay,close:ctx.close,release:ctx.release})},
+      presentHome:ctx=>{open({from:'home',play:ctx.play||a.onPlay,close:ctx.close,release:ctx.release})},
       loseWarning:()=>{if(!enabled()||k.floor<=protectedFloor())return null;return {html:`<span class="skWarn"><img src="${art('sl_balloon')}" alt="">Balloon drops to floor <b>${protectedFloor()}</b></span>`,from:k.floor,to:protectedFloor()}},
       refresh:refreshTile,mountTile,open:ctx=>open(Object.assign({from:'button',play:a.onPlay},ctx||{})),
       state:()=>k,reset:()=>{k=fresh();save();refreshTile()},
