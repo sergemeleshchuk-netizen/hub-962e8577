@@ -158,7 +158,7 @@ footer{position:fixed;left:0;right:0;bottom:0;background:rgba(23,18,14,.95);bord
 
 <script src="data.js"></script>
 <script src="review.js"></script>
-<script src="sheet_data.js"></script>
+<script src="sheet_data.js?v=20261110"></script>
 <script>
 (function(){
   const P = window.PAINTINGS, RV = window.REVIEW || {}; const byId = {}, byN = {}; P.forEach(p => { byId[p.id] = p; byN[p.n] = p; });
@@ -168,7 +168,7 @@ footer{position:fixed;left:0;right:0;bottom:0;background:rgba(23,18,14,.95);bord
   const BOARD = ['books','shelves','variant','locks','lockHp','ribbons','hidden','stars','ticking','tickingTurns','keyBook'];
   const INTRO = {stars:31,hidden:41,ribbons:51,locks:61,ticking:71,keyBook:80};
   const MECH = [['stars','Star book'],['hidden','Hidden book'],['ribbons','Tied books'],['locks','Locked book'],['ticking','Ticking book'],['keyBook','Key book']];
-  const MAXV = 39, SHELVES = [2,6], PER = [4,9];
+  const MAXV = 39, SHELVES = [2,5], PER = [4,9];
   const $ = s => document.querySelector(s); const grid = $('#grid'), status = $('#status');
   const pick = r => { const c = {}; FIELDS.forEach(k => c[k] = r[k]); return c; };
 
@@ -190,6 +190,10 @@ footer{position:fixed;left:0;right:0;bottom:0;background:rgba(23,18,14,.95);bord
   try { const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
     if (d && okOrder(d.order) && Array.isArray(d.cfg) && d.cfg.length === LEVELS) st = {order: d.order, cfg: d.cfg};
     else { const old = JSON.parse(localStorage.getItem('bookshelf_atlas_draft_v1') || 'null'); if (old && okOrder(old.order)) st.order = old.order; } } catch (e) {}
+  /* sheet update: keep the draft's painting order and its own edits, take the new sheet row where the draft still had the old one */
+  try { const PREV = window.SHEET_PREV || {}; let moved = 0;
+    for (const L in PREV) { const c = st.cfg[L-1], s = SHEET[L-1]; if (c && s && FIELDS.every((k, i) => c[k] === PREV[L][i])) { st.cfg[L-1] = pick(s); moved++; } }
+    if (moved) localStorage.setItem(DRAFT_KEY, JSON.stringify(st)); } catch (e) {}
   const saveDraft = () => { try { localStorage.setItem(DRAFT_KEY, JSON.stringify(st)); } catch (e) {} };
 
   let sortMode = 'custom', gradeF = 'all', selectedLevel = 1;
