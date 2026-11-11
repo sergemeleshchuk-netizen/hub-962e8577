@@ -7,6 +7,8 @@
    2026-11-10 (2): first-time how-to popup comes after the chest popup (never over the rise); the rise is paced per floor
    (430 ms/floor, 0.8-2.6 s) and the HUD floor counter ticks floor by floor, so a player who opens the screen from the
    Home tile sees exactly how many floors were gained since the last visit.
+   2026-11-11: popup title = ribbon art sl_popribbon (ChatGPT, same set as the screen banner) on every popup; the intro is a
+   paywall-style card: hero art sl_hero, coloured headline, four bullets with art icons, timer, one CTA.
 
    Usage (host game):
      const sky = SkyLift.init({
@@ -71,15 +73,20 @@ window.SkyLift=(function(){
       save();refreshTile()}
     /* ---------- popups ---------- */
     const pops=[];
-    function popup({title,html,close=true,onClose}){const ov=document.createElement('div');ov.className='skOv';
-      ov.innerHTML=`<div class="skPop">${title?`<div class="skRibbon"><span class="skOl">${title}</span></div>`:''}${close?`<button class="skX" aria-label="Close">${SVGX}</button>`:''}${html}</div>`;
+    function popup({title,html,close=true,onClose,cls=''}){const ov=document.createElement('div');ov.className='skOv';
+      ov.innerHTML=`<div class="skPop ${cls}">${title?`<div class="skRibbon" style="background-image:url(${art('sl_popribbon')})"><span class="skOl">${title}</span></div>`:''}${close?`<button class="skX" aria-label="Close">${SVGX}</button>`:''}${html}</div>`;
       root.appendChild(ov);snd('pop');
       const p={ov,el:ov.firstChild,closed:false,close(cb){if(p.closed)return;p.closed=true;ov.classList.add('out');const i=pops.indexOf(p);if(i>=0)pops.splice(i,1);setTimeout(()=>{ov.remove();onClose&&onClose();cb&&cb()},170)},q:s=>ov.querySelector(s)};
       if(close)ov.querySelector('.skX').onclick=()=>{snd('click');p.close()};pops.push(p);return p}
     const closePops=()=>pops.slice().forEach(p=>p.close());
     function confettiIn(el){const c=document.createElement('div');c.className='skConf';const cols=['#FFC548','#A77AF4','#53D96B','#5FE6F2','#FF735F','#fff'];
       c.innerHTML=Array.from({length:26},(_,i)=>`<i style="left:${4+Math.random()*92}%;background:${cols[i%cols.length]};animation-delay:${Math.random()*.5}s;animation-duration:${1.3+Math.random()*.8}s"></i>`).join('');el.appendChild(c);setTimeout(()=>c.remove(),2600)}
-    function infoPopup(cb){const p=popup({title:cfg.title,html:`<img class="skHero" src="${art('sl_balloon')}" alt=""><div class="skText">Every won level lifts the balloon one floor. Reach a chest floor to open it: coins, boosters or unlimited hearts. A lost level drops you to the last chest you opened, never lower. Reach floor ${M[N-1]} for the grand prize! Ends in <b>${left()}</b>.</div><button class="skBtn purple wide" id="skOk"><span class="t">Got it</span></button>`});
+    /* intro: paywall layout (hero art, coloured headline, four short bullets, timer, one CTA) instead of a wall of text */
+    function infoPopup(cb){const pts=[[art('sl_balloon'),'Win a level:','+1 floor'],[art('sl_'+cfg.chests[0]),'Chests:','coins & boosters'],
+        [art('sl2_bracket'),'Lose:','keep your last chest'],[art('sl_grand'),`Floor ${M[N-1]}:`,'grand prize']];
+      const p=popup({title:cfg.title,cls:'skIntro',html:`<img class="skHero big" src="${art('sl_hero')}" alt=""><div class="skHead">Fly to the top!</div>
+        <ul class="skPts">${pts.map(([src,a,b],i)=>`<li style="animation-delay:${.12+i*.07}s"><img src="${src}" alt=""><span><b>${a}</b> ${b}</span></li>`).join('')}</ul>
+        <div class="skEnds">Ends in <b>${left()}</b></div><button class="skBtn gold wide" id="skOk"><span class="t">Let's go!</span></button>`});
       p.q('#skOk').onclick=()=>{snd('click');p.close(cb)};return p}
     /* ---------- screen ---------- */
     let sec=null,anim=0,timer=0;
