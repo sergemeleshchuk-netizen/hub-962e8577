@@ -41,7 +41,7 @@ Game hooks (the only places the game knows about events):
 | moment | call |
 |---|---|
 | level won / lost | `EventsHub.levelResult(won, levelNumber, firstClear)` |
-| NEXT on the win screen | `EventsHub.wonHop(() => nextLevel(), () => goHome())` — a pending milestone shows the event first |
+| NEXT on the win screen | `EventsHub.wonHop(() => nextLevel(), () => goHome(), play?)` — a pending milestone shows the event first; `play` = PLAY on the event screen when it differs from `next` (Bookshelf: Continue goes Home, PLAY starts the next level) |
 | arriving on Home | `EventsHub.homeShow()` — one pending presentation per arrival (enter prompt, unclaimed milestone) |
 | lose popup | `EventsHub.loseWarnings()[0]?.html` — what the player is about to lose |
 | Home refresh | `EventsHub.refresh()` — re-renders the event tiles |
@@ -58,5 +58,6 @@ Reward types: `{type:'coins',n}`, `{type:'booster',id,n}`, `{type:'lives',min}` 
 Verified with `proto-size-match/verify_v51.mjs` (headless Chrome + CDP, real taps).
 
 ## Changelog
+- 2026-11-11: second host, Bookshelf v12 (`proto-bookshelf/patch_v12_events_kit.py`): the built-in Sky Lift v4 copy is replaced by the kit; `wonHop` takes an optional third argument `play` for hosts whose NEXT does not start the next level; rewards mapped to Bookshelf boosters + unlimited hearts (`S.unlimUntil`). Demo video of every case: `proto-bookshelf/sky_lift_video/`.
 - 2026-11-10 (2), feedback on Size Match v51: the first-time how-to popup is shown only after the chest popup (Collect), never over the rising balloon; the rise is paced per floor (430 ms per floor, 0.8-2.6 s) with the HUD floor counter ticking floor by floor, so opening the screen from the Home tile shows exactly how many floors were gained since the last visit; any first showing (hop or tile) counts as the entry presentation (no second "enter" screen on Home).
 - 2026-11-10: first release (Size Match v51).

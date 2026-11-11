@@ -2,7 +2,7 @@
    Small presentation scheduler shared by every live-ops event in a web prototype.
    Policy: one event presentation at a time. The game talks to the hub at three moments:
      EventsHub.levelResult(won, level, firstClear)  — right after a level ends (silent, no UI)
-     EventsHub.wonHop(next)                          — the player taps NEXT on the win screen:
+     EventsHub.wonHop(next, closed, play?)          — the player taps NEXT on the win screen:
                                                         the first event with a pending presentation shows itself, then calls next()
      EventsHub.homeShow()                            — the player arrives on Home: one pending presentation per arrival
    An event object implements:
@@ -18,10 +18,10 @@ window.EventsHub=(function(){
   function levelResult(won,level,firstClear){events.forEach(e=>{if(e.onLevelResult)e.onLevelResult(won,level,firstClear)})}   // each event decides itself (an unlocking win is not counted)
   // ctx passed to an event presentation: release() must be called when the screen goes away (the event does it on every exit), play()/close() are the host continuations
   const ctx=(e,extra)=>Object.assign({release(){if(busy===e.id)busy=null}},extra||{});
-  function wonHop(next,closed){
+  function wonHop(next,closed,play){   // play: PLAY on the event screen (defaults to next; Bookshelf: Continue goes Home, PLAY starts the next level)
     const e=!busy&&events.find(e=>e.enabled()&&e.pendingWin&&e.pendingWin());
     if(!e){next();return false}
-    busy=e.id;e.presentWin(ctx(e,{play:next,close:closed}));return true}
+    busy=e.id;e.presentWin(ctx(e,{play:play||next,close:closed}));return true}
   function homeShow(){
     if(busy)return false;const e=events.find(e=>e.enabled()&&e.pendingHome&&e.pendingHome());
     if(!e)return false;busy=e.id;e.presentHome(ctx(e));return true}

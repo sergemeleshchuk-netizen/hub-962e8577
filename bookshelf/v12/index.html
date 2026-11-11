@@ -149,68 +149,15 @@ body.minimal .mcHd small{background:none;border:1px solid #C9A25C;color:#E3C27A}
 </style>
 <style id="padBubCss">#brPad .brBub.lo{top:auto;transform:none;border-radius:16px;pointer-events:none;box-shadow:0 0 0 3px #FFE14D,0 8px 18px rgba(0,0,0,.25);animation:padBubIn .35s cubic-bezier(.34,1.56,.64,1) both}#brPad .brBub.lo::after{content:"";position:absolute;left:calc(var(--ax,50%) - 8px);bottom:-7px;width:16px;height:16px;background:#fff;transform:rotate(45deg);box-shadow:3px 3px 0 0 #FFE14D}#brPad .brBub.lo.go{opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s}@keyframes padBubIn{from{opacity:0;transform:translateY(8px) scale(.9)}to{opacity:1;transform:none}}</style>
 <style id="hiddenTutorialFocus">#mechW .spotH.hiddenFocus{border-radius:6px;border:0;outline:0;box-shadow:0 0 0 2000px rgba(16,10,40,.72);animation:none}#mechW .spotH.hiddenFocus::after{display:none}</style>
-<style>/* v12 Sky Lift v2 */
-#sSky{background:#5EB9FF;z-index:7;overflow:hidden}
-.skBg{position:absolute;inset:0;background:linear-gradient(#016EFD,#4CC2FD 60%,#99DDFB);z-index:0}
-/* 2026-11-09 Sky Lift v4 (as in the video reference): the Sky Lift plaque floats over the scene all the time, the tower scrolls right under it, and the top of the sky darkens into a blue haze */
-.skTop{position:absolute;left:0;right:0;top:0;pointer-events:none;z-index:4;height:calc(112px + env(safe-area-inset-top,0px));padding-top:calc(6px + env(safe-area-inset-top,0px));display:flex;align-items:flex-start;justify-content:center}
-.skTop>*{pointer-events:auto}
-.skTop::before{content:"";position:absolute;left:0;right:0;top:0;height:calc(190px + env(safe-area-inset-top,0px));background:linear-gradient(rgba(2,22,96,.9),rgba(6,40,140,.62) 35%,rgba(16,74,190,.25) 68%,rgba(20,90,210,0));z-index:-1;pointer-events:none}
-.skBanner{position:relative;width:224px}
-.skBanner img{width:100%;display:block;filter:drop-shadow(0 6px 8px rgba(40,10,70,.35))}
-.skTitle{position:absolute;left:0;right:0;top:56%;text-align:center;font:800 25px/1 var(--f-hero);color:#fff;--o:#5A1E8A}
-.skTime{position:absolute;left:0;right:0;top:85%;text-align:center;font:800 12px/1 var(--f-num);color:#FFE38A;text-shadow:0 1px 0 #5A1E8A}
-.skI{position:absolute;left:12px;top:calc(16px + env(safe-area-inset-top,0px));width:40px;height:40px;border-radius:50%;border:3px solid #fff;background:linear-gradient(#8FC8FF,#3C86E8);box-shadow:0 4px 0 #1C4BA8;font:800 20px/1 var(--f-num);color:#fff;display:grid;place-items:center;padding:0}
-.skI .ol{--o:#1C4BA8}
-.xbtn.skX{position:absolute;right:12px;top:calc(14px + env(safe-area-inset-top,0px))}
-.skScroll{position:relative;z-index:1;flex:1;min-height:0;padding-top:calc(104px + env(safe-area-inset-top,0px));overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-.skScroll::-webkit-scrollbar{display:none}
-.skTower{position:relative;width:100%}
-.skCity{position:absolute;left:0;right:0;bottom:0;height:700px;background:url(ui/sl2_bg.webp?v=sky4) center bottom/100% auto no-repeat;z-index:0}
-.skCloud{position:absolute;bottom:var(--y);width:124px;z-index:1}
-.skCloud.c1,.skCloud.c3{width:86px}
-.skMast{position:absolute;left:7px;top:230px;bottom:60px;width:80px;background:url(ui/sl2_mast.webp?v=sky4) left top/80px auto repeat-y;z-index:2;filter:drop-shadow(0 4px 6px rgba(40,10,70,.3))}
-.skMastTop{position:absolute;left:-27px;top:0;width:270px;height:250px;background:url(ui/sl2_top.webp?v=sky4) left top/auto 250px no-repeat;z-index:3;filter:drop-shadow(0 4px 6px rgba(40,10,70,.3))}
-.skMastBase{position:absolute;left:-31px;bottom:0;width:160px;height:77px;background:url(ui/sl2_base.webp?v=sky4) left bottom/auto 77px no-repeat;z-index:3;filter:drop-shadow(0 4px 6px rgba(40,10,70,.3))}
-.skHex{position:absolute;left:21px;bottom:var(--y);width:52px;height:57px;transform:translateY(50%);background:url(ui/sl_hex.webp?v=sky4) center/contain no-repeat;display:grid;place-items:center;font:800 20px/1 var(--f-num);color:#fff;--o:#1F5452;z-index:5;filter:drop-shadow(0 3px 4px rgba(40,10,70,.35))}
-.skHex .ol{--o:#1F5452;padding-top:2px}
-.skHex.on{filter:drop-shadow(0 0 5px #FFE38A) drop-shadow(0 3px 4px rgba(40,10,70,.35))}
-.skStop{position:absolute;left:76px;bottom:calc(var(--y) - 40px);width:110px;z-index:4}
-.skPlat{width:110px;display:block;filter:drop-shadow(0 5px 6px rgba(40,10,70,.3))}
-.skStop .skChest{position:absolute;left:36px;bottom:46px;width:64px;filter:drop-shadow(0 4px 5px rgba(40,10,70,.35));transform-origin:50% 100%}
-.skStop.on .skChest,.skGrand.on .skChest{filter:grayscale(.55) brightness(.9) drop-shadow(0 4px 5px rgba(40,10,70,.3));opacity:.75;transition:filter .4s,opacity .4s}
-.skStop.pop .skChest,.skGrand.pop .skChest{animation:skPop .46s cubic-bezier(.34,1.56,.64,1)}
-@keyframes skPop{0%{transform:scale(1)}45%{transform:scale(1.22) translateY(-6px)}100%{transform:scale(1)}}
-.skGrand{position:absolute;left:88px;bottom:calc(var(--y) - 30px);width:170px;z-index:4}
-.skGrand .skChest{width:100%;display:block;filter:drop-shadow(0 6px 10px rgba(40,10,70,.3));transform-origin:50% 100%}
-.skBalloon{position:absolute;left:70%;width:120px;transform:translateX(-50%);z-index:6;pointer-events:none}
-.skBalloon img{width:100%;display:block;filter:drop-shadow(0 10px 12px rgba(40,10,70,.35));transform-origin:50% 0;transition:transform .45s cubic-bezier(.22,1,.36,1)}
-.skBalloon.rise img{transform:rotate(-2.5deg) translateY(-3px)}
-.skBalloon.fall img{transform:rotate(3deg) translateY(4px)}
-.skHud{position:relative;z-index:2;display:flex;align-items:center;gap:10px;padding:8px 12px calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(20,40,90,0),rgba(20,40,90,.6))}
-.skFire{position:relative;width:62px;height:74px;flex:none}
-.skFire img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 3px 4px rgba(40,10,70,.35))}
-.skFire b{position:absolute;left:0;right:0;top:63%;transform:translateY(-50%);text-align:center;font:800 24px/1 var(--f-num);color:#fff;--o:#B5221A}
-.skInfoTxt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;color:#fff;font:700 11.5px/1.3 var(--f-ui);text-shadow:0 1px 2px rgba(0,0,0,.5)}
-.skInfoTxt strong{font:800 15px/1.2 var(--f-hero)}
-#skPlay{flex:none;min-width:92px}
-.skyHero{width:140px;height:120px}
-/* вход снизу вверх каскадом (баннер сверху, башня и HUD снизу), выход вниз ≈75 % */
-#sSky.in .skTop{animation:skDown .42s cubic-bezier(.22,1,.36,1) both}
-#sSky.in .skScroll{animation:skUp .5s cubic-bezier(.22,1,.36,1) .06s both}
-#sSky.in .skHud{animation:skUp .42s cubic-bezier(.22,1,.36,1) .14s both}
-#sSky.out .skTop{animation:skDownOut .3s cubic-bezier(.5,0,.75,0) both}
-#sSky.out .skScroll{animation:skUpOut .36s cubic-bezier(.5,0,.75,0) both}
-#sSky.out .skHud{animation:skUpOut .3s cubic-bezier(.5,0,.75,0) both}
-@keyframes skUp{0%{transform:translateY(70px);opacity:0}100%{transform:translateY(0);opacity:1}}
-@keyframes skDown{0%{transform:translateY(-50px);opacity:0}100%{transform:translateY(0);opacity:1}}
-@keyframes skUpOut{0%{transform:translateY(0);opacity:1}100%{transform:translateY(70px);opacity:0}}
-@keyframes skDownOut{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-50px);opacity:0}}
-</style>
 </head><body><title>Bookshelf: Art Puzzle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../events-kit/sky-lift.css?v=20261111">
+<style id="skyKitHost">/* 2026-11-11 Sky Lift = общий модуль событий; экран и его попапы выше окна победы (#winWrap 90) и попапов игры (.ov 100) */
+#app>.skScreen{z-index:95}#app>.skOv{z-index:120}
+.skWarnRow{display:flex;justify-content:center;margin:-4px 0 12px}.pop .skWarn{color:#2A4C9C;background:#E4EEFF;border-color:#9DBCF5}.pop .skWarn b{color:#C2410C}
+</style>
 <style>
 /* Layout: one-screen portrait app (max 440px) — sunny cozy library, glossy soft-3D components, the bookcase is the hero */
 :root{
@@ -1932,7 +1879,6 @@ body{height:100dvh;display:flex;align-items:center;justify-content:center;backgr
     <div id="stage"><div id="case"></div><div id="peek"><div class="pf"><i id="peekImg"></i><span class="pk-n ol">3</span><div class="pk-bar"><i></i></div><span class="pk-x"><b>✕</b>Tap to close</span></div></div></div>
     <div class="bbar" id="gBoosters"></div>
   </section>
-  <section class="scr" id="sSky" hidden></section>
   <section class="scr" id="sSlide" hidden>
     <div class="topbar evRes"><div class="ctr evLives"><img src="ui/i_heart.png" alt=""><span class="v livesV">5</span><span class="sv livesSv">Full</span><button class="plus" aria-label="Get lives"><span class="ol">+</span></button></div><div class="ctr evCoins"><img src="ui/i_coin.png" alt=""><span class="v coinsV">0</span><button class="plus" aria-label="Get coins"><span class="ol">+</span></button></div></div>
     <div class="hud slHud">
@@ -1968,7 +1914,9 @@ body{height:100dvh;display:flex;align-items:center;justify-content:center;backgr
 <script src="config/load.js?v=20261029"></script>
 <script src="levels.js?v=cyc-20261110"></script>
 <script src="lib_backgrounds.js"></script>
-<script src="game.js?v=cyc-20261110"></script>
+<script src="../../events-kit/events-hub.js?v=20261111"></script>
+<script src="../../events-kit/sky-lift.js?v=20261111"></script>
+<script src="game.js?v=skykit-20261111"></script>
 <style id="fullArt">
 /* v12 full-art (patch_v12_full_art): the picture is never cut or covered; frames sit in the gap */
 #case:not(.solved) .book{border-radius:0!important;border-top:0 solid #5A3A22;border-left:0;border-right:0;border-bottom:0;background-clip:padding-box}
