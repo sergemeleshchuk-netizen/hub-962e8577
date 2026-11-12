@@ -38,9 +38,9 @@ Sort the spines. Reveal the masterpiece.
 ## Screenshot order (v2, 2026-11-12)
 
 1. SORT THE BOOKS. REVEAL THE ART!
-2. COMPLETE THE MASTERPIECE!
-3. RIDE THE SKY LIFT. WIN REWARDS!
+2. SWAP THE SPINES. FIND THE PANDA!
+3. RESTORE THE MASTERPIECE!
 4. DISCOVER 350 PAINTINGS!
-5. RESTORE THE ART. PLAY NOW!
+5. RIDE THE SKY LIFT. WIN REWARDS!
 
-Frame = full-screen game screenshot (bookshelf v12) with the CTA band over the bottom 22 % (it covers the booster bar), no phone mockup, no small print. 1: level 3 (Starry Night Cat-stronaut) almost solved, a book being dragged; 2: level 29 (The Flower Carrier) partly solved, the rabbit assembled; 3: Sky Lift event screen, floor 9; 4: level 35 (Fox Hunters in the Snow) partly solved, the fox hunter assembled; 5: level 14 (Vitruvian Frog, after Leonardo da Vinci) restored, reward card. Arrangements and event progress are listing states set during capture, the game itself is unchanged. Ratings, reviews and store metadata in the preview are mockup placeholders.
+Frame = full-screen game screenshot (bookshelf v12) with the CTA band over the bottom 22 % (it covers the booster bar), no phone mockup, no small print. 1: level 3 (Starry Night Cat-stronaut) almost solved, a book being dragged; 2: level 35 (Snow at the Temple Gate) partly solved, the red panda assembled; 3: level 52 (Otter Blowing Bubbles) restored; 4: level 55 (Time Transfixed Mouse, tied books) partly solved, the mouse and the locomotive assembled; 5: Sky Lift event screen, floor 9. Arrangements and event progress are listing states set during capture, the game itself is unchanged. Ratings, reviews and store metadata in the preview are mockup placeholders.
