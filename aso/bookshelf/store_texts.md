@@ -31,17 +31,16 @@ Sort the spines. Reveal the masterpiece.
 
 ## What's new
 
-• Swap & Glue: matching books now lock into blocks you can drag as one
-• Hint moves a whole block to its true spot
-• Hold to preview the original painting
+• Sky Lift: win levels to lift the balloon, open chests on the way up
+• 350 paintings, new shelf styles and libraries
+• Five boosters: Art Peek, Hint Lens, Time Freeze, Magic Hand, Brush
 
-## Screenshot order
+## Screenshot order (v2, 2026-11-12)
 
-1. DRAG THE BOOKS. REVEAL THE ART! — Swap spines until the painting appears. (The Starry Night, mid-level, a book being dragged to its spot)
-2. MATCHING SPINES LOCK TOGETHER — Move the whole block as one. (Girl with a Pearl Earring, a block just glued (in-game tip visible))
-3. STUCK? HOLD TO PREVIEW — Peek at the original. Three hints per painting. (The Great Wave, Hold to preview)
-4. ARTWORK RESTORED! — Fewer moves, more stars. (Mona Lisa restored, gold frame + result card)
-5. BUILD YOUR OWN MUSEUM — Museum labels and a story behind every work. (Your Gallery with four restored works)
-6. SIX MASTERPIECES. EASY TO EXPERT — From 16 books to a 50-book Klimt. (The Collection, six paintings, three restored)
+1. SORT THE BOOKS. REVEAL THE ART! — Drag a book into its place
+2. COMPLETE THE HIDDEN MASTERPIECE — Every spine is a piece of the painting
+3. RIDE THE SKY LIFT. WIN REWARDS! — Win levels to lift the balloon
+4. DISCOVER 350 PAINTINGS! — A new masterpiece on every level
+5. RESTORE THE ART. PLAY NOW! — Relax. No timer, no pressure
 
-All captions sit below the complete game screenshot (bottom 16% band). Shots are captured from the published bookshelf v2 build; arrangements, move counters and gallery progress are listing states set during capture, the game itself is unchanged. Ratings, reviews and store metadata in the preview are mockup placeholders.
+Frame = full game screenshot (bookshelf v12) in the top 80 % + CTA band in the bottom 20 %, no phone mockup. 1: level 3 (Starry Night Cat-stronaut) almost solved, a book being dragged; 2: level 29 (The Flower Carrier) partly solved, the rabbit assembled; 3: Sky Lift event screen, floor 9; 4: level 35 (Fox Hunters in the Snow) partly solved, the fox hunter assembled; 5: level 6 (Axolotl with a Pearl Earring) restored, reward card. Arrangements and event progress are listing states set during capture, the game itself is unchanged. Ratings, reviews and store metadata in the preview are mockup placeholders.
