@@ -84,7 +84,6 @@
 .skStop{position:absolute;left:76px;bottom:calc(var(--y) - 40px);width:110px;z-index:4}
 .skPlat{width:110px;display:block;filter:drop-shadow(0 5px 6px rgba(40,10,70,.3))}
 .skStop .skChest{position:absolute;left:36px;bottom:46px;width:64px;filter:drop-shadow(0 4px 5px rgba(40,10,70,.35));transform-origin:50% 100%}
-.skStop.on .skChest,.skGrand.on .skChest{filter:grayscale(.55) brightness(.9) drop-shadow(0 4px 5px rgba(40,10,70,.3));opacity:.75;transition:filter .4s,opacity .4s}
 .skStop.pop .skChest,.skGrand.pop .skChest{animation:skPop .46s cubic-bezier(.34,1.56,.64,1)}
 @keyframes skPop{0%{transform:scale(1)}45%{transform:scale(1.22) translateY(-6px)}100%{transform:scale(1)}}
 .skGrand{position:absolute;left:88px;bottom:calc(var(--y) - 30px);width:170px;z-index:4}
@@ -95,7 +94,6 @@
 .skBadge .i>*{width:20px;height:20px;display:block}
 .skStop .skBadge{top:-18px;left:68px}
 .skGrand .skBadge{top:-6px;left:50%;height:30px;font-size:15px}
-.skStop.on .skBadge,.skGrand.on .skBadge{filter:grayscale(.7);opacity:.7}
 .skBalloon{position:absolute;left:70%;width:120px;transform:translateX(-50%);z-index:6;pointer-events:none}
 .skBalloon img{width:100%;display:block;filter:drop-shadow(0 10px 12px rgba(40,10,70,.35));transform-origin:50% 0;transition:transform .45s cubic-bezier(.22,1,.36,1)}
 .skBalloon.rise img{transform:rotate(-2.5deg) translateY(-3px)}
@@ -150,3 +148,44 @@
 .skEnds{font:700 14px/1 var(--sk-ui);color:#8A6A4E;margin:-2px 0 -4px}
 .skEnds b{color:var(--sk-purple-d)}
 .skIntro{gap:11px}
+/* 2026-11-16: floor numbers grey until reached; closed / open chests; the juicy chest opening */
+.skHex:not(.on){filter:grayscale(1) brightness(.78) drop-shadow(0 3px 4px rgba(40,10,70,.3))}
+.skHex:not(.on) .skOl{color:#D9D9D9;--o:#4A4A4A}
+.skHex{transition:filter .35s}
+.skHex.lit{animation:skLit .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes skLit{0%{transform:translateY(50%) scale(1)}40%{transform:translateY(50%) scale(1.28)}100%{transform:translateY(50%) scale(1)}}
+.skStop .skChest.o,.skStop.on .skChest.c{display:none}
+.skStop.on .skChest.o{display:block}
+.skStop.ready .skChest.c{animation:skWob .9s ease-in infinite}
+.skStop.slam .skChest.o{animation:skSlam .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes skWob{0%,100%{transform:rotate(0) scale(1)}10%{transform:rotate(-6deg) scale(1.04,.94)}20%{transform:rotate(5deg) scale(.97,1.04)}30%{transform:rotate(-4deg)}40%{transform:rotate(0)}}
+@keyframes skSlam{0%{transform:scale(1.15,.8)}45%{transform:scale(.94,1.1)}100%{transform:scale(1)}}
+.skJuicy{position:relative;width:150px;height:140px;margin:0 auto 2px}
+.skJuicy .skChest{position:absolute;left:0;bottom:0;width:150px;transform-origin:50% 100%;filter:drop-shadow(0 8px 8px rgba(60,25,5,.35));z-index:2}
+.skJuicy .skChest.o{opacity:0}
+.skJuicy.wob .skChest.c{animation:skShakeUp 1.08s linear forwards}
+@keyframes skShakeUp{
+  0%{transform:rotate(0) scale(1)}8%{transform:rotate(-4deg) scale(1.05,.95)}16%{transform:rotate(4deg) scale(.97,1.03)}24%{transform:rotate(-5deg) scale(1.06,.93)}
+  31%{transform:rotate(5deg)}38%{transform:rotate(-6deg) scale(1.07,.92)}44%{transform:rotate(6deg)}50%{transform:rotate(-7deg) scale(1.08,.9)}
+  55%{transform:rotate(7deg)}60%{transform:rotate(-7deg) scale(1.1,.88)}64%{transform:rotate(7deg)}68%{transform:rotate(-6deg)}72%{transform:rotate(0) scale(1.14,.82)}
+  100%{transform:rotate(0) scale(.88,1.2)}}
+.skJuicy.slam .skChest.c{opacity:0}
+.skJuicy.slam .skChest.o{opacity:1;animation:skSlamBig .6s cubic-bezier(.34,1.56,.64,1)}
+@keyframes skSlamBig{0%{transform:scale(1.22,.74)}12%{transform:scale(1.22,.74)}50%{transform:scale(.92,1.12)}100%{transform:scale(1)}}
+.skGlow{position:absolute;left:50%;top:44%;width:190px;height:190px;margin:-95px 0 0 -95px;border-radius:50%;z-index:1;opacity:0;
+  background:radial-gradient(circle,rgba(255,244,190,.95) 0%,rgba(255,214,90,.6) 30%,rgba(255,200,60,0) 68%)}
+.skJuicy.slam .skGlow{animation:skGlowIn .9s ease-out forwards}
+@keyframes skGlowIn{0%{opacity:0;transform:scale(.3)}25%{opacity:1;transform:scale(1.15)}100%{opacity:.55;transform:scale(1)}}
+.skRing{position:absolute;left:50%;top:55%;width:60px;height:60px;margin:-30px 0 0 -30px;border-radius:50%;border:6px solid #FFE9A0;z-index:3;opacity:0;box-shadow:0 0 12px #FFD45A}
+.skJuicy.slam .skRing{animation:skRing .55s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes skRing{0%{opacity:1;transform:scale(.4);border-width:8px}100%{opacity:0;transform:scale(4.6);border-width:1px}}
+.skBurst{position:absolute;left:50%;top:48%;width:0;height:0;z-index:4;pointer-events:none}
+.skBurst img{position:absolute;left:0;top:0;opacity:0}
+.skBurst .st{width:calc(30px * var(--s));margin:calc(-15px * var(--s));animation:skStar .8s cubic-bezier(.2,.9,.3,1) both}
+@keyframes skStar{0%{opacity:1;transform:translate(0,0) scale(.2) rotate(0)}55%{opacity:1;transform:translate(var(--x),var(--y)) scale(1.1) rotate(var(--r))}
+  80%{opacity:1;transform:translate(var(--x),var(--y)) scale(1.35) rotate(var(--r))}100%{opacity:0;transform:translate(var(--x),var(--y)) scale(0) rotate(var(--r))}}
+.skBurst .du{width:calc(16px * var(--s));margin:calc(-8px * var(--s));animation:skDust 1.1s ease-out both}
+@keyframes skDust{0%{opacity:0;transform:translate(0,0) scale(.3)}20%{opacity:1}100%{opacity:0;transform:translate(var(--x),var(--y)) scale(.9) rotate(90deg)}}
+.skClaim .skText,.skClaim .skBtn{animation:skAfter .35s ease-out 1.15s both}
+@keyframes skAfter{from{opacity:0;transform:translateY(8px)}}
+.skStop .skBurst{top:20px;left:68px}

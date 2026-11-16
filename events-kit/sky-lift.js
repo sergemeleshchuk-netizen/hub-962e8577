@@ -9,6 +9,9 @@
    Home tile sees exactly how many floors were gained since the last visit.
    2026-11-11: popup title = ribbon art sl_popribbon (ChatGPT, same set as the screen banner) on every popup; the intro is a
    paywall-style card: hero art sl_hero, coloured headline, four bullets with art icons, timer, one CTA.
+   2026-11-16: no reward plates on the tower (the reward is a surprise); floor numbers grey until the balloon reaches them;
+   a chest stays closed until Collect, then shows its open, empty art (sl_open1-6); the claim popup opens the chest per the
+   "juicy chest" how-to: wobble+squash, stretch, slam with freeze and shake, inner light, shockwave, stars, magic dust.
 
    Usage (host game):
      const sky = SkyLift.init({
@@ -55,6 +58,8 @@ window.SkyLift=(function(){
     const rewardsOf=i=>[].concat(cfg.rewards[i]||[]);
     const icon=r=>{try{const h=a.rewardIcon&&a.rewardIcon(r);if(h)return h}catch(e){}return DEF_ICON[r.type]||'🎁'};
     const label=r=>{try{const h=a.rewardLabel&&a.rewardLabel(r);if(h)return h}catch(e){}return r.type==='coins'?'+'+r.n:r.type==='booster'?'×'+r.n:r.type==='lives'?r.min+' min':''};
+    /* chest art: closed until its reward is collected, then the open, empty one (lid ajar) */
+    const chestArt=(i,open)=>{const n=cfg.chests[i];return n==='grand'?'sl_grand':'sl_'+(open?n.replace('chest','open'):n)};
     const badge=i=>{const rs=rewardsOf(i);if(rs.length===1)return `<span class="skBadge"><span class="i">${icon(rs[0])}</span>${label(rs[0])}</span>`;
       return `<span class="skBadge">${rs.slice(0,3).map(r=>`<span class="i">${icon(r)}</span>`).join('')}${rs.length>3?'+'+(rs.length-3):''}</span>`};
     function tick(){const now=Date.now();
@@ -82,6 +87,17 @@ window.SkyLift=(function(){
     function confettiIn(el){const c=document.createElement('div');c.className='skConf';const cols=['#FFC548','#A77AF4','#53D96B','#5FE6F2','#FF735F','#fff'];
       c.innerHTML=Array.from({length:26},(_,i)=>`<i style="left:${4+Math.random()*92}%;background:${cols[i%cols.length]};animation-delay:${Math.random()*.5}s;animation-duration:${1.3+Math.random()*.8}s"></i>`).join('');el.appendChild(c);setTimeout(()=>c.remove(),2600)}
     /* intro: paywall layout (hero art, coloured headline, four short bullets, timer, one CTA) instead of a wall of text */
+    /* VFX burst: big stars that pop like bubbles + tiny drifting sparks (art sl_star / sl_spark) */
+    function burst(host,{stars=6,dust=12,size=1}={}){const b=document.createElement('div');b.className='skBurst';b.style.setProperty('--s',size);
+      b.innerHTML=Array.from({length:stars},(_,i)=>{const a=-150+i*(120/Math.max(1,stars-1))+(Math.random()*16-8),d=(70+Math.random()*40)*size;
+          return `<img class="st" src="${art('sl_star')}" alt="" style="--x:${(Math.cos(a*Math.PI/180)*d).toFixed(0)}px;--y:${(Math.sin(a*Math.PI/180)*d).toFixed(0)}px;--r:${(Math.random()*80-40).toFixed(0)}deg;animation-delay:${(i*.035).toFixed(2)}s">`}).join('')
+        +Array.from({length:dust},()=>`<img class="du" src="${art('sl_spark')}" alt="" style="--x:${((Math.random()*2-1)*80*size).toFixed(0)}px;--y:${(-(40+Math.random()*90)*size).toFixed(0)}px;animation-delay:${(.1+Math.random()*.6).toFixed(2)}s">`).join('');
+      host.appendChild(b);setTimeout(()=>b.remove(),2200)}
+    /* the claim popup's chest: 1 wobble + squash (faster and faster), 2 stretch, 3 slam open (freeze, then the popup shakes),
+       4 light from inside, 5 shockwave ring, 6 stars, 7 magic dust; rewards and Collect come in after the slam */
+    function juicyOpen(p){const jz=p.q('.skJuicy');snd('pop');jz.classList.add('wob');
+      setTimeout(()=>{if(p.closed)return;jz.classList.remove('wob');jz.classList.add('slam');snd('win');
+        setTimeout(()=>{if(p.closed)return;p.el.animate&&p.el.animate([{translate:'0 0'},{translate:'-6px 3px'},{translate:'5px -4px'},{translate:'-4px 2px'},{translate:'3px -1px'},{translate:'0 0'}],{duration:300});burst(jz,{stars:7,dust:14})},70)},1080)}
     function infoPopup(cb){const pts=[[art('sl_balloon'),'Win a level:','+1 floor'],[art('sl_'+cfg.chests[0]),'Chests:','coins & boosters'],
         [art('sl2_bracket'),'Lose:','keep your last chest'],[art('sl_grand'),`Floor ${M[N-1]}:`,'grand prize']];
       const p=popup({title:cfg.title,cls:'skIntro',html:`<img class="skHero big" src="${art('sl_hero')}" alt=""><div class="skHead">Fly to the top!</div>
@@ -92,15 +108,15 @@ window.SkyLift=(function(){
     let sec=null,anim=0,timer=0;
     function ensure(){if(sec)return sec;sec=document.createElement('div');sec.className='skScreen';sec.hidden=true;sec.id='skScreen';root.appendChild(sec);return sec}
     function render(){const seen=k.presented,H=Y(N)+380;
-      const cps=M.map((c,i)=>{const y=Y(i+1),on=k.cp>i,fresh=on&&k.pending.includes(i),done=on&&!fresh;
-        return (i===N-1?`<div class="skGrand ${done?'on':''}" data-i="${i}" style="--y:${y}px"><img class="skChest" src="${art('sl_grand')}" alt="">${badge(i)}</div>`
-          :`<div class="skStop ${done?'on':''}" data-i="${i}" style="--y:${y}px"><img class="skPlat" src="${art('sl2_bracket')}" alt=""><img class="skChest" src="${art('sl_'+cfg.chests[i])}" alt="">${badge(i)}</div>`)
-          +`<div class="skHex ${on?'on':''}" style="--y:${y}px"><span class="skOl">${c}</span></div>`}).join('');
+      const cps=M.map((c,i)=>{const y=Y(i+1),on=k.cp>i,fresh=on&&k.pending.includes(i),done=on&&!fresh,lit=on&&c<=seen;
+        return (i===N-1?`<div class="skGrand ${done?'on':''}" data-i="${i}" style="--y:${y}px"><img class="skChest" src="${art('sl_grand')}" alt=""></div>`
+          :`<div class="skStop ${done?'on':''}" data-i="${i}" style="--y:${y}px"><img class="skPlat" src="${art('sl2_bracket')}" alt=""><img class="skChest c" src="${art(chestArt(i))}" alt=""><img class="skChest o" src="${art(chestArt(i,true))}" alt=""></div>`)
+          +`<div class="skHex ${lit?'on':''}" data-f="${c}" style="--y:${y}px"><span class="skOl">${c}</span></div>`}).join('');
       const clouds=Array.from({length:N+2},(_,i)=>`<img class="skCloud c${i%4}" src="${art('sl2_cloud'+(i%4+1))}" alt="" style="--y:${Y(i+.45)+(i%3)*28}px;left:${i%2?58+(i*7)%26:44+(i*11)%14}%">`).join('');
       const from=Y(units(seen));
       sec.innerHTML=`<div class="skBg"></div>
         <div class="skTop"><button class="skI" id="skInfo" aria-label="How it works"><span class="skOl">i</span></button><div class="skBanner"><img src="${art('sl_banner')}" alt=""><span class="skTitle skOl">${cfg.title}</span><span class="skTime" id="skTime">${left()}</span></div><button class="skX skScrX" id="skClose" aria-label="Close">${SVGX}</button></div>
-        <div class="skScroll" id="skScroll"><div class="skTower" style="height:${H}px"><div class="skCity"></div>${clouds}<div class="skMast"></div><div class="skMastTop"></div><div class="skMastBase"></div><div class="skHex zero on" style="--y:${BASE}px"><span class="skOl">0</span></div>${cps}<div class="skBalloon" id="skBalloon" style="bottom:${from}px"><img src="${art('sl_balloon')}" alt=""></div></div></div>
+        <div class="skScroll" id="skScroll"><div class="skTower" style="height:${H}px"><div class="skCity"></div>${clouds}<div class="skMast"></div><div class="skMastTop"></div><div class="skMastBase"></div><div class="skHex zero" style="--y:${BASE}px"><span class="skOl">0</span></div>${cps}<div class="skBalloon" id="skBalloon" style="bottom:${from}px"><img src="${art('sl_balloon')}" alt=""></div></div></div>
         <div class="skHud"><div class="skFire"><img src="${art('sl_fire')}" alt=""><b class="skOl" id="skFloor">${seen}</b></div><div class="skInfoTxt" id="skInfoTxt"></div><button class="skBtn gold" id="skPlay"><span class="t">Play</span></button></div>`;
       hudText(seen)}
     function hudText(shown){const next=k.cp<N?M[k.cp]-k.floor:0,el=sec.querySelector('#skInfoTxt');if(!el)return;
@@ -115,15 +131,15 @@ window.SkyLift=(function(){
       const alive=()=>run===anim&&!sec.hidden;
       const needTut=!k.tut,tut=()=>{if(!alive())return;if(!k.tut){k.tut=true;save()}infoPopup()};
       const finish=()=>{if(!alive())return;const fresh=k.pending.slice();
-        fresh.forEach((i,n)=>setTimeout(()=>{if(!alive())return;const st=sec.querySelector(`[data-i="${i}"]`);if(!st)return;st.classList.add('pop');snd('coin');setTimeout(()=>{st.classList.remove('pop');st.classList.add('on')},460)},450+n*260));
-        if(fresh.length)setTimeout(()=>{if(alive())claim(fresh,needTut?tut:null)},450+fresh.length*260+420);   // first time: chest first, the how-to popup after Collect
+        fresh.forEach((i,n)=>setTimeout(()=>{if(!alive())return;const st=sec.querySelector(`[data-i="${i}"]`);if(!st)return;st.classList.add('ready');snd('coin')},450+n*260));
+        if(fresh.length)setTimeout(()=>{if(alive())claim(fresh,needTut?tut:null)},450+fresh.length*260+700);   // first time: chest first, the how-to popup after Collect
         else if(needTut)setTimeout(tut,320)};
       setTimeout(()=>{if(!alive())return;sec.classList.remove('in');
         if(Math.abs(to-from)<1){finish();return}
         const up=to>from,floors=Math.abs(k.floor-seen),dur=Math.min(2600,Math.max(800,floors*(up?430:260)));b.style.transition=`bottom ${dur}ms ${up?EASE.inout:EASE.in}`;b.style.bottom=to+'px';b.classList.add(up?'rise':'fall');snd(up?'whoosh':'slide');
         const fEl=sec.querySelector('#skFloor');let shown=seen;
         const t0=performance.now(),tickF=()=>{if(!alive())return;const t=Math.min(1,(performance.now()-t0)/dur),e=up?(t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2):t*t;center(from+(to-from)*e);
-          const fl=Math.round(seen+(k.floor-seen)*e);if(fl!==shown&&fEl){shown=fl;fEl.textContent=fl;fEl.classList.remove('tick');void fEl.offsetWidth;fEl.classList.add('tick');if(up)snd('tick')}
+          const fl=Math.round(seen+(k.floor-seen)*e);if(fl!==shown&&fEl){shown=fl;fEl.textContent=fl;if(up)sec.querySelectorAll('.skHex:not(.on):not(.zero)').forEach(h=>{if(+h.dataset.f<=fl&&k.cp>M.indexOf(+h.dataset.f)){h.classList.add('on','lit')}});fEl.classList.remove('tick');void fEl.offsetWidth;fEl.classList.add('tick');if(up)snd('tick')}
           if(t<1)requestAnimationFrame(tickF);else{b.classList.remove('rise','fall');finish()}};
         requestAnimationFrame(tickF)},520);
       k.presented=k.floor;save();
@@ -135,11 +151,12 @@ window.SkyLift=(function(){
     /* claim: grant the rewards of the freshly reached milestones; the grand prize also completes the flight (balloon back to 0) */
     function claim(ids,after){const last=ids.includes(N-1),rs=ids.flatMap(rewardsOf);
       k.pending=k.pending.filter(i=>!ids.includes(i));
-      const p=popup({title:cfg.title,close:false,html:`<img class="skHero chest" src="${art('sl_'+cfg.chests[ids[ids.length-1]])}" alt=""><div class="skText">${last?'You reached the top of the Sky Lift!':`Floor${ids.length>1?'s':''} <b>${ids.map(i=>M[i]).join(', ')}</b> reached!`} Chest${ids.length>1?'s':''} opened:</div><div class="skRw">${rs.map((r,i)=>`<span class="r" style="animation-delay:${.15+i*.09}s"><span class="i">${icon(r)}</span>${label(r)}</span>`).join('')}</div><button class="skBtn gold wide" id="skCollect"><span class="t">Collect</span></button>`});
-      confettiIn(p.el);snd('win');track('sky_lift_claim',{floors:ids.map(i=>M[i]),grand:last});
+      const j=ids[ids.length-1],p=popup({title:cfg.title,cls:'skClaim',close:false,html:`<div class="skJuicy"><div class="skGlow"></div><div class="skRing"></div><img class="skChest c" src="${art(chestArt(j))}" alt=""><img class="skChest o" src="${art(chestArt(j,true))}" alt=""></div><div class="skText">${last?'You reached the top of the Sky Lift!':`Floor${ids.length>1?'s':''} <b>${ids.map(i=>M[i]).join(', ')}</b> reached!`} Chest${ids.length>1?'s':''} opened:</div><div class="skRw">${rs.map((r,i)=>`<span class="r" style="animation-delay:${1.25+i*.09}s"><span class="i">${icon(r)}</span>${label(r)}</span>`).join('')}</div><button class="skBtn gold wide" id="skCollect"><span class="t">Collect</span></button>`});
+      juicyOpen(p);track('sky_lift_claim',{floors:ids.map(i=>M[i]),grand:last});
       p.q('#skCollect').onclick=()=>{snd('coin');rs.forEach(r=>{try{a.grant&&a.grant(r)}catch(e){}});
         if(last){k.flights++;k.floor=0;k.cp=0;k.presented=0;track('sky_lift_flight',{flights:k.flights})}
-        save();p.close(()=>{if(last&&sec&&!sec.hidden){const b=sec.querySelector('#skBalloon'),sc=sec.querySelector('#skScroll'),H=Y(N)+380;
+        save();p.close(()=>{if(!last&&sec)ids.forEach(i=>{const st=sec.querySelector(`[data-i="${i}"]`);if(!st)return;st.classList.remove('ready');st.classList.add('on','slam');burst(st,{stars:3,dust:6,size:.5});setTimeout(()=>st.classList.remove('slam'),600)});
+          if(last&&sec&&!sec.hidden){const b=sec.querySelector('#skBalloon'),sc=sec.querySelector('#skScroll'),H=Y(N)+380;
             sec.querySelectorAll('.skStop.on,.skGrand.on').forEach(e=>e.classList.remove('on'));sec.querySelectorAll('.skHex.on:not(.zero)').forEach(e=>e.classList.remove('on'));
             b.style.transition=`bottom 1600ms ${EASE.inout}`;b.style.bottom=Y(0)+'px';b.classList.add('fall');setTimeout(()=>b.classList.remove('fall'),1600);
             const y0=parseFloat(getComputedStyle(b).bottom)||0,t0=performance.now(),f=()=>{const t=Math.min(1,(performance.now()-t0)/1600);sc.scrollTop=Math.max(0,H-(y0+(Y(0)-y0)*t)-sc.clientHeight*.56);if(t<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
