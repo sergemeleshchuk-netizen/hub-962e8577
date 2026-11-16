@@ -1,0 +1,7 @@
+{
+  "powerUps": [
+    {"powerUpId": "PowerUp1", "playableKey": "bookmark", "name": "Additional Moves", "description": "Start the level with +3 moves.", "priceCoins": 250, "purchaseAmount": 3, "initialCount": 1, "unlockLevel": 10},
+    {"powerUpId": "PowerUp2", "playableKey": "corners",  "name": "Fixed Corners",    "description": "Start with all four corner books in place and pinned.", "priceCoins": 400, "purchaseAmount": 3, "initialCount": 1, "unlockLevel": 11},
+    {"powerUpId": "PowerUp3", "playableKey": "center",   "name": "Center Five",      "description": "Start with five center books in place and pinned.", "priceCoins": 700, "purchaseAmount": 3, "initialCount": 1, "unlockLevel": 14}
+  ]
+}

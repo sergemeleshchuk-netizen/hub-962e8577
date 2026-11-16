@@ -1,0 +1,9 @@
+{
+  "boosters": [
+    {"boosterId": "Booster1", "playableKey": "peek",  "name": "Art Peek",    "description": "Shows the finished painting for 3 seconds.", "priceCoins": 100, "purchaseAmount": 3, "initialCount": 3, "unlockLevel": 3, "sellForOffer": false},
+    {"boosterId": "Booster2", "playableKey": "lens",  "name": "Hint Lens",   "description": "Shows the best move on the shelf.", "priceCoins": 150, "purchaseAmount": 3, "initialCount": 2, "unlockLevel": 4, "sellForOffer": false},
+    {"boosterId": "Booster3", "playableKey": "key",   "name": "Time Freeze", "description": "For 5 seconds your moves are free. Move as fast as you can!", "priceCoins": 450, "purchaseAmount": 3, "initialCount": 2, "unlockLevel": 6, "sellForOffer": true},
+    {"boosterId": "Booster4", "playableKey": "glove", "name": "Magic Hand",  "description": "Tap the shelf: the free books in that area go into place (2x2, or 3x2 on Super Hard levels). No move spent.", "priceCoins": 300, "purchaseAmount": 3, "initialCount": 2, "unlockLevel": 7, "sellForOffer": false},
+    {"boosterId": "Booster5", "playableKey": "brush", "name": "Art Brush",   "description": "Pick a shelf: the whole shelf gets painted into place. No moves spent.", "priceCoins": 650, "purchaseAmount": 3, "initialCount": 1, "unlockLevel": 9, "sellForOffer": false}
+  ]
+}
