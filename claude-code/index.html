@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Шпаргалка Claude Code</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌨️</text></svg>">
+<style>
+:root{
+  --bg:#f3f4f8; --card:#ffffff; --ink:#1c1d2b; --mute:#646780; --line:#e6e7ef;
+  --code-bg:#f0f1f7; --code-ink:#22243a; --new:#d9480f; --hit:#fff3bf;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --bg:#14151c; --card:#1d1f2a; --ink:#e9eaf2; --mute:#9a9db5; --line:#2c2f3e;
+    --code-bg:#2a2d3c; --code-ink:#e6e8f5; --new:#ffa94d; --hit:#5c4a00; }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+header{max-width:1500px;margin:0 auto;padding:22px 16px 6px}
+h1{margin:0;font-size:24px;letter-spacing:-.2px}
+.sub{margin:4px 0 0;color:var(--mute);font-size:13px}
+.sub a{color:inherit}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar-in{max-width:1500px;margin:0 auto;padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#q{flex:1 1 220px;min-width:0;max-width:360px;font:inherit;color:var(--ink);background:var(--card);
+  border:1px solid var(--line);border-radius:10px;padding:8px 12px;outline:none}
+#q:focus{border-color:#7c83ff;box-shadow:0 0 0 3px #7c83ff33}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:12.5px;font-weight:600;text-decoration:none;color:#fff;background:var(--c);
+  padding:5px 10px;border-radius:999px;white-space:nowrap}
+main{max-width:1500px;margin:0 auto;padding:14px 16px 40px;display:flex;flex-direction:column;gap:16px}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+section>h2{margin:0;padding:9px 14px;font-size:16px;color:#fff;background:var(--c);display:flex;gap:8px;align-items:baseline}
+section>h2 small{font-weight:500;font-size:12.5px;opacity:.9}
+.groups{columns:330px;column-gap:26px;padding:12px 14px 6px}
+.group{break-inside:avoid;margin:0 0 12px}
+.group h3{margin:0 0 3px;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--c);border-bottom:2px solid var(--c);padding-bottom:3px}
+@media (prefers-color-scheme:dark){ .group h3{filter:brightness(1.5)} }
+.row{display:flex;gap:10px;align-items:baseline;padding:4px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row.long{flex-direction:column;gap:1px}
+.k{flex:none;max-width:100%;cursor:pointer;display:inline-flex;flex-wrap:wrap;gap:3px;align-items:center}
+.row:not(.long) .k{max-width:52%}
+code,kbd{font:600 12.5px/1.35 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--code-ink);
+  background:var(--code-bg);border-radius:5px;padding:1.5px 6px;overflow-wrap:anywhere}
+kbd{border:1px solid var(--line);border-bottom-width:2px;white-space:nowrap;font-family:inherit;font-size:12px}
+.plus{color:var(--mute);font-size:11px}
+.d{flex:1;min-width:0;color:var(--ink)}
+.d i{color:var(--mute);font-style:normal}
+.new{display:inline-block;margin-left:5px;font-size:9.5px;font-weight:800;letter-spacing:.4px;color:var(--new);
+  border:1px solid var(--new);border-radius:4px;padding:0 4px;vertical-align:1px}
+.k.copied code,.k.copied kbd{background:#2f9e44;color:#fff}
+.hide{display:none!important}
+#none{display:none;color:var(--mute);padding:30px 0;text-align:center}
+footer{max-width:1500px;margin:0 auto;padding:0 16px 40px;color:var(--mute);font-size:12.5px}
+footer a{color:inherit}
+@media (max-width:600px){
+  h1{font-size:20px} .groups{padding:10px 12px 4px}
+  .row{flex-direction:column;gap:1px} .row:not(.long) .k{max-width:100%}
+}
+@media print{ .bar{position:static} #q{display:none} section{break-inside:auto} }
+</style>
+</head>
+<body>
+<header>
+  <h1>⌨️ Шпаргалка Claude Code</h1>
+  <p class="sub">Все клавиши, команды, флаги и настройки на одной странице · версия Claude Code 2.1.327 · данные на 16.11.2026 ·
+    <span class="new" style="margin:0">NEW</span> = недавно появилось · клик по команде копирует её</p>
+</header>
+<div class="bar"><div class="bar-in">
+  <input id="q" type="search" placeholder="Поиск: команда или слово, например «модель»" autocomplete="off">
+  <nav class="chips" id="chips"></nav>
+</div></div>
+<main id="main"></main>
+<p id="none">Ничего не найдено.</p>
+<footer>Источник данных: <a href="https://cc.storyfox.cz/">Claude Code Cheat Sheet</a> (Martin Baláž, @phasE89), там же ежедневные обновления.
+  Здесь тот же набор, перегруппированный по задачам и с описаниями на русском.
+  <a href="https://code.claude.com/docs/en/changelog">Официальный список изменений</a>.</footer>
+
+<script>
+// Строка: [что набирать, описание, 1 = NEW].  Тип группы 'k' = сочетания клавиш.
+const DATA = [
+{id:'keys', t:'Клавиши', ico:'⌨️', c:'#2563EB', g:[
+  {t:'Управление', k:1, r:[
+    ['Ctrl+C','Отменить ввод или остановить ответ'],
+    ['Ctrl+D','Выйти из сессии'],
+    ['Esc Esc','Откатиться назад или сжать разговор в сводку'],
+    ['Shift+Tab','Переключить режим прав: обычный → авто-принятие правок → план → …'],
+    ['Ctrl+B','Отправить выполняемую задачу в фон'],
+    ['Ctrl+T','Показать или скрыть список задач'],
+    ['Ctrl+O','Подробный журнал: что делают инструменты и ход размышлений; в полноэкранном режиме переключает фокус-вид',1],
+    ['Ctrl+X Ctrl+K','Остановить всех фоновых агентов (нажать дважды для подтверждения)'],
+  ]},
+  {t:'Ввод текста', k:1, r:[
+    ['\\ Enter','Новая строка'],
+    ['Ctrl+L','Очистить поле ввода и перерисовать экран'],
+    ['Ctrl+U','Стереть весь набранный текст'],
+    ['Ctrl+Y','Вернуть стёртый текст'],
+    ['Ctrl+G','Открыть ввод во внешнем редакторе (то же, что Ctrl+X Ctrl+E)'],
+    ['Ctrl+R','Поиск по истории ввода'],
+    ['Space','Удерживать: голосовая запись, отпустить: отправить (после включения /voice; 20 языков: EN, ES, FR, DE, CZ, PL…)'],
+    ['v','Vim: выделение по символам, с операторами',1],
+    ['V','Vim: выделение целыми строками',1],
+  ]},
+  {t:'С чего начать строку', r:[
+    ['/','Команда (список ниже)'],
+    ['!','Команда терминала напрямую; пути к файлам дополняются на лету',1],
+    ['! <cmd>','Запустить команду терминала как фоновую сессию',1],
+    ['@','Упомянуть файл, с автодополнением'],
+    ['@agent-name','Упомянуть именованного субагента',1],
+    ['"ultrathink"','Слово в запросе: максимум усилий на этот ход'],
+  ]},
+  {t:'Mac: клавиша Option (настроить Option как Meta)', k:1, r:[
+    ['⌥+P','Сменить модель'],
+    ['⌥+T','Включить или выключить расширенное размышление (Alt+T)'],
+    ['⌥+O','Включить или выключить быстрый режим'],
+  ]},
+]},
+{id:'slash', t:'Команды в чате', ico:'⚡', c:'#7C3AED', g:[
+  {t:'Разговор и контекст', r:[
+    ['/clear','Очистить разговор'],
+    ['/compact [focus]','Сжать контекст; можно указать, на чём сделать акцент'],
+    ['/context','Показать, чем занят контекст (сетка), и советы по оптимизации'],
+    ['/recap','Сводка сессии, когда возвращаешься к работе',1],
+    ['/btw <вопрос>','Побочный вопрос: не попадает в разговор и не тратит контекст'],
+    ['/branch [name]','Ответвить разговор (то же: /fork)'],
+    ['/resume [session]','Продолжить сессию по ID или имени'],
+    ['/rename [name]','Переименовать текущую сессию'],
+    ['/export','Выгрузить разговор'],
+    ['/copy [N]','Скопировать последний (или N-й) ответ'],
+  ]},
+  {t:'Откат и просмотр', r:[
+    ['/rewind','Откатить разговор или код к контрольной точке; работает и после /clear (то же: /undo)',1],
+    ['/diff','Интерактивный просмотр изменений'],
+    ['/focus','Фокус-вид (только в полноэкранном режиме)',1],
+  ]},
+  {t:'Планы и длинные задачи', r:[
+    ['/plan [desc]','Сразу войти в режим плана'],
+    ['/goal [desc]','Задать цель: Claude работает, пока не выполнит, с живым индикатором прогресса',1],
+    ['/loop [interval] [prompt]','Повторяющаяся задача, например /loop 5m … (то же: /proactive)',1],
+    ['/batch','Большие параллельные изменения: 5–30 рабочих копий (worktree), создаёт их сам'],
+    ['/workflows','Фоновые запуски с несколькими агентами: просмотр и управление',1],
+  ]},
+  {t:'Модель и расход', r:[
+    ['/model [model]','Сменить модель (стрелки ← → меняют уровень усилий)',1],
+    ['/effort [level]','Уровень усилий: ○ low · ◐ medium · ● high · ★ xhigh · ★★ max; без аргумента открывает ползунок'],
+    ['/fast [on|off]','Быстрый режим'],
+    ['/usage','Расход токенов, стоимость и кэш (заменяет /cost и /stats)',1],
+    ['/extra-usage','Дополнительный лимит, когда упёрся в ограничение'],
+  ]},
+  {t:'Настройки', r:[
+    ['/config [key [value]]','Посмотреть или задать настройки (сохраняются в ~/.claude/settings.json)',1],
+    ['/permissions','Посмотреть или изменить разрешения'],
+    ['/theme [name]','Создать и выбрать свою тему; есть «Auto» под светлый или тёмный терминал',1],
+    ['/color [color]','Цвет строки ввода'],
+    ['/keybindings','Настроить сочетания клавиш'],
+    ['/scroll-speed [speed]','Скорость прокрутки вывода',1],
+    ['/terminal-setup','Настроить клавиши терминала'],
+    ['/tui classic','Обычный (не полноэкранный) вид; /tui default тоже работает',1],
+    ['/voice','Включить или выключить голосовой ввод по удержанию клавиши'],
+  ]},
+  {t:'Память, скиллы, подключения', r:[
+    ['/init','Создать CLAUDE.md'],
+    ['/memory','Править файлы CLAUDE.md, включать автопамять, смотреть записи'],
+    ['/skills','Список доступных скиллов'],
+    ['/reload-skills','Перечитать скиллы без перезапуска',1],
+    ['/skill-doctor','Найти неиспользуемые скиллы и сколько контекста они занимают',1],
+    ['/agents','Управление настройками агентов',1],
+    ['/mcp','Управление MCP-серверами (интерактивное окно)'],
+    ['/hooks','Управление хуками'],
+    ['/ide','Состояние интеграций с IDE'],
+    ['/add-dir <path>','Добавить рабочую папку'],
+  ]},
+  {t:'Проверка кода', r:[
+    ['/code-review [effort]','Ревью кода; уровни Quick / Standard / Deep; ревью по всей GitHub-организации; --fix применяет найденное',1],
+    ['/ultrareview [PR#]','Облачное ревью: параллельный анализ несколькими агентами'],
+    ['/security-review','Проверить изменения на уязвимости'],
+    ['/debug [desc]','Разобраться в проблеме по журналу отладки'],
+  ]},
+  {t:'Справка и диагностика', r:[
+    ['/help','Справка и список команд'],
+    ['/status','Состояние; показывает сломанные файлы агентов, скиллов и команд, ошибки клавиш, недоступные песочницы, проигнорированные разрешения',1],
+    ['/doctor [prompt-audit]','Полная проверка установки (то же: /checkup); prompt-audit ищет в CLAUDE.md устаревшие упоминания моделей',1],
+    ['/insights','Отчёт с анализом сессий'],
+    ['/claude-api [subcmd]','Загрузить справку по API и SDK; managed-agents-secure проверяет безопасность',1],
+    ['/desktop','Продолжить в настольном приложении'],
+    ['/feedback','Отправить отзыв (то же: /bug)'],
+  ]},
+]},
+{id:'cli', t:'Запуск из терминала', ico:'🖥️', c:'#4B5563', g:[
+  {t:'Запуск и продолжение', r:[
+    ['claude','Интерактивный режим'],
+    ['claude "вопрос"','Запуск сразу с запросом'],
+    ['claude -c','Продолжить последний разговор (--continue)'],
+    ['claude -r "имя"','Продолжить сессию по ID или имени (--resume)'],
+    ['claude -p "вопрос"','Без диалога: ответил и вышел (headless, SDK)'],
+    ['cat file | claude -p','Передать данные на вход'],
+  ]},
+  {t:'Служебные команды', r:[
+    ['claude update','Обновить'],
+    ['claude auth login','Войти (--sso, --console)'],
+    ['claude agents','Список агентов'],
+    ['claude mcp','Настройка MCP'],
+    ['claude mcp list','Список всех MCP-серверов'],
+    ['claude plugin','Управление плагинами'],
+    ['claude plugin init <name>','Заготовка нового плагина',1],
+    ['claude project purge [path]','Удалить всё состояние Claude Code для проекта',1],
+    ['claude ultrareview [target]','Ревью кода без диалога (PR, ветка или путь)',1],
+  ]},
+  {t:'Флаги: сессия', r:[
+    ['-n / --name','Имя сессии'],
+    ['--add-dir','Добавить рабочую папку'],
+    ['--worktree name','Отдельная изолированная ветка под задачу'],
+    ['--remote','Веб-сессия на claude.ai'],
+    ['--from-pr','Загрузить контекст PR (GitHub / GitLab / Bitbucket / GHE)',1],
+  ]},
+  {t:'Флаги: модель и вывод', r:[
+    ['--model','Выбрать модель'],
+    ['--effort','low / medium / high / xhigh / max'],
+    ['--agent','Запустить с указанным агентом'],
+    ['--settings <file>','Загрузить настройки из JSON-файла'],
+    ['--output-format','text / json / stream-json'],
+    ['--max-budget-usd 5','Потолок расхода в долларах'],
+  ]},
+  {t:'Флаги: права и отладка', r:[
+    ['--permission-mode','default / acceptEdits / plan / auto / dontAsk / bypassPermissions'],
+    ['--allowedTools','Заранее разрешить инструменты'],
+    ['--disallowedTools','Убрать инструменты'],
+    ['--restricted','Убрать встроенные инструменты из набора Claude',1],
+    ['--dangerously-skip-permissions','⚠️ Пропускать все запросы разрешений'],
+    ['--debug [filter]','Журнал отладки'],
+    ['--safe-mode','Отключить все настройки для поиска проблемы (CLAUDE.md, плагины, хуки, MCP)',1],
+  ]},
+]},
+{id:'perm', t:'Режимы прав', ico:'🛡️', c:'#DC2626', g:[
+  {t:'Что разрешено без вопроса', r:[
+    ['default','Спрашивает разрешение'],
+    ['acceptEdits','Правки файлов принимает сам'],
+    ['plan','Только чтение и составление плана'],
+    ['auto','Решает сам; часть команд Bash, cp и mv теперь спрашивает или отклоняет',1],
+    ['dontAsk','Отклоняет всё, что не разрешено заранее'],
+    ['bypassPermissions','Пропускает все запросы (флаг --dangerously-skip-permissions)'],
+  ]},
+  {t:'Как переключать', r:[
+    ['Shift+Tab','По кругу: ручной → авто-принятие → план'],
+    ['--permission-mode plan','Запустить сразу в режиме плана'],
+    ['/permissions → Recent','Авто-режим что-то отклонил: повторить клавишей R',1],
+    ['Файл плана','Называется по запросу, например fix-auth-race-snug-otter.md'],
+  ]},
+]},
+{id:'mem', t:'Память и файлы', ico:'📁', c:'#D97706', g:[
+  {t:'Где лежит CLAUDE.md', r:[
+    ['./CLAUDE.md','Проект, общий для команды (или ./.claude/CLAUDE.md)'],
+    ['./CLAUDE.local.md','Личные заметки по проекту (не попадают в git)'],
+    ['~/.claude/CLAUDE.md','Личный, для всех проектов'],
+    ['/etc/claude-code/CLAUDE.md','Политика организации (Linux/WSL)'],
+  ]},
+  {t:'Правила и импорт', r:[
+    ['.claude/rules/*.md','Правила проекта'],
+    ['~/.claude/rules/*.md','Личные правила'],
+    ['paths:','В шапке файла: правило только для указанных путей'],
+    ['@path/to/file','Подключить файл внутри CLAUDE.md'],
+  ]},
+  {t:'Автопамять', r:[
+    ['~/.claude/projects/<proj>/memory/','Папка автопамяти проекта'],
+    ['MEMORY.md','Загружается при старте (первые 25 КБ или 200 строк); файлы по темам подгружаются по мере надобности'],
+  ]},
+  {t:'Размер контекста', r:[
+    ['1M context','Haiku 5.5, Sonnet 5 (промо), Opus 5 (Max / Team / Ent)'],
+  ]},
+]},
+{id:'cfg', t:'Настройки', ico:'⚙️', c:'#C2410C', g:[
+  {t:'Файлы настроек', r:[
+    ['~/.claude/settings.json','Личные настройки'],
+    ['.claude/settings.json','Настройки проекта (общие)'],
+    ['.claude/settings.local.json','Только на этом компьютере'],
+    ['~/.claude.json','Вход (OAuth), MCP, состояние'],
+    ['.mcp.json','MCP-серверы проекта'],
+    ['managed-settings.d/','Папка с фрагментами политик организации'],
+  ]},
+  {t:'Параметры: модели', r:[
+    ['modelOverrides','Подменить модели из списка своими ID'],
+    ['modelPicker','Свой список моделей в /model',1],
+    ['fallbackModel','До 3 запасных моделей при сбое',1],
+    ['showThinkingSummaries','Показывать сводки размышлений (теперь выключено по умолчанию)',1],
+  ]},
+  {t:'Параметры: права и хуки', r:[
+    ['autoMode.hard_deny','Безусловные запреты для авто-режима',1],
+    ['permissions.blockWritesOutsideWorkingDirectories','Запретить запись вне рабочих папок во всех режимах',1],
+    ['permissions.denyInsteadOfPrompting','Отклонять вместо вопроса о разрешении: в терминале, у субагентов и напарников',1],
+    ['hooks: if','Хуки с условием (синтаксис правил разрешений)'],
+    ['hooks: "defer"','Приостановить headless-запуск и продолжить позже'],
+    ['"decision": "block"','Блокировка хуком теперь срабатывает в большем числе случаев',1],
+    ['continueOnBlock','Настройка хука: продолжать работу после заблокированного вызова',1],
+  ]},
+  {t:'Параметры: прочее', r:[
+    ['Monitor tool','Поток событий от фоновых скриптов',1],
+    ['axScreenReader','Простой текстовый вывод для экранных читалок',1],
+  ]},
+  {t:'Переменные окружения: API и модель', r:[
+    ['ANTHROPIC_API_KEY','Ключ API'],
+    ['ANTHROPIC_MODEL','Модель'],
+    ['ANTHROPIC_BASE_URL','Свой прокси или шлюз'],
+    ['ANTHROPIC_CUSTOM_MODEL_OPTION','Свой пункт в /model'],
+    ['MAX_THINKING_TOKENS','Лимит размышлений; 0 = выключить'],
+    ['ENABLE_PROMPT_CACHING_1H','Кэш запросов на 1 час',1],
+    ['CLAUDE_CODE_AUTO_MODE_MODEL','Модель, которая оценивает действия в авто-режиме',1],
+  ]},
+  {t:'Переменные окружения: субагенты', r:[
+    ['CLAUDE_CODE_SUBAGENT_MODEL_FORCE','Одна модель для всех субагентов',1],
+    ['CLAUDE_CODE_WORKFLOW_SUBAGENT_MODEL','Одна модель для всех агентов в workflow',1],
+    ['CLAUDE_CODE_SUBAGENT_EFFORT','Уровень усилий субагентов по умолчанию',1],
+  ]},
+  {t:'Переменные окружения: выключатели (=1)', r:[
+    ['CLAUDE_CODE_DISABLE_CRON','Отключить задачи по расписанию'],
+    ['CLAUDE_CODE_DISABLE_WEB_FETCH','Отключить инструмент WebFetch',1],
+    ['CLAUDE_CODE_DISABLE_MCP_TASKS','MCP-задачи не уходят в фон, вызовы ждут ответа',1],
+    ['DISABLE_UPDATES','Запретить любые обновления',1],
+    ['CLAUDE_AX_SCREEN_READER','Режим экранной читалки',1],
+  ]},
+  {t:'Переменные окружения: прочее', r:[
+    ['CLAUDECODE','=1 внутри оболочки Claude Code: по ней скрипт узнаёт, что запущен из него'],
+    ['CLAUDE_CODE_SESSION_ID','Уникальный ID сессии для хуков и CI',1],
+    ['CLAUDE_CODE_PACKAGE_MANAGER_AUTO_UPDATE','Автообновление через Homebrew / WinGet',1],
+    ['CLAUDE_CODE_CERT_STORE','Хранилище сертификатов TLS: bundled, system'],
+    ['MCP_TIMEOUT','Сколько ждать запуска MCP-сервера, мс'],
+  ]},
+]},
+{id:'skills', t:'Скиллы и агенты', ico:'🔧', c:'#059669', g:[
+  {t:'Где лежат скиллы', r:[
+    ['.claude/skills/<name>/','Скиллы проекта'],
+    ['~/.claude/skills/<name>/','Личные скиллы'],
+    ['Skill tool','Находит встроенные команды (/init, /review, /security-review…)',1],
+    ['plugin bin/','Плагин может поставлять программы для инструмента Bash',1],
+  ]},
+  {t:'Шапка скилла (frontmatter)', r:[
+    ['description','По этому описанию скилл вызывается автоматически'],
+    ['allowed-tools','Инструменты без запроса разрешений'],
+    ['disallowed-tools','Запретить скиллу отдельные инструменты',1],
+    ['model','Своя модель для скилла'],
+    ['effort','Свой уровень усилий'],
+    ['paths: [globs]','Только для указанных путей (список YAML)',1],
+    ['context: fork','Выполнять в субагенте'],
+  ]},
+  {t:'Подстановки в тексте скилла', r:[
+    ['$ARGUMENTS','То, что ввёл пользователь'],
+    ['${CLAUDE_SKILL_DIR}','Папка самого скилла'],
+    ['${CLAUDE_EFFORT}','Текущий уровень усилий',1],
+    ['!`cmd`','Вставить вывод команды в контекст'],
+  ]},
+  {t:'Встроенные агенты', r:[
+    ['Explore','Быстрый, только чтение (Haiku)'],
+    ['Plan','Исследование для режима плана'],
+    ['General','Все инструменты, сложные задачи'],
+    ['Bash','Терминал в отдельном контексте'],
+  ]},
+  {t:'Шапка агента (frontmatter)', r:[
+    ['permissionMode','default / acceptEdits / plan / dontAsk / bypassPermissions'],
+    ['isolation: worktree','Работать в своей копии репозитория (git worktree)'],
+    ['memory: user|project|local','Постоянная память'],
+    ['background: true','Фоновая задача'],
+    ['maxTurns','Ограничить число шагов'],
+    ['initialPrompt','Первый запрос отправляется сам'],
+    ['SendMessage','Продолжить работу агента (заменяет resume)'],
+  ]},
+  {t:'Рабочие копии (git worktree) и команды агентов', r:[
+    ['sparsePaths','Выгружать только нужные папки'],
+    ['workspace.git_worktree','JSON строки состояния: путь связанной копии',1],
+    ['ExitWorktree','Спрашивает перед удалением копии с несохранённой работой; в режиме dontAsk отказывает',1],
+    ['Code Mode','Теперь работает с командами агентов',1],
+  ]},
+]},
+{id:'mcp', t:'MCP-серверы', ico:'🔌', c:'#0891B2', g:[
+  {t:'Способ подключения', r:[
+    ['--transport http','Удалённый сервер по HTTP (рекомендуется)'],
+    ['--transport stdio','Локальная программа'],
+    ['--transport sse','Удалённый сервер по SSE'],
+  ]},
+  {t:'Кому доступен сервер', r:[
+    ['Local','~/.claude.json: только вам, в этом проекте'],
+    ['Project','.mcp.json: всей команде, хранится в репозитории'],
+    ['User','~/.claude.json: вам во всех проектах'],
+  ]},
+  {t:'Управление', r:[
+    ['/mcp','Интерактивное окно'],
+    ['claude mcp list','Список всех серверов'],
+    ['alwaysLoad: true','Держать сервер подключённым во всех сессиях (настройка сервера)',1],
+    ['maxResultSizeChars','_meta["anthropic/maxResultSizeChars"] поднимает лимит текста на инструмент (до 500 тыс. символов)',1],
+  ]},
+]},
+];
+
+const esc = s => s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function keyHtml(key, isKbd){
+  if(!isKbd) return `<code>${esc(key)}</code>`;
+  // "Ctrl+X Ctrl+K" → клавиши в одну строку
+  return key.split(' ').map(combo =>
+    combo.split('+').map(k => `<kbd>${esc(k)}</kbd>`).join('<span class="plus">+</span>')
+  ).join('<span class="plus">→</span>');
+}
+const main = document.getElementById('main'), chips = document.getElementById('chips');
+main.innerHTML = DATA.map(s => `
+<section id="${s.id}" style="--c:${s.c}">
+  <h2>${s.ico} ${s.t} <small>${s.g.reduce((n,g)=>n+g.r.length,0)}</small></h2>
+  <div class="groups">${s.g.map(g => `
+    <div class="group"><h3>${esc(g.t)}</h3>${g.r.map(r => `
+      <div class="row${r[0].length>24?' long':''}" data-s="${esc((r[0]+' '+r[1]).toLowerCase()).replace(/"/g,'&quot;')}">
+        <span class="k" data-copy="${esc(r[0]).replace(/"/g,'&quot;')}" title="Скопировать">${keyHtml(r[0], g.k)}</span>
+        <span class="d">${esc(r[1])}${r[2]?'<span class="new">NEW</span>':''}</span>
+      </div>`).join('')}
+    </div>`).join('')}
+  </div>
+</section>`).join('');
+chips.innerHTML = DATA.map(s => `<a class="chip" href="#${s.id}" style="--c:${s.c}">${s.ico} ${s.t}</a>`).join('');
+
+const q = document.getElementById('q'), none = document.getElementById('none');
+q.addEventListener('input', () => {
+  const words = q.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  let any = false;
+  document.querySelectorAll('section').forEach(sec => {
+    let secHit = false;
+    sec.querySelectorAll('.group').forEach(gr => {
+      let grHit = false;
+      const gt = gr.querySelector('h3').textContent.toLowerCase();
+      gr.querySelectorAll('.row').forEach(row => {
+        const hay = row.dataset.s + ' ' + gt;
+        const ok = words.every(w => hay.includes(w));
+        row.classList.toggle('hide', !ok); if(ok) grHit = true;
+      });
+      gr.classList.toggle('hide', !grHit); if(grHit) secHit = true;
+    });
+    sec.classList.toggle('hide', !secHit); if(secHit) any = true;
+  });
+  none.style.display = any ? 'none' : 'block';
+});
+main.addEventListener('click', e => {
+  const k = e.target.closest('.k'); if(!k) return;
+  const done = () => { k.classList.add('copied'); setTimeout(() => k.classList.remove('copied'), 700); };
+  try { navigator.clipboard.writeText(k.dataset.copy).then(done, () => {}); } catch(_) {}
+});
+</script>
+</body>
+</html>
