@@ -1049,9 +1049,7 @@ function openShieldHub(){const s=ev12().shield,bd=shieldBoard(),me=bd.findIndex(
   q(p,'#ok').onclick=()=>p.close(()=>openStart())}
 /* 2026-11-11: Sky Lift через общий модуль событий (deploy/events-kit: events-hub.js + sky-lift.js). Игра только сообщает результаты уровней
    и три момента: Continue после победы (hop), приход на Home (автопоказ), попап проигрыша (предупреждение). Награды под Bookshelf. */
-const SKY_REWARDS=[{type:'coins',n:40},{type:'booster',id:'lens',n:1},{type:'coins',n:80},{type:'booster',id:'glove',n:1},{type:'lives',min:15},
-  {type:'coins',n:160},{type:'booster',id:'peek',n:2},{type:'booster',id:'key',n:2},{type:'coins',n:300},{type:'lives',min:30},
-  [{type:'coins',n:600},{type:'booster',id:'lens',n:2},{type:'booster',id:'glove',n:2},{type:'booster',id:'brush',n:1},{type:'booster',id:'key',n:2},{type:'lives',min:60}]];
+/* 2026-11-20: reward table = deploy/events-kit/config/sky-lift-rewards-bookshelf.csv -> sky-lift-rewards.js (window.SKY_LIFT_REWARDS.bookshelf) */
 function unlimOn(){return (S.unlimUntil||0)>Date.now()}
 function unlimLeft(){return Math.max(1,Math.ceil((S.unlimUntil-Date.now())/60000))+'m ∞'}
 function livesUI(){const v=$('#hLives .v'),sv=$('#hLives .sv');if(!v)return;if(unlimOn()){v.textContent='∞';sv.textContent=unlimLeft();return}
@@ -1061,7 +1059,7 @@ const SKY=SkyLift.init({root:$('#app'),load:()=>S.skyLift||null,save:k=>{S.skyLi
   rewardIcon:r=>`<img src="${r.type==='coins'?ICO.coin:r.type==='lives'?ICO.heart:bImg(r.id)}" alt="">`,
   rewardLabel:r=>r.type==='coins'?'+'+r.n:r.type==='booster'?'×'+r.n+' '+BOOST[r.id].name:r.min+' min ∞',
   onPlay:()=>openStart(),sound:n=>Sound.play(n==='tick'?'click':n),
-  cfg:{rewards:SKY_REWARDS,track:(n,p)=>console.log('[event] '+n,JSON.stringify(p))}});
+  cfg:Object.assign({track:(n,p)=>console.log('[event] '+n,JSON.stringify(p))},SKY_LIFT_REWARDS.bookshelf)});
 EventsHub.register(SKY);
 const skyTop=()=>SKY.cfg.milestones[SKY.cfg.milestones.length-1];
 function slHomeBtns(){const l=$('#hEvL'),r=$('#hEvR');if(!l)return;const e=ev12();l.hidden=true;r.hidden=true;

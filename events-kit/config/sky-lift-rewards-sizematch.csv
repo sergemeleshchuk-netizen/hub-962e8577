@@ -1,0 +1,12 @@
+floor,chestId,rewardId1,rewardValue1,rewardId2,rewardValue2,rewardId3,rewardValue3,rewardId4,rewardValue4,comment
+2,chest1,Booster2,1,,,,,,,cycle 1: SWAP x1
+5,chest2,Booster1,1,,,,,,,cycle 1: INFO x1
+8,chest1,Booster3,1,,,,,,,cycle 1: JOKER x1
+11,chest2,Booster4,1,,,,,,,cycle 1: SHIELD x1 (armed before the level = the power-up of Size Match)
+15,chest3,Booster2,2,Booster1,1,,,,,cycle 2: SWAP x2 + INFO x1
+20,chest4,Booster1,2,Booster3,1,,,,,cycle 2: INFO x2 + JOKER x1
+25,chest3,Booster3,2,Booster2,1,,,,,cycle 2: JOKER x2 + SWAP x1
+30,chest5,Booster2,2,Booster4,1,,,,,cycle 3: SWAP x2 + SHIELD x1
+40,chest6,Booster1,2,Booster4,1,,,,,cycle 3: INFO x2 + SHIELD x1
+50,chest5,Booster3,2,Booster4,1,,,,,cycle 3: JOKER x2 + SHIELD x1
+60,grand,Coin,2000,Booster1,3,Booster2,3,Booster4,2,grand prize: 2000 coins + INFO x3 + SWAP x3 + SHIELD x2

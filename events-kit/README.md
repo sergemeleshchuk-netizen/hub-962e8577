@@ -48,6 +48,14 @@ Game hooks (the only places the game knows about events):
 
 Reward types: `{type:'coins',n}`, `{type:'booster',id,n}`, `{type:'lives',min}` (unlimited lives for N minutes). A milestone may hold a bundle (array).
 
+Reward tables (2026-11-20): `config/sky-lift-rewards-<game>.csv` is the source, in the sheet format of the Unity configs
+(`floor, chestId, rewardId1..4, rewardValue1..4, comment`; ids `Coin`, `Booster1..5`, `PowerUp1..3`, `UnlimitedLives`).
+`python3 config/build_rewards.py` maps the ids to the prototype booster keys and writes `sky-lift-rewards.js`
+(`window.SKY_LIFT_REWARDS.<game> = {milestones, rewards, chests}`); a host loads it before the game script and passes it as `cfg`.
+Scheme: no coins before the top; cycle 1 = every booster x1 (first the ones not first on the game screen), then every power-up x1;
+cycle 2 = booster x2 + booster x1; cycle 3 = booster x2 + power-up x1; top = 2000 coins + two boosters x3 (never the strongest one) + one power-up x2.
+Bookshelf: 19 chests (floors 2..60), Size Match: 11 chests (SHIELD plays the power-up role). The same CSV goes into the Unity feature branch (`Tools/sky-lift/`).
+
 ## Sky Lift rules (as implemented)
 - Unlocks when the player reaches `unlockLevel`; the unlocking win is not counted. Personal season of `seasonDays`, then a reset (flights are kept).
 - Every first clear lifts the balloon one floor (`countReplays:false`); a loss (fail popup → replay / give up, or leaving the level) drops it to the last reached milestone, never lower.
@@ -61,3 +69,4 @@ Verified with `proto-size-match/verify_v51.mjs` (headless Chrome + CDP, real tap
 - 2026-11-11: second host, Bookshelf v12 (`proto-bookshelf/patch_v12_events_kit.py`): the built-in Sky Lift v4 copy is replaced by the kit; `wonHop` takes an optional third argument `play` for hosts whose NEXT does not start the next level; rewards mapped to Bookshelf boosters + unlimited hearts (`S.unlimUntil`). Demo video of every case: `proto-bookshelf/sky_lift_video/`.
 - 2026-11-10 (2), feedback on Size Match v51: the first-time how-to popup is shown only after the chest popup (Collect), never over the rising balloon; the rise is paced per floor (430 ms per floor, 0.8-2.6 s) with the HUD floor counter ticking floor by floor, so opening the screen from the Home tile shows exactly how many floors were gained since the last visit; any first showing (hop or tile) counts as the entry presentation (no second "enter" screen on Home).
 - 2026-11-10: first release (Size Match v51).
+- 2026-11-20: reward tables moved to CSV (`config/`) + generated `sky-lift-rewards.js`; chests hold boosters/power-ups only, coins only at the top; `cfg.chestsText`; chest art cycles when the table is longer than `cfg.chests`.

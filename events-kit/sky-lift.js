@@ -35,12 +35,17 @@ window.SkyLift=(function(){
   const DEFAULTS={
     unlockLevel:2,                  // the event opens once the player reaches this level (1-based)
     seasonDays:3,                   // personal season: starts at unlock, resets at the end (flights are kept)
+    /* reward tables live in config/sky-lift-rewards-*.csv (sheet format, Unity reward ids) -> sky-lift-rewards.js (window.SKY_LIFT_REWARDS.<game>);
+       a host passes cfg:{milestones,rewards,chests} from there. The defaults below = the Size Match table (2026-11-20): no coins before the top,
+       cycle 1 = every booster x1, cycle 2 = booster x2 + booster x1, cycle 3 = booster x2 + power-up x1, top = coins + 2 boosters x3 + power-up x2 */
     milestones:[2,5,8,11,15,20,25,30,40,50,60],
     rewards:[                       // one reward (or a bundle = array) per milestone; the last one is the grand prize
-      {type:'coins',n:40},{type:'booster',id:'info',n:1},{type:'coins',n:80},{type:'booster',id:'swap',n:1},{type:'lives',min:15},
-      {type:'coins',n:160},{type:'booster',id:'jk',n:2},{type:'booster',id:'shield',n:2},{type:'coins',n:300},{type:'lives',min:30},
-      [{type:'coins',n:600},{type:'booster',id:'info',n:2},{type:'booster',id:'swap',n:2},{type:'booster',id:'jk',n:2},{type:'booster',id:'shield',n:2},{type:'lives',min:60}]],
-    chests:['chest2','chest1','chest4','chest3','chest5','chest6','chest4','chest3','chest5','chest6','grand'],
+      {type:'booster',id:'swap',n:1},{type:'booster',id:'info',n:1},{type:'booster',id:'jk',n:1},{type:'booster',id:'shield',n:1},
+      [{type:'booster',id:'swap',n:2},{type:'booster',id:'info',n:1}],[{type:'booster',id:'info',n:2},{type:'booster',id:'jk',n:1}],[{type:'booster',id:'jk',n:2},{type:'booster',id:'swap',n:1}],
+      [{type:'booster',id:'swap',n:2},{type:'booster',id:'shield',n:1}],[{type:'booster',id:'info',n:2},{type:'booster',id:'shield',n:1}],[{type:'booster',id:'jk',n:2},{type:'booster',id:'shield',n:1}],
+      [{type:'coins',n:2000},{type:'booster',id:'info',n:3},{type:'booster',id:'swap',n:3},{type:'booster',id:'shield',n:2}]],
+    chests:['chest1','chest2','chest1','chest2','chest3','chest4','chest3','chest5','chest6','chest5','grand'],   // chest art per milestone (chest1-6, grand); missing entries cycle chest1-6
+    chestsText:'boosters & power-ups',   // the intro line next to the chest
     countReplays:false,             // a won level counts only on its first clear (loss always counts)
     artBase:null,                   // default: art/skylift/ next to this script
     title:'Sky Lift',
@@ -64,7 +69,8 @@ window.SkyLift=(function(){
     const icon=r=>{try{const h=a.rewardIcon&&a.rewardIcon(r);if(h)return h}catch(e){}return DEF_ICON[r.type]||'🎁'};
     const label=r=>{try{const h=a.rewardLabel&&a.rewardLabel(r);if(h)return h}catch(e){}return r.type==='coins'?'+'+r.n:r.type==='booster'?'×'+r.n:r.type==='lives'?r.min+' min':''};
     /* chest art: closed until its reward is collected, then the open, empty one (lid ajar) */
-    const chestArt=(i,open)=>{const n=cfg.chests[i];return n==='grand'?'sl_grand':'sl_'+(open?n.replace('chest','open'):n)};
+    const chestName=i=>i===N-1?'grand':(cfg.chests[i]&&cfg.chests[i]!=='grand'?cfg.chests[i]:'chest'+(i%6+1));
+    const chestArt=(i,open)=>{const n=chestName(i);return n==='grand'?'sl_grand':'sl_'+(open?n.replace('chest','open'):n)};
     const badge=i=>{const rs=rewardsOf(i);if(rs.length===1)return `<span class="skBadge"><span class="i">${icon(rs[0])}</span>${label(rs[0])}</span>`;
       return `<span class="skBadge">${rs.slice(0,3).map(r=>`<span class="i">${icon(r)}</span>`).join('')}${rs.length>3?'+'+(rs.length-3):''}</span>`};
     function tick(){const now=Date.now();
@@ -103,7 +109,7 @@ window.SkyLift=(function(){
     function juicyOpen(p){const jz=p.q('.skJuicy');snd('pop');jz.classList.add('wob');
       setTimeout(()=>{if(p.closed)return;jz.classList.remove('wob');jz.classList.add('slam');snd('win');
         setTimeout(()=>{if(p.closed)return;p.el.animate&&p.el.animate([{translate:'0 0'},{translate:'-6px 3px'},{translate:'5px -4px'},{translate:'-4px 2px'},{translate:'3px -1px'},{translate:'0 0'}],{duration:300});burst(jz,{stars:7,dust:14})},70)},1080)}
-    function infoPopup(cb){const pts=[[art('sl_balloon'),'Win a level:','+1 floor'],[art('sl_'+cfg.chests[0]),'Chests:','coins & boosters'],
+    function infoPopup(cb){const pts=[[art('sl_balloon'),'Win a level:','+1 floor'],[art('sl_'+chestName(0)),'Chests:',cfg.chestsText],
         [art('sl2_bracket'),'Lose:','keep your last chest'],[art('sl_grand'),`Floor ${M[N-1]}:`,'grand prize']];
       const p=popup({title:cfg.title,cls:'skIntro',html:`<img class="skHero big" src="${art('sl_hero')}" alt=""><div class="skHead">Fly to the top!</div>
         <ul class="skPts">${pts.map(([src,a,b],i)=>`<li style="animation-delay:${.12+i*.07}s"><img src="${src}" alt=""><span><b>${a}</b> ${b}</span></li>`).join('')}</ul>

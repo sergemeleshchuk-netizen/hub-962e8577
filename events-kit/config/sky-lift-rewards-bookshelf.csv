@@ -1,0 +1,20 @@
+floor,chestId,rewardId1,rewardValue1,rewardId2,rewardValue2,rewardId3,rewardValue3,rewardId4,rewardValue4,comment
+2,chest1,Booster2,1,,,,,,,cycle 1: Hint Lens x1
+4,chest2,Booster4,1,,,,,,,cycle 1: Magic Hand x1
+6,chest1,Booster1,1,,,,,,,cycle 1: Art Peek x1
+8,chest2,Booster3,1,,,,,,,cycle 1: Time Freeze x1
+10,chest1,Booster5,1,,,,,,,cycle 1: Art Brush x1
+12,chest2,PowerUp1,1,,,,,,,cycle 1: Additional Moves x1
+14,chest1,PowerUp2,1,,,,,,,cycle 1: Fixed Corners x1
+16,chest2,PowerUp3,1,,,,,,,cycle 1: Center Five x1
+19,chest3,Booster2,2,Booster4,1,,,,,cycle 2: Hint Lens x2 + Magic Hand x1
+22,chest4,Booster4,2,Booster1,1,,,,,cycle 2: Magic Hand x2 + Art Peek x1
+25,chest3,Booster1,2,Booster3,1,,,,,cycle 2: Art Peek x2 + Time Freeze x1
+28,chest4,Booster3,2,Booster5,1,,,,,cycle 2: Time Freeze x2 + Art Brush x1
+31,chest3,Booster5,2,Booster2,1,,,,,cycle 2: Art Brush x2 + Hint Lens x1
+35,chest5,Booster2,2,PowerUp1,1,,,,,cycle 3: Hint Lens x2 + Additional Moves x1
+40,chest6,Booster4,2,PowerUp2,1,,,,,cycle 3: Magic Hand x2 + Fixed Corners x1
+45,chest5,Booster1,2,PowerUp3,1,,,,,cycle 3: Art Peek x2 + Center Five x1
+50,chest6,Booster3,2,PowerUp1,1,,,,,cycle 3: Time Freeze x2 + Additional Moves x1
+55,chest5,Booster5,2,PowerUp2,1,,,,,cycle 3: Art Brush x2 + Fixed Corners x1
+60,grand,Coin,2000,Booster2,3,Booster4,3,PowerUp1,2,grand prize: 2000 coins + Hint Lens x3 + Magic Hand x3 + Additional Moves x2
