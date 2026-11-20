@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Snippets · v14 calm backgrounds</title>
+<meta name="theme-color" content="#0A162C">
+<script>window.SNIP_STAGE = 10; /* v10 content */
+/* v11: opened from the Level Atlas (atlas/?) with ?atlas=1 -> play its picture order (same-origin localStorage) */
+if (/[?&]atlas=1/.test(location.search)) { try { var a = JSON.parse(localStorage.getItem("snippets_atlas_v1") || "null"); if (a && Array.isArray(a.order)) window.SNIP_ORDER = a.order; } catch (e) {} }</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>@media (min-aspect-ratio:1){html body{background:radial-gradient(120% 120% at 50% 0,#2a3247,#10131c 80%)}#stage{border-radius:32px;width:54dvh;height:96dvh;margin:auto;top:0;bottom:0;left:0;right:0;overflow:hidden;box-shadow:0 30px 80px #0009,0 0 0 8px #0c0e15,0 0 0 10px #3a4560}}</style>
+  <script type="module" crossorigin src="./v14-pZPXLbWd.js"></script>
+  <link rel="modulepreload" crossorigin href="./BoardRenderer-DMGpXBJl.js">
+  <link rel="modulepreload" crossorigin href="./preload-helper-uoiWJDAw.js">
+  <link rel="modulepreload" crossorigin href="./snippets-skin-DBmP1Nfz.js">
+  <link rel="modulepreload" crossorigin href="./shell-art-goose2-q73OJV84.js">
+  <link rel="stylesheet" crossorigin href="./preload-helper-D6zwG_-e.css">
+  <link rel="stylesheet" crossorigin href="./snippets-skin-CeLVMufG.css">
+</head>
+<body>
+<div id="stage">
+  <div id="app">
+    <div id="tbg" aria-hidden="true"></div>
+    <canvas id="game"></canvas>
+    <div id="band"></div>
+    <div id="coinPill" class="spr hud"><span id="coinText" class="txt">20</span></div>
+    <div id="levelChip" class="spr hud"><span id="levelText" class="txt">Level 1</span></div>
+    <div id="movesBox" class="hud"><small>Moves</small><b id="movesN">20</b></div>
+    <button id="btnRestart" class="spr hud" aria-label="Restart level"></button>
+    <button id="slot1" class="spr hud" aria-label="Locked power-up"></button>
+    <button id="slot2" class="spr hud" aria-label="Locked power-up"></button>
+    <button id="btnGear" class="spr hud" aria-label="Settings"></button>
+    <button id="btnHome" class="spr hud" aria-label="Home"></button>
+    <div id="worldTag" class="hud" aria-hidden="true"></div>
+    <div id="tut"><div id="tutSpot"></div><div id="tutPill" class="spr"></div><div id="tutRing"></div><div id="tutHand" class="spr"></div></div>
+    <div id="menu" aria-label="Main menu">
+      <header id="mTop"><button id="mCoin" class="mpill spr" style="position:relative" aria-label="Coins, open shop"><span class="mcoin"></span><span id="mCoinText">0</span><span class="mplus">+</span></button>
+        <div id="mTitle" class="mtitle"></div><button id="mGear" class="msq" aria-label="Settings"></button></header>
+      <section id="scr_home" class="scr"></section><section id="scr_shop" class="scr"></section><section id="scr_journey" class="scr"></section>
+      <nav id="tabs" role="tablist"><button data-tab="shop" role="tab"><span class="ti"></span><span class="tl">Shop</span></button><button data-tab="home" role="tab"><span class="ti"></span><span class="tl">Home</span></button><button data-tab="journey" role="tab"><span class="ti"></span><span class="tl">Journey</span></button></nav>
+    </div>
+    <div id="buy"><div class="card" id="bcard"></div></div>
+    <div id="tip"></div>
+    <div id="dim"></div>
+    <div id="reward">
+      <div id="raysGlow"></div><div id="rays"></div>
+      <img id="panelImg" alt=""><img id="crownImg" alt="">
+      <div id="rewardRow"><div id="rewardCoin" class="spr" style="position:relative;cursor:default"></div><span id="rewardNum" class="txt">+0</span></div>
+      <button id="btnAd" class="spr rbtn" aria-label="+300 coins (simulated rewarded video)"></button>
+      <button id="btnCont" class="spr rbtn" aria-label="Continue"></button>
+      <div id="fBar"><div id="fFill"></div><div id="fText" class="txt"></div></div>
+      <div id="fIcon"></div>
+    </div>
+    <div id="inter"><img id="logoImg" alt=""></div>
+    <canvas id="fx"></canvas>
+    <div id="adsim"><div class="t">Rewarded video</div><div id="adbar"><div id="adfill"></div></div><div class="s">Simulated in this prototype: no ad is loaded. You still get the reward.</div></div>
+    <div id="modal"><div class="card" id="card"></div></div>
+    <div id="loader"><img id="ldIcon" src="./loader-icon-goose2-DXFYdY6Z.webp" alt=""><i></i></div>
+  </div>
+</div>
+</body>
+</html>
