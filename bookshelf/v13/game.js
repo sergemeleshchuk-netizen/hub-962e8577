@@ -918,12 +918,15 @@ const SET_GROUPS=[['Sound',[['sfx','Sound'],['music','Music'],['haptics','Vibrat
   ['Look',[['minimalUi','Minimalistic UI','Dark library theme with line icons (from v10)'],['bookCaps','Book tops','Varied heights come from a leather top above the picture. Off: all books the same height. The picture is never cut']]]];
 function settingsRows(){return SET_GROUPS.map(([g,rows])=>`<div class="setGrp"><span class="lbl">${g}</span>${rows.map(([k,l,h])=>`<div class="set"><span class="setL">${l}${h?`<small>${h}</small>`:''}</span><button class="tg ${S.settings[k]?'on':''}" data-set="${k}" aria-label="${l}"></button></div>`).join('')}</div>`).join('')}
 function bindSettings(p){p.el.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{const k=b.dataset.set;S.settings[k]=!S.settings[k];b.classList.toggle('on',S.settings[k]);Sound.musicSync();save();if(k==='minimalUi')applyUiStyle();if(k==='bookCaps'&&typeof G!=='undefined'&&G&&!$('#sGame').hidden)layout(G.solved,true)})}
-function toolsHTML(){return `<details class="setTools"><summary class="lbl">Prototype tools</summary><button class="btn blue wide" id="showCurve"><span class="t">Difficulty Curve · 350 levels</span></button><div class="dbg">
+function toolsHTML(){return `<details class="setTools"><summary class="lbl">Prototype tools</summary><button class="btn gold wide" data-d="win"><span class="t">⚡ Win level</span></button><button class="btn blue wide" id="showCurve"><span class="t">Difficulty Curve · 350 levels</span></button><div class="dbg">
    <button class="btn gold" data-d="t40"><span class="t">Test 40</span></button><button class="btn gold" data-d="t48"><span class="t">Test 48</span></button><button class="btn gold" data-d="t54"><span class="t">Test 54</span></button><button class="btn grey" data-d="lm"><span class="t">Level −10</span></button><button class="btn grey" data-d="lp"><span class="t">Level +10</span></button><button class="btn grey" data-d="l1"><span class="t">Level +1</span></button>
    <button class="btn grey" data-d="coins"><span class="t">+1000 coins</span></button><button class="btn grey" data-d="lives"><span class="t">Lose lives</span></button><button class="btn grey" data-d="day"><span class="t">Next day</span></button><button class="btn coral" data-d="reset"><span class="t">Reset</span></button></div></details>`}
+/* 2026-11-20 prototype tool (testing only, not part of any feature): instant win of the running level, as Size Match v52 */
+function cheatWin(){if(!G||G.solved)return;G.books.forEach((b,i)=>{G.pos[i]=i;G.order[i]=i;placeBook(i)});updateHud();setTimeout(()=>{if(G&&!G.solved)complete()},260)}
 function bindTools(p){q(p,'#showCurve').onclick=()=>p.close(openDifficultyCurve);
   const tl=q(p,'.setTools');tl.ontoggle=()=>p.el.classList.toggle('toolsOpen',tl.open); // tools replace the setting rows, the popup has no room for both
   p.el.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{const d=b.dataset.d;
+    if(d==='win'){if(!G||G.solved){toast('Open a level first');return}p.close(cheatWin);return}
     if(d[0]==='t'&&d[1]!=='d'){const g={t40:[5,8],t48:[6,8],t54:[6,9]}[d];if(g){p.close(()=>testLevel(g[0],g[1]));return}}
     if(d==='lm')S.level=Math.max(1,S.level-10);if(d==='lp')S.level+=10;if(d==='l1')S.level++;if(d==='coins')S.coins+=1000;if(d==='lives'){S.lives=0;S.livesTs=Date.now()}
     if(d==='day')S.daily.last='';
