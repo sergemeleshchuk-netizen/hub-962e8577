@@ -14,6 +14,10 @@
    "juicy chest" how-to: wobble+squash, stretch, slam with freeze and shake, inner light, shockwave, stars, magic dust.
    2026-11-20: the tower balloon has three burner states (ChatGPT art): small flame while standing, big flame while rising,
    no fire while falling (sl_balloon_idle / _up / _off).
+   2026-11-20 (UI/UX review): every chest faces the tower centre (new art: closed sl_chestN, claim reveal sl_fullN full of loot,
+   taken sl_openN empty); the claim ribbon names the floor and the rewards are the hero; HUD = balloon badge + bar to the next
+   chest (updates after the rise, not before); intro hero with the game balloon; lose chip shows floor A → B; winChip() for the
+   host's win screen (+1 floor); lit floor numbers glow gold; the balloon flies closer to the tower.
 
    Usage (host game):
      const sky = SkyLift.init({
@@ -70,7 +74,7 @@ window.SkyLift=(function(){
     const label=r=>{try{const h=a.rewardLabel&&a.rewardLabel(r);if(h)return h}catch(e){}return r.type==='coins'?'+'+r.n:r.type==='booster'?'×'+r.n:r.type==='lives'?r.min+' min':''};
     /* chest art: closed until its reward is collected, then the open, empty one (lid ajar) */
     const chestName=i=>i===N-1?'grand':(cfg.chests[i]&&cfg.chests[i]!=='grand'?cfg.chests[i]:'chest'+(i%6+1));
-    const chestArt=(i,open)=>{const n=chestName(i);return n==='grand'?'sl_grand':'sl_'+(open?n.replace('chest','open'):n)};
+    const chestArt=(i,st)=>{const n=chestName(i);return n==='grand'?'sl_grand':'sl_'+(st==='full'?n.replace('chest','full'):st?n.replace('chest','open'):n)};   // st: falsy closed, 'full' = claim reveal, truthy = taken (empty)
     const badge=i=>{const rs=rewardsOf(i);if(rs.length===1)return `<span class="skBadge"><span class="i">${icon(rs[0])}</span>${label(rs[0])}</span>`;
       return `<span class="skBadge">${rs.slice(0,3).map(r=>`<span class="i">${icon(r)}</span>`).join('')}${rs.length>3?'+'+(rs.length-3):''}</span>`};
     function tick(){const now=Date.now();
@@ -82,8 +86,9 @@ window.SkyLift=(function(){
     const units=h=>{let prev=0;for(let i=0;i<N;i++){const c=M[i];if(h>=c){prev=c;continue}return i+(h-prev)/(c-prev)}return N};
     const Y=u=>BASE+u*SEG;
     /* ---------- results ---------- */
-    function onLevelResult(won,level,firstClear){const was=k.status;if(!enabled()||was!=='active')return;   // the level that unlocks the event is not counted
-      if(won){if(!cfg.countReplays&&firstClear===false)return;if(k.cp>=N)return;k.floor++;
+    let gain=0;   // 1 = the last level result lifted the balloon (read once by winChip)
+    function onLevelResult(won,level,firstClear){gain=0;const was=k.status;if(!enabled()||was!=='active')return;   // the level that unlocks the event is not counted
+      if(won){if(!cfg.countReplays&&firstClear===false)return;if(k.cp>=N)return;k.floor++;gain=1;
         if(k.floor>=M[k.cp]){k.pending.push(k.cp);k.cp++;track('sky_lift_milestone',{floor:M[k.cp-1],index:k.cp-1})}}
       else{const to=protectedFloor();if(k.floor!==to)track('sky_lift_drop',{from:k.floor,to});k.floor=to}
       save();refreshTile()}
@@ -109,10 +114,10 @@ window.SkyLift=(function(){
     function juicyOpen(p){const jz=p.q('.skJuicy');snd('pop');jz.classList.add('wob');
       setTimeout(()=>{if(p.closed)return;jz.classList.remove('wob');jz.classList.add('slam');snd('win');
         setTimeout(()=>{if(p.closed)return;p.el.animate&&p.el.animate([{translate:'0 0'},{translate:'-6px 3px'},{translate:'5px -4px'},{translate:'-4px 2px'},{translate:'3px -1px'},{translate:'0 0'}],{duration:300});burst(jz,{stars:7,dust:14})},70)},1080)}
-    function infoPopup(cb){const pts=[[art('sl_balloon'),'Win a level:','+1 floor'],[art('sl_'+chestName(0)),'Chests:',cfg.chestsText],
-        [art('sl2_bracket'),'Lose:','keep your last chest'],[art('sl_grand'),`Floor ${M[N-1]}:`,'grand prize']];
+    function infoPopup(cb){const pts=[[art('sl_balloon_up'),'Win a level:','+1 floor'],[art('sl_'+chestName(0)),'Chests:',cfg.chestsText],
+        [art('sl_balloon_off'),'Lose:','drop to your last chest'],[art('sl_grand'),`Floor ${M[N-1]}:`,'grand prize']];
       const p=popup({title:cfg.title,cls:'skIntro',html:`<img class="skHero big" src="${art('sl_hero')}" alt=""><div class="skHead">Fly to the top!</div>
-        <ul class="skPts">${pts.map(([src,a,b],i)=>`<li style="animation-delay:${.12+i*.07}s"><img src="${src}" alt=""><span><b>${a}</b> ${b}</span></li>`).join('')}</ul>
+        <ul class="skPts">${pts.map(([src,a,b],i)=>`<li class="${['up','','dn',''][i]}" style="animation-delay:${.12+i*.07}s"><img src="${src}" alt=""><span><b>${a}</b> ${b}</span></li>`).join('')}</ul>
         <div class="skEnds">Ends in <b>${left()}</b></div><button class="skBtn gold wide" id="skOk"><span class="t">Let's go!</span></button>`});
       p.q('#skOk').onclick=()=>{snd('click');p.close(cb)};return p}
     /* ---------- screen ---------- */
@@ -128,11 +133,14 @@ window.SkyLift=(function(){
       sec.innerHTML=`<div class="skBg"></div>
         <div class="skTop"><button class="skI" id="skInfo" aria-label="How it works"><span class="skOl">i</span></button><div class="skBanner"><img src="${art('sl_banner')}" alt=""><span class="skTitle skOl">${cfg.title}</span><span class="skTime" id="skTime">${left()}</span></div><button class="skX skScrX" id="skClose" aria-label="Close">${SVGX}</button></div>
         <div class="skScroll" id="skScroll"><div class="skTower" style="height:${H}px"><div class="skCity"></div>${clouds}<div class="skMast"></div><div class="skMastTop"></div><div class="skMastBase"></div><div class="skHex zero" style="--y:${BASE}px"><span class="skOl">0</span></div>${cps}<div class="skBalloon" id="skBalloon" style="bottom:${from}px"><img src="${art('sl_balloon_idle')}" alt=""></div></div></div>
-        <div class="skHud"><div class="skFire"><img src="${art('sl_fire')}" alt=""><b class="skOl" id="skFloor">${seen}</b></div><div class="skInfoTxt" id="skInfoTxt"></div><button class="skBtn gold" id="skPlay"><span class="t">Play</span></button></div>`;
+        <div class="skHud"><div class="skFire"><img src="${art('sl_balloon_idle')}" alt=""><b class="skOl" id="skFloor">${seen}</b></div><div class="skInfoTxt" id="skInfoTxt"></div><button class="skBtn gold" id="skPlay"><span class="t">Play</span></button></div>`;
       hudText(seen)}
-    function hudText(shown){const next=k.cp<N?M[k.cp]-k.floor:0,el=sec.querySelector('#skInfoTxt');if(!el)return;
-      el.innerHTML=`<strong>${k.cp>=N?'Top reached!':`${next} more win${next===1?'':'s'} to floor ${M[k.cp]}`}</strong><span>Win levels to rise. A lost level drops the balloon to floor ${protectedFloor()}.${k.flights?` Flights completed: ${k.flights}.`:''}</span>`;
-      const f=sec.querySelector('#skFloor');if(f)f.textContent=shown==null?k.floor:shown}
+    /* HUD: the next chest and a progress bar from the last chest floor; counted from the floor on screen, so it never runs ahead of the rise */
+    function hudText(shown){const fl=shown==null?k.floor:shown,el=sec.querySelector('#skInfoTxt');if(!el)return;const i=M.findIndex(c=>c>fl);
+      if(i<0)el.innerHTML=`<strong>Top reached!</strong>`;
+      else{const from=i?M[i-1]:0,need=M[i]-fl,pct=Math.round((fl-from)/(M[i]-from)*100);
+        el.innerHTML=`<strong>${need} win${need===1?'':'s'} to next chest</strong><span class="skBar"><i style="width:${pct}%"></i><b>${fl-from}/${M[i]-from}</b><img src="${art(chestArt(i))}" alt=""></span>`}
+      const f=sec.querySelector('#skFloor');if(f)f.textContent=fl}
     /* open({from:'win'|'home'|'button', play, close}) → cascade in → balloon moves (camera follows) → pause → fresh chests pop → claim popup */
     function open(ctx){ensure();tick();const seen=k.presented,run=++anim;render();sec.hidden=false;sec.classList.remove('out');sec.classList.add('in');
       if(!k.enter){k.enter=true;save()}   // any first showing (hop or tile) counts as the entry presentation
@@ -151,7 +159,7 @@ window.SkyLift=(function(){
         const fEl=sec.querySelector('#skFloor');let shown=seen;
         const t0=performance.now(),tickF=()=>{if(!alive())return;const t=Math.min(1,(performance.now()-t0)/dur),e=up?(t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2):t*t;center(from+(to-from)*e);
           const fl=Math.round(seen+(k.floor-seen)*e);if(fl!==shown&&fEl){shown=fl;fEl.textContent=fl;if(up)sec.querySelectorAll('.skHex:not(.on):not(.zero)').forEach(h=>{if(+h.dataset.f<=fl&&k.cp>M.indexOf(+h.dataset.f)){h.classList.add('on','lit')}});fEl.classList.remove('tick');void fEl.offsetWidth;fEl.classList.add('tick');if(up)snd('tick')}
-          if(t<1)requestAnimationFrame(tickF);else{b.classList.remove('rise','fall');burner(b,'idle');finish()}};
+          if(t<1)requestAnimationFrame(tickF);else{b.classList.remove('rise','fall');burner(b,'idle');hudText();finish()}};
         requestAnimationFrame(tickF)},520);
       k.presented=k.floor;save();
       clearInterval(timer);timer=setInterval(()=>{const t=sec.querySelector('#skTime');if(t)t.textContent=left()},30000);
@@ -162,7 +170,7 @@ window.SkyLift=(function(){
     /* claim: grant the rewards of the freshly reached milestones; the grand prize also completes the flight (balloon back to 0) */
     function claim(ids,after){const last=ids.includes(N-1),rs=ids.flatMap(rewardsOf);
       k.pending=k.pending.filter(i=>!ids.includes(i));
-      const j=ids[ids.length-1],p=popup({title:cfg.title,cls:'skClaim',close:false,html:`<div class="skJuicy"><div class="skGlow"></div><div class="skRing"></div><img class="skChest c" src="${art(chestArt(j))}" alt=""><img class="skChest o" src="${art(chestArt(j,true))}" alt=""></div><div class="skText">${last?'You reached the top of the Sky Lift!':`Floor${ids.length>1?'s':''} <b>${ids.map(i=>M[i]).join(', ')}</b> reached!`} Chest${ids.length>1?'s':''} opened:</div><div class="skRw">${rs.map((r,i)=>`<span class="r" style="animation-delay:${1.25+i*.09}s"><span class="i">${icon(r)}</span>${label(r)}</span>`).join('')}</div><button class="skBtn gold wide" id="skCollect"><span class="t">Collect</span></button>`});
+      const j=ids[ids.length-1],p=popup({title:last?'Top reached!':`Floor ${ids.map(i=>M[i]).join(' & ')}`,cls:'skClaim',close:false,html:`<div class="skJuicy"><div class="skGlow"></div><div class="skRing"></div><img class="skChest c" src="${art(chestArt(j))}" alt=""><img class="skChest o" src="${art(chestArt(j,'full'))}" alt=""></div><div class="skText">${last?'Grand prize! A new flight starts from the ground.':`You got:`}</div><div class="skRw">${rs.map((r,i)=>`<span class="r" style="animation-delay:${1.25+i*.09}s"><span class="i">${icon(r)}</span>${label(r)}</span>`).join('')}</div><button class="skBtn gold wide" id="skCollect"><span class="t">Collect</span></button>`});
       juicyOpen(p);track('sky_lift_claim',{floors:ids.map(i=>M[i]),grand:last});
       p.q('#skCollect').onclick=()=>{snd('coin');rs.forEach(r=>{try{a.grant&&a.grant(r)}catch(e){}});
         if(last){k.flights++;k.floor=0;k.cp=0;k.presented=0;track('sky_lift_flight',{flights:k.flights})}
@@ -176,14 +184,17 @@ window.SkyLift=(function(){
     let tile=null;
     function mountTile(el){tile=el;el.classList.add('skTile');el.onclick=()=>{snd('click');if(window.EventsHub&&EventsHub.open)EventsHub.open(id,{play:a.onPlay});else open({from:'button',play:a.onPlay})};refreshTile()}
     function refreshTile(){if(!tile)return;if(!enabled()){tile.hidden=true;return}tile.hidden=false;const next=k.cp<N?M[k.cp]-k.floor:0;
-      tile.innerHTML=`<img class="b" src="${art('sl_balloon')}" alt=""><span class="tx"><span class="tt skOl">${cfg.title}</span><span class="st">Floor <b>${k.floor}</b>${k.cp<N?` · ${next} win${next===1?'':'s'} to the chest`:' · top reached'}</span></span><span class="tm">${left()}</span>${k.pending.length?`<span class="dot">${k.pending.length}</span>`:''}`}
+      tile.innerHTML=`<img class="b" src="${art('sl_balloon_idle')}" alt=""><span class="tx"><span class="tt skOl">${cfg.title}</span><span class="st">Floor <b>${k.floor}</b>${k.cp<N?` · ${next} win${next===1?'':'s'} to the chest`:' · top reached'}</span></span><span class="tm">${left()}</span>${k.pending.length?`<span class="dot">${k.pending.length}</span>`:''}`}
     const id='sky_lift';
     const api={id,priority:10,cfg,enabled,onLevelResult,
       pendingWin:()=>k.pending.length>0,
       presentWin:ctx=>open({from:'win',play:ctx.play,close:ctx.close,release:ctx.release}),
       pendingHome:()=>k.pending.length>0||!k.enter,
       presentHome:ctx=>{open({from:'home',play:ctx.play||a.onPlay,close:ctx.close,release:ctx.release})},
-      loseWarning:()=>{if(!enabled()||k.floor<=protectedFloor())return null;return {html:`<span class="skWarn"><img src="${art('sl_balloon')}" alt="">Balloon drops to floor <b>${protectedFloor()}</b></span>`,from:k.floor,to:protectedFloor()}},
+      loseWarning:()=>{if(!enabled()||k.floor<=protectedFloor())return null;return {html:`<span class="skWarn"><img src="${art('sl_balloon_off')}" alt="">Sky Lift: floor <b>${k.floor}</b> → <b class="dn">${protectedFloor()}</b></span>`,from:k.floor,to:protectedFloor()}},
+      /* win screen chip: shown once after a level result that lifted the balloon */
+      winChip:()=>{if(!gain||!enabled())return null;gain=0;const i=M.findIndex(c=>c>=k.floor),nx=i<0?M[N-1]:M[i];
+        return `<span class="skWarn up"><img src="${art('sl_balloon_up')}" alt="">Sky Lift <b>+1 floor</b> · ${k.floor===nx?'chest reached!':`${k.floor}/${nx}`}</span>`},
       refresh:refreshTile,mountTile,open:ctx=>open(Object.assign({from:'button',play:a.onPlay},ctx||{})),
       state:()=>k,reset:()=>{k=fresh();save();refreshTile()},
       cheat:{setFloor(h){k.floor=h;k.cp=M.filter(c=>c<=h).length;save();refreshTile()},endSeason(){k.seasonEnd=0;tick();refreshTile()}}};

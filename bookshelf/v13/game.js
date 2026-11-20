@@ -649,7 +649,7 @@ function failLevel(){if(G.replay){replayFail();return}const skyWarn=EventsHub.lo
     <button class="btn wide" id="fRetry"><span class="t">Try Again</span></button><button class="link" id="fHome">Home</button>`});
   q(p,'#fRetry').onclick=()=>p.close(()=>{goHome(false);setTimeout(openStart,250)});q(p,'#fHome').onclick=()=>p.close(()=>goHome(false))}
 // 2026-10-27: the pause button is gone; in a level the gear opens this menu as the settings popup
-function pauseMenu(){if(!G||G.solved)return openSettings();const p=popup({title:'Settings',html:`${settingsRows()}<button class="btn wide" id="pRes"><span class="t">Continue</span></button><button class="link" id="pQuit">${G.replay?'Leave (no life lost)':'Leave level (lose a life)'}</button>${toolsHTML()}`});
+function pauseMenu(){if(!G||G.solved)return openSettings();const p=popup({title:'Settings',html:`${settingsRows()}<button class="btn wide" id="pRes"><span class="t">Continue</span></button><button class="link" id="pQuit">${G.replay?'Leave (no life lost)':'Leave level (lose a life)'}</button>${!G.replay&&G.used>0?`<div class="pWarn">${EventsHub.loseWarnings().map(w=>w.html).join('')}</div>`:''}${toolsHTML()}`});
   bindSettings(p);bindTools(p);q(p,'#pRes').onclick=()=>p.close();q(p,'#pQuit').onclick=()=>p.close(()=>{if(G.used>0&&!G.replay){loseLife();ev12Result(false);S.attempts[G.L]=(S.attempts[G.L]||0)+1;S.streak=0;save()}goHome(false)})}
 
 function complete(){G.solved=true;G.locked=true;clearHint();tipOff();
@@ -671,7 +671,7 @@ function complete(){G.solved=true;G.locked=true;clearHint();tipOff();
     wrap.innerHTML=`<div class="winTitle">Restored!</div><div class="winArt"><i style="background-image:url(${art.file})"></i></div><div class="sheet pending"></div>`;
     const sh=wrap.querySelector('.sheet');
     sh.innerHTML=`<div class="artname">${art.title}</div><div class="after">${art.after}</div>
-      <div class="reward"><img src="${ICO.coin}" alt=""><span class="v ol" id="wCoins">+${total}</span></div>
+      <div class="reward"><img src="${ICO.coin}" alt=""><span class="v ol" id="wCoins">+${total}</span></div>${!RP&&SKY.winChip?SKY.winChip()||'':''}
       ${RP?`<div class="ptext" style="font-size:14px">${RP.excl?'Exclusive level':'Replay · '+RP.label} ${RP.rows}×${RP.cols}</div>`:''}${EXH?`<div class="exPrize">${EXH}</div>`:''}${streakBonus?`<div class="ptext" style="font-size:14px">5-win streak bonus +150!</div>`:''}${tierBonus?`<div class="ptext" style="font-size:14px">New frame unlocked +250!</div>`:''}
       <div class="row"><button class="btn purple sm" id="wX2"><span class="t">×2 coins</span></button><button class="btn" id="wNext" style="flex:1"><span class="t">Continue</span></button></div>`;
     $('#sGame').appendChild(wrap);
@@ -922,7 +922,7 @@ function toolsHTML(){return `<details class="setTools"><summary class="lbl">Prot
    <button class="btn gold" data-d="t40"><span class="t">Test 40</span></button><button class="btn gold" data-d="t48"><span class="t">Test 48</span></button><button class="btn gold" data-d="t54"><span class="t">Test 54</span></button><button class="btn grey" data-d="lm"><span class="t">Level −10</span></button><button class="btn grey" data-d="lp"><span class="t">Level +10</span></button><button class="btn grey" data-d="l1"><span class="t">Level +1</span></button>
    <button class="btn grey" data-d="coins"><span class="t">+1000 coins</span></button><button class="btn grey" data-d="lives"><span class="t">Lose lives</span></button><button class="btn grey" data-d="day"><span class="t">Next day</span></button><button class="btn coral" data-d="reset"><span class="t">Reset</span></button></div></details>`}
 /* 2026-11-20 prototype tool (testing only, not part of any feature): instant win of the running level, as Size Match v52 */
-function cheatWin(){if(!G||G.solved)return;G.books.forEach((b,i)=>{G.pos[i]=i;G.order[i]=i;placeBook(i)});updateHud();setTimeout(()=>{if(G&&!G.solved)complete()},260)}
+function cheatWin(){if(!G||G.solved)return;spotOff();tipOff();G.books.forEach((b,i)=>{G.pos[i]=i;G.order[i]=i;placeBook(i)});updateHud();setTimeout(()=>{if(G&&!G.solved)complete()},260)}
 function bindTools(p){q(p,'#showCurve').onclick=()=>p.close(openDifficultyCurve);
   const tl=q(p,'.setTools');tl.ontoggle=()=>p.el.classList.toggle('toolsOpen',tl.open); // tools replace the setting rows, the popup has no room for both
   p.el.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{const d=b.dataset.d;
@@ -1345,7 +1345,7 @@ function offerHome(){let box=$('#hOffers');if(!box){box=document.createElement('
   const btn=(id,side,top,img,lb,extra='')=>`<button class="ofbtn ${side}${extra.includes('class="tm"')?' hasTm':''}" id="${id}" style="top:${top}px"><img class="ic" src="${img}" alt="">${extra}<span class="lb ol">${lb}</span></button>`;
   const R=[];if(!S.removeAds)R.push(['ofNoAds','ui/of_noads.webp','No Ads','']);
   if(!S.starter)R.push(['ofStart','ui/dl_c2.webp','Starter Pack','']);else if(!S.offerPack)R.push(['ofPack','ui/of_pack.webp','Sale',`<span class="bdg">-${OFFER_PACK.off}%</span><span class="tm" id="ofTm">${offerLeft()}</span>`]);
-  const Lb=[];if(SKY.enabled())Lb.push(['ofSky','ui/sl_balloon.webp?v=sky4','Sky Lift',`<span class="tm">${SKY.state().floor}/${skyTop()}</span>${SKY.state().pending.length?'<span class="bdg">!</span>':''}`]);
+  const Lb=[];if(SKY.enabled())Lb.push(['ofSky',SKY.cfg.artBase+'sl_balloon_idle.webp','Sky Lift',`<span class="tm">${SKY.state().floor}/${SKY.cfg.milestones.find(c=>c>SKY.state().floor)||skyTop()}</span>${SKY.state().pending.length?'<span class="bdg">!</span>':''}`]);
   if(questOpen())Lb.push(['ofLava','ui/ev_quest.webp?v=water-shark-20261103','Quest',`<span class="tm">${e.lava.step}/${LAVA_N}</span>`]);
   if(shieldOpen())Lb.push(['ofShield','ui/ev_shield.webp','Shield Arena',`<span class="tm">${shieldTime()}</span>`]);
   box.innerHTML=Lb.map((x,i)=>btn(x[0],'l',i*112,x[1],x[2],x[3])).join('')+R.map((x,i)=>btn(x[0],'r',i*112,x[1],x[2],x[3])).join('');
