@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Snippets Level Atlas</title>
+<link rel="icon" href="../icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1422;--card:#1a2236;--card2:#222c45;--line:#2f3b5a;--text:#eef2fb;--mute:#93a0bd;--accent:#ffb627;--accent-ink:#2a1a00;
+  --tut:#5ad1a0;--easy:#6cb8ff;--med:#ffb627;--hard:#ff6b7a;--moved:#c58cff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 Fredoka,system-ui,sans-serif}
+header{position:sticky;top:0;z-index:5;background:rgba(15,20,34,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.hwrap{max-width:1280px;margin:0 auto;padding:12px 16px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+h1{margin:0;font-size:22px;font-weight:700}
+.sub{color:var(--mute);font-size:13px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:10px;padding:7px 12px;cursor:pointer}
+button:hover{border-color:#4a5a85}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.danger{color:#ffb3bb}
+main{max-width:1280px;margin:0 auto;padding:14px 16px 60px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--mute);font-size:13px;margin:0 0 12px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.band{margin:18px 0 8px;font-weight:600;font-size:14px;color:var(--mute);display:flex;gap:8px;align-items:center}
+.band b{color:var(--text)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tile{position:relative;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:8px 8px 10px;cursor:grab;user-select:none;touch-action:none;transition:border-color .15s}
+.tile:hover{border-color:#4a5a85}
+.tile.moved{border-color:var(--moved)}
+.tile img{display:block;width:100%;aspect-ratio:1;object-fit:contain;pointer-events:none}
+.tile .pos{position:absolute;top:6px;left:6px;min-width:30px;padding:2px 8px;border-radius:9px;background:#0d1220;font-weight:700;text-align:center}
+.tile .tier{position:absolute;top:8px;right:8px;width:12px;height:12px;border-radius:4px}
+.tile .name{margin-top:4px;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .meta{color:var(--mute);font-size:12px}
+.tile .was{color:var(--moved);font-size:12px}
+.tile .play{position:absolute;right:8px;bottom:8px;padding:3px 9px;font-size:13px}
+.tile.ghost{opacity:.35}
+.tile.chosen{border-color:var(--accent)}
+.t-tut{background:var(--tut)}.t-easy{background:var(--easy)}.t-med{background:var(--med)}.t-hard{background:var(--hard)}
+dialog{border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--text);padding:18px;width:min(440px,calc(100vw - 32px))}
+dialog::backdrop{background:rgba(0,0,0,.6)}
+dialog img{width:100%;max-height:46vh;object-fit:contain}
+dialog h2{margin:6px 0 2px;font-size:20px}
+dialog .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+dialog input[type=number]{width:70px;font:inherit;background:#0d1220;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px}
+dialog textarea{width:100%;min-height:150px;font:13px/1.4 ui-monospace,monospace;background:#0d1220;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--accent);color:var(--accent-ink);padding:8px 16px;border-radius:12px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+@media (max-width:520px){.grid{grid-template-columns:repeat(2,1fr)}h1{font-size:19px}}
+</style>
+</head>
+<body>
+<header><div class="hwrap">
+  <div><h1>Snippets · Level Atlas</h1><div class="sub" id="sub"></div></div>
+  <div class="btns">
+    <button class="primary" id="btnPlay">▶ Play from level 1</button>
+    <button id="btnCopy">Copy order</button>
+    <button id="btnPaste">Paste order</button>
+    <button class="danger" id="btnReset">Reset to v10</button>
+  </div>
+</div></header>
+<main>
+  <div class="legend">
+    <span>Drag a picture to another place. The difficulty belongs to the level number, the picture moves.</span>
+    <span><i class="t-tut"></i>tutorial</span><span><i class="t-easy"></i>easy</span><span><i class="t-med"></i>medium</span><span><i class="t-hard"></i>hard</span>
+    <span><i style="background:var(--moved)"></i>moved vs v10</span>
+  </div>
+  <div id="list"></div>
+</main>
+
+<dialog id="dlg">
+  <img id="dImg" alt="">
+  <h2 id="dTitle"></h2>
+  <div class="sub" id="dMeta"></div>
+  <div class="row"><button class="primary" id="dPlay">▶ Play this level</button></div>
+  <div class="row">move to level <input type="number" id="dMoveIn" min="1" max="30"><button id="dMove">Move</button></div>
+  <div class="row">swap with level <input type="number" id="dSwapIn" min="1" max="30"><button id="dSwap">⇄ Swap</button></div>
+  <div class="row"><button id="dPrev">← prev</button><button id="dNext">next →</button><button id="dClose">Close</button></div>
+</dialog>
+
+<dialog id="pasteDlg">
+  <h2>Paste order</h2>
+  <div class="sub">One picture per line (or comma separated), all 30 names.</div>
+  <textarea id="pasteText"></textarea>
+  <div class="row"><button class="primary" id="pasteOk">Apply</button><button id="pasteCancel">Cancel</button></div>
+</dialog>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<script>
+// v10 order and difficulty ramp, mirrored from proto-snippets/src/levels/levels.ts (v10Level)
+const V10 = ['pizza', 'balloon', 'mushroom', 'rocket', 'cactus', 'robot', 'icecream', 'camera', 'burger', 'lighthouse', 'sailboat',
+  'gumball', 'watermelon', 'butterfly', 'fish', 'parrot', 'donut', 'smoothie', 'dragon', 'octopus',
+  'potion', 'chest', 'teapot', 'sneaker', 'sushi', 'taco', 'waffle', 'pancakes', 'hotdog', 'cupcake'];
+const NAMES = { watermelon: 'Watermelon', gumball: 'Gumball Machine', butterfly: 'Butterfly', fish: 'Tropical Fish',
+  mushroom: 'Mushroom House', parrot: 'Parrot', smoothie: 'Tropical Smoothie', dragon: 'Little Dragon', octopus: 'Octopus', potion: 'Magic Potion',
+  burger: 'Cheeseburger', cactus: 'Cactus', balloon: 'Hot Air Balloon', donut: 'Donut', rocket: 'Rocket', camera: 'Instant Camera', teapot: 'Teapot',
+  sneaker: 'Sneaker', lighthouse: 'Lighthouse', robot: 'Robot', chest: 'Treasure Chest', sailboat: 'Sailboat', icecream: 'Ice Cream', sushi: 'Sushi',
+  pizza: 'Pizza', cupcake: 'Cupcake', taco: 'Taco', waffle: 'Waffle', pancakes: 'Pancakes', hotdog: 'Hot Dog' };
+const BANDS = [
+  { from: 1, to: 1, cls: 't-tut', label: 'Tutorial', meta: 'guided tutorial · 6 columns' },
+  { from: 2, to: 3, cls: 't-tut', label: 'Hints', meta: 'hint · 6 columns' },
+  { from: 4, to: 7, cls: 't-easy', label: 'Easy', meta: 'easy · 6 columns' },
+  { from: 8, to: 11, cls: 't-easy', label: 'Easy, bigger board', meta: 'easy · 7 columns' },
+  { from: 12, to: 20, cls: 't-med', label: 'Medium', meta: 'medium · 7 columns, bigger pieces' },
+  { from: 21, to: 30, cls: 't-hard', label: 'Hard', meta: 'hard · 8 columns' },
+];
+const band = (L) => BANDS.find((b) => L >= b.from && L <= b.to);
+const KEY = 'snippets_atlas_v1'; // read by ../v11.html?atlas=1
+const valid = (o) => Array.isArray(o) && o.length === V10.length && V10.every((a) => o.includes(a));
+
+let order = V10.slice();
+try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && valid(s.order)) order = s.order; } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ order })); } catch (e) {} };
+
+const $ = (id) => document.getElementById(id);
+function toast(t) { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 1600); }
+function play(L) { save(); window.open(`../v11.html?atlas=1&level=${L}`, '_blank'); }
+
+const sortables = [];
+function render() {
+  sortables.splice(0).forEach((s) => s.destroy());
+  const moved = order.filter((a, i) => V10[i] !== a).length;
+  $('sub').textContent = `30 levels · ${moved ? moved + ' moved vs v10' : 'same as v10'} · saved in this browser`;
+  const list = $('list'); list.innerHTML = '';
+  for (const b of BANDS) {
+    const h = document.createElement('div'); h.className = 'band';
+    h.innerHTML = `<i class="${b.cls}" style="width:10px;height:10px;border-radius:3px;display:inline-block"></i><b>${b.label}</b> · ${b.from === b.to ? 'level ' + b.from : 'levels ' + b.from + '–' + b.to} · ${b.meta}`;
+    const g = document.createElement('div'); g.className = 'grid';
+    for (let L = b.from; L <= b.to; L++) {
+      const a = order[L - 1], was = V10.indexOf(a) + 1;
+      const t = document.createElement('div'); t.className = 'tile' + (was !== L ? ' moved' : ''); t.dataset.art = a;
+      t.innerHTML = `<img src="art/${a}.webp" alt=""><span class="pos">${L}</span><span class="tier ${b.cls}"></span>
+        <div class="name">${NAMES[a]}</div><div class="${was !== L ? 'was' : 'meta'}">${was !== L ? 'was level ' + was : 'as in v10'}</div>
+        <button class="play" title="Play level ${L}">▶</button>`;
+      t.querySelector('.play').addEventListener('click', (e) => { e.stopPropagation(); play(L); });
+      t.addEventListener('click', () => openDlg(L));
+      g.appendChild(t);
+    }
+    list.append(h, g);
+    // all band grids share one group, so a picture can go to any level
+    sortables.push(Sortable.create(g, { group: 'levels', animation: 150, ghostClass: 'ghost', chosenClass: 'chosen', filter: '.play', preventOnFilter: false,
+      delay: 120, delayOnTouchOnly: true, onEnd: commitDom }));
+  }
+}
+function commitDom() {
+  const o = [...document.querySelectorAll('#list .tile')].map((t) => t.dataset.art);
+  if (valid(o)) { order = o; save(); }
+  render();
+}
+function move(from, to) { const [a] = order.splice(from - 1, 1); order.splice(to - 1, 0, a); save(); render(); }
+function swap(x, y) { [order[x - 1], order[y - 1]] = [order[y - 1], order[x - 1]]; save(); render(); }
+
+let cur = 1;
+function openDlg(L) {
+  cur = L; const a = order[L - 1], b = band(L), was = V10.indexOf(a) + 1;
+  $('dImg').src = `art/${a}.webp`;
+  $('dTitle').textContent = `Level ${L} · ${NAMES[a]}`;
+  $('dMeta').textContent = `${b.meta}${was !== L ? ' · was level ' + was + ' in v10' : ''}`;
+  $('dPlay').textContent = `▶ Play level ${L}`;
+  $('dMoveIn').value = L; $('dSwapIn').value = '';
+  if (!$('dlg').open) $('dlg').showModal();
+}
+const num = (id) => { const n = parseInt($(id).value, 10); return n >= 1 && n <= 30 ? n : 0; };
+$('dPlay').onclick = () => play(cur);
+$('dMove').onclick = () => { const n = num('dMoveIn'); if (n && n !== cur) { move(cur, n); openDlg(n); toast(`Moved to level ${n}`); } };
+$('dSwap').onclick = () => { const n = num('dSwapIn'); if (n && n !== cur) { swap(cur, n); openDlg(n); toast(`Swapped with level ${cur}`); } };
+$('dPrev').onclick = () => openDlg(cur > 1 ? cur - 1 : 30);
+$('dNext').onclick = () => openDlg(cur < 30 ? cur + 1 : 1);
+$('dClose').onclick = () => $('dlg').close();
+document.addEventListener('keydown', (e) => { if (!$('dlg').open) return; if (e.key === 'ArrowLeft') $('dPrev').click(); if (e.key === 'ArrowRight') $('dNext').click(); });
+
+$('btnPlay').onclick = () => play(1);
+$('btnCopy').onclick = async () => {
+  const txt = order.map((a, i) => `${i + 1}\t${a}\t${NAMES[a]}`).join('\n');
+  try { await navigator.clipboard.writeText(txt); toast('Order copied'); } catch (e) { $('pasteText').value = txt; $('pasteDlg').showModal(); }
+};
+$('btnPaste').onclick = () => { $('pasteText').value = ''; $('pasteDlg').showModal(); };
+$('pasteCancel').onclick = () => $('pasteDlg').close();
+$('pasteOk').onclick = () => {
+  // accepts our own "N<tab>id<tab>Name" lines, plain ids or display names
+  const byName = Object.fromEntries(Object.entries(NAMES).map(([k, v]) => [v.toLowerCase(), k]));
+  const o = $('pasteText').value.split(/[\n,]+/).map((l) => l.split('\t').map((x) => x.trim().toLowerCase()).filter(Boolean))
+    .map((p) => p.find((x) => NAMES[x]) || p.map((x) => byName[x]).find(Boolean)).filter(Boolean);
+  if (!valid(o)) { toast('Need all 30 pictures, each once'); return; }
+  order = o; save(); render(); $('pasteDlg').close(); toast('Order loaded');
+};
+$('btnReset').onclick = () => { if (order.every((a, i) => a === V10[i])) return; order = V10.slice(); save(); render(); toast('Back to v10 order'); };
+render();
+</script>
+</body>
+</html>
