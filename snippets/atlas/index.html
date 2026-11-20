@@ -58,14 +58,14 @@ dialog textarea{width:100%;min-height:150px;font:13px/1.4 ui-monospace,monospace
     <button class="primary" id="btnPlay">▶ Play from level 1</button>
     <button id="btnCopy">Copy order</button>
     <button id="btnPaste">Paste order</button>
-    <button class="danger" id="btnReset">Reset to v10</button>
+    <button class="danger" id="btnReset">Reset to v12</button>
   </div>
 </div></header>
 <main>
   <div class="legend">
     <span>Drag a picture to another place. The difficulty belongs to the level number, the picture moves.</span>
     <span><i class="t-tut"></i>tutorial</span><span><i class="t-easy"></i>easy</span><span><i class="t-med"></i>medium</span><span><i class="t-hard"></i>hard</span>
-    <span><i style="background:var(--moved)"></i>moved vs v10</span>
+    <span><i style="background:var(--moved)"></i>moved vs v12</span>
   </div>
   <div id="list"></div>
 </main>
@@ -91,9 +91,11 @@ dialog textarea{width:100%;min-height:150px;font:13px/1.4 ui-monospace,monospace
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 <script>
 // v10 order and difficulty ramp, mirrored from proto-snippets/src/levels/levels.ts (v10Level)
-const V10 = ['pizza', 'balloon', 'mushroom', 'rocket', 'cactus', 'robot', 'icecream', 'camera', 'burger', 'lighthouse', 'sailboat',
+const V10_ORDER = ['pizza', 'balloon', 'mushroom', 'rocket', 'cactus', 'robot', 'icecream', 'camera', 'burger', 'lighthouse', 'sailboat',
   'gumball', 'watermelon', 'butterfly', 'fish', 'parrot', 'donut', 'smoothie', 'dragon', 'octopus',
   'potion', 'chest', 'teapot', 'sneaker', 'sushi', 'taco', 'waffle', 'pancakes', 'hotdog', 'cupcake'];
+// base order = v12 (levels.ts V12): watermelon, balloon, pizza, then v10
+const V10 = ['watermelon', 'balloon', 'pizza', ...V10_ORDER.filter((a) => !['watermelon', 'balloon', 'pizza'].includes(a))];
 const NAMES = { watermelon: 'Watermelon', gumball: 'Gumball Machine', butterfly: 'Butterfly', fish: 'Tropical Fish',
   mushroom: 'Mushroom House', parrot: 'Parrot', smoothie: 'Tropical Smoothie', dragon: 'Little Dragon', octopus: 'Octopus', potion: 'Magic Potion',
   burger: 'Cheeseburger', cactus: 'Cactus', balloon: 'Hot Air Balloon', donut: 'Donut', rocket: 'Rocket', camera: 'Instant Camera', teapot: 'Teapot',
@@ -108,7 +110,7 @@ const BANDS = [
   { from: 21, to: 30, cls: 't-hard', label: 'Hard', meta: 'hard · 8 columns' },
 ];
 const band = (L) => BANDS.find((b) => L >= b.from && L <= b.to);
-const KEY = 'snippets_atlas_v1'; // read by ../v11.html?atlas=1
+const KEY = 'snippets_atlas_v1'; // read by ../v11.html and ../v12.html with ?atlas=1
 const valid = (o) => Array.isArray(o) && o.length === V10.length && V10.every((a) => o.includes(a));
 
 let order = V10.slice();
@@ -117,13 +119,13 @@ const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ order }));
 
 const $ = (id) => document.getElementById(id);
 function toast(t) { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 1600); }
-function play(L) { save(); window.open(`../v11.html?atlas=1&level=${L}`, '_blank'); }
+function play(L) { save(); window.open(`../v12.html?atlas=1&level=${L}`, '_blank'); }
 
 const sortables = [];
 function render() {
   sortables.splice(0).forEach((s) => s.destroy());
   const moved = order.filter((a, i) => V10[i] !== a).length;
-  $('sub').textContent = `30 levels · ${moved ? moved + ' moved vs v10' : 'same as v10'} · saved in this browser`;
+  $('sub').textContent = `30 levels · ${moved ? moved + ' moved vs v12' : 'same as v12'} · saved in this browser`;
   const list = $('list'); list.innerHTML = '';
   for (const b of BANDS) {
     const h = document.createElement('div'); h.className = 'band';
@@ -133,7 +135,7 @@ function render() {
       const a = order[L - 1], was = V10.indexOf(a) + 1;
       const t = document.createElement('div'); t.className = 'tile' + (was !== L ? ' moved' : ''); t.dataset.art = a;
       t.innerHTML = `<img src="art/${a}.webp" alt=""><span class="pos">${L}</span><span class="tier ${b.cls}"></span>
-        <div class="name">${NAMES[a]}</div><div class="${was !== L ? 'was' : 'meta'}">${was !== L ? 'was level ' + was : 'as in v10'}</div>
+        <div class="name">${NAMES[a]}</div><div class="${was !== L ? 'was' : 'meta'}">${was !== L ? 'was level ' + was : 'as in v12'}</div>
         <button class="play" title="Play level ${L}">▶</button>`;
       t.querySelector('.play').addEventListener('click', (e) => { e.stopPropagation(); play(L); });
       t.addEventListener('click', () => openDlg(L));
@@ -158,7 +160,7 @@ function openDlg(L) {
   cur = L; const a = order[L - 1], b = band(L), was = V10.indexOf(a) + 1;
   $('dImg').src = `art/${a}.webp`;
   $('dTitle').textContent = `Level ${L} · ${NAMES[a]}`;
-  $('dMeta').textContent = `${b.meta}${was !== L ? ' · was level ' + was + ' in v10' : ''}`;
+  $('dMeta').textContent = `${b.meta}${was !== L ? ' · was level ' + was + ' in v12' : ''}`;
   $('dPlay').textContent = `▶ Play level ${L}`;
   $('dMoveIn').value = L; $('dSwapIn').value = '';
   if (!$('dlg').open) $('dlg').showModal();
@@ -187,7 +189,7 @@ $('pasteOk').onclick = () => {
   if (!valid(o)) { toast('Need all 30 pictures, each once'); return; }
   order = o; save(); render(); $('pasteDlg').close(); toast('Order loaded');
 };
-$('btnReset').onclick = () => { if (order.every((a, i) => a === V10[i])) return; order = V10.slice(); save(); render(); toast('Back to v10 order'); };
+$('btnReset').onclick = () => { if (order.every((a, i) => a === V10[i])) return; order = V10.slice(); save(); render(); toast('Back to v12 order'); };
 render();
 </script>
 </body>
