@@ -12,6 +12,8 @@
    2026-11-16: no reward plates on the tower (the reward is a surprise); floor numbers grey until the balloon reaches them;
    a chest stays closed until Collect, then shows its open, empty art (sl_open1-6); the claim popup opens the chest per the
    "juicy chest" how-to: wobble+squash, stretch, slam with freeze and shake, inner light, shockwave, stars, magic dust.
+   2026-11-20: the tower balloon has three burner states (ChatGPT art): small flame while standing, big flame while rising,
+   no fire while falling (sl_balloon_idle / _up / _off).
 
    Usage (host game):
      const sky = SkyLift.init({
@@ -51,6 +53,9 @@ window.SkyLift=(function(){
     const cfg=Object.assign({},DEFAULTS,a.cfg||{});if(!cfg.artBase)cfg.artBase=scriptBase+'art/skylift/';
     const M=cfg.milestones,N=M.length,root=a.root,snd=n=>{try{a.sound&&a.sound(n)}catch(e){}},track=(n,p)=>{try{cfg.track&&cfg.track(n,p||{})}catch(e){}};
     const art=n=>cfg.artBase+n+'.webp';
+    /* tower balloon burner: idle = small flame, up = big flame (rising), off = no fire (falling) */
+    const burner=(b,st)=>{b.querySelector('img').src=art('sl_balloon_'+st)};
+    ['off','idle','up'].forEach(st=>{new Image().src=art('sl_balloon_'+st)});
     /* ---------- state ---------- */
     const fresh=()=>({status:'locked',seasonStart:0,seasonEnd:0,floor:0,cp:0,presented:0,pending:[],flights:0,seasons:0,tut:false,enter:false});
     let k=Object.assign(fresh(),a.load&&a.load()||{});
@@ -116,7 +121,7 @@ window.SkyLift=(function(){
       const from=Y(units(seen));
       sec.innerHTML=`<div class="skBg"></div>
         <div class="skTop"><button class="skI" id="skInfo" aria-label="How it works"><span class="skOl">i</span></button><div class="skBanner"><img src="${art('sl_banner')}" alt=""><span class="skTitle skOl">${cfg.title}</span><span class="skTime" id="skTime">${left()}</span></div><button class="skX skScrX" id="skClose" aria-label="Close">${SVGX}</button></div>
-        <div class="skScroll" id="skScroll"><div class="skTower" style="height:${H}px"><div class="skCity"></div>${clouds}<div class="skMast"></div><div class="skMastTop"></div><div class="skMastBase"></div><div class="skHex zero" style="--y:${BASE}px"><span class="skOl">0</span></div>${cps}<div class="skBalloon" id="skBalloon" style="bottom:${from}px"><img src="${art('sl_balloon')}" alt=""></div></div></div>
+        <div class="skScroll" id="skScroll"><div class="skTower" style="height:${H}px"><div class="skCity"></div>${clouds}<div class="skMast"></div><div class="skMastTop"></div><div class="skMastBase"></div><div class="skHex zero" style="--y:${BASE}px"><span class="skOl">0</span></div>${cps}<div class="skBalloon" id="skBalloon" style="bottom:${from}px"><img src="${art('sl_balloon_idle')}" alt=""></div></div></div>
         <div class="skHud"><div class="skFire"><img src="${art('sl_fire')}" alt=""><b class="skOl" id="skFloor">${seen}</b></div><div class="skInfoTxt" id="skInfoTxt"></div><button class="skBtn gold" id="skPlay"><span class="t">Play</span></button></div>`;
       hudText(seen)}
     function hudText(shown){const next=k.cp<N?M[k.cp]-k.floor:0,el=sec.querySelector('#skInfoTxt');if(!el)return;
@@ -136,11 +141,11 @@ window.SkyLift=(function(){
         else if(needTut)setTimeout(tut,320)};
       setTimeout(()=>{if(!alive())return;sec.classList.remove('in');
         if(Math.abs(to-from)<1){finish();return}
-        const up=to>from,floors=Math.abs(k.floor-seen),dur=Math.min(2600,Math.max(800,floors*(up?430:260)));b.style.transition=`bottom ${dur}ms ${up?EASE.inout:EASE.in}`;b.style.bottom=to+'px';b.classList.add(up?'rise':'fall');snd(up?'whoosh':'slide');
+        const up=to>from,floors=Math.abs(k.floor-seen),dur=Math.min(2600,Math.max(800,floors*(up?430:260)));b.style.transition=`bottom ${dur}ms ${up?EASE.inout:EASE.in}`;b.style.bottom=to+'px';b.classList.add(up?'rise':'fall');burner(b,up?'up':'off');snd(up?'whoosh':'slide');
         const fEl=sec.querySelector('#skFloor');let shown=seen;
         const t0=performance.now(),tickF=()=>{if(!alive())return;const t=Math.min(1,(performance.now()-t0)/dur),e=up?(t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2):t*t;center(from+(to-from)*e);
           const fl=Math.round(seen+(k.floor-seen)*e);if(fl!==shown&&fEl){shown=fl;fEl.textContent=fl;if(up)sec.querySelectorAll('.skHex:not(.on):not(.zero)').forEach(h=>{if(+h.dataset.f<=fl&&k.cp>M.indexOf(+h.dataset.f)){h.classList.add('on','lit')}});fEl.classList.remove('tick');void fEl.offsetWidth;fEl.classList.add('tick');if(up)snd('tick')}
-          if(t<1)requestAnimationFrame(tickF);else{b.classList.remove('rise','fall');finish()}};
+          if(t<1)requestAnimationFrame(tickF);else{b.classList.remove('rise','fall');burner(b,'idle');finish()}};
         requestAnimationFrame(tickF)},520);
       k.presented=k.floor;save();
       clearInterval(timer);timer=setInterval(()=>{const t=sec.querySelector('#skTime');if(t)t.textContent=left()},30000);
@@ -158,7 +163,7 @@ window.SkyLift=(function(){
         save();p.close(()=>{if(!last&&sec)ids.forEach(i=>{const st=sec.querySelector(`[data-i="${i}"]`);if(!st)return;st.classList.remove('ready');st.classList.add('on','slam');burst(st,{stars:3,dust:6,size:.5});setTimeout(()=>st.classList.remove('slam'),600)});
           if(last&&sec&&!sec.hidden){const b=sec.querySelector('#skBalloon'),sc=sec.querySelector('#skScroll'),H=Y(N)+380;
             sec.querySelectorAll('.skStop.on,.skGrand.on').forEach(e=>e.classList.remove('on'));sec.querySelectorAll('.skHex.on:not(.zero)').forEach(e=>e.classList.remove('on'));
-            b.style.transition=`bottom 1600ms ${EASE.inout}`;b.style.bottom=Y(0)+'px';b.classList.add('fall');setTimeout(()=>b.classList.remove('fall'),1600);
+            b.style.transition=`bottom 1600ms ${EASE.inout}`;b.style.bottom=Y(0)+'px';b.classList.add('fall');burner(b,'off');setTimeout(()=>{b.classList.remove('fall');burner(b,'idle')},1600);
             const y0=parseFloat(getComputedStyle(b).bottom)||0,t0=performance.now(),f=()=>{const t=Math.min(1,(performance.now()-t0)/1600);sc.scrollTop=Math.max(0,H-(y0+(Y(0)-y0)*t)-sc.clientHeight*.56);if(t<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
           hudText();refreshTile();after&&setTimeout(after,last?1700:120)})}}
     /* ---------- home tile ---------- */
